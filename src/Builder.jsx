@@ -1,16 +1,4 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
-import ReactDOM from "react-dom";
-import {
-  mxGraph,
-  mxRubberband,
-  mxKeyHandler,
-  mxClient,
-  mxUtils,
-  mxEvent,
-  mxConstants,
-  mxEdgeStyle
-} from "mxgraph-js";
 
 import {
   ReflexContainer,
@@ -18,60 +6,61 @@ import {
   ReflexElement
 } from 'react-reflex'
 
-import 'react-reflex/styles.css'
+import "react-reflex/styles.css";
+
 
 import GraphView from "./GraphView";
-
-import { black } from "ansi-colors";
+import Packages from "./Packages";
 
 export default class Builder extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {graphdata : null};    
+  }
 
+  onChange(event) {
+    var file = event.target.files[0];
+    var reader = new FileReader();
+    reader.onload = (event) => {
+      // The file's text will be printed here
+      
+    try {
+        var json_data = JSON.parse(event.target.result);
+    } catch (e) {
+        alert("Please enter a JSON file");
+        return;
+    }
+    
+    this.setState({ graphdata: json_data });
+    
+    };
+  
+    reader.readAsText(file);
   }
 
   render() {
-    return (
-
-      <ReflexContainer orientation="vertical" >
-
-<ReflexElement className="left-pane"  >
-            
+    return (      
+      <ReflexContainer className="site-content" orientation="vertical">
+      
+      <ReflexElement className="video-panels" flex={0.25} minSize="100">
+      <form>
+  <label>
+    Graph input:
+    <input type="file" onChange={this.onChange.bind(this)} name="graph_file" />
+  </label>
+  <input type="submit" value="Reset" />
+</form>
+  </ReflexElement>
+  <ReflexSplitter />
+        <ReflexElement className="workboard" minSize="50">
+          <GraphView graphdata={this.state.graphdata}/>
+        </ReflexElement>
+        <ReflexSplitter />
+        <ReflexElement className="video-panels" flex={0.25} minSize="100">
+<Packages/>        
+</ReflexElement>
         
-        <ReflexContainer orientation="horizontal" >
-
-          <ReflexElement className="header" >
-            <p>Yoyoyoy</p>
-          </ReflexElement>
-
-          <ReflexSplitter />
-
-          <ReflexElement className="header">
-            <p>Yeyeyeye</p>
-          </ReflexElement>
-        </ReflexContainer>
-
-        </ReflexElement>
-
-        <ReflexElement className="middle-pane">
-          <div class='pane-content'>
-            <GraphView />
-          </div>
-        </ReflexElement>
-
-        <ReflexSplitter propagate={true} />
-
-        <ReflexElement className="right-pane" >
-          <div class='pane-content'>
-            <input id='json-input' type='file' />
-          </div>
-        </ReflexElement>
-
       </ReflexContainer>
-
-
-
 
     );
   }

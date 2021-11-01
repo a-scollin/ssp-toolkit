@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 import {
   mxGraph,
   mxRubberband,
-  mxKeyHandler,
+  mxHierarchicalLayout,
   mxClient,
   mxUtils,
   mxEvent,
@@ -20,15 +20,23 @@ import { black } from "ansi-colors";
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {graphdata : props.graphdata};
     this.GraphRef = React.createRef()
+
   }
 
-  componentDidMount() {
-    this.LoadGraph()
+  componentDidUpdate(prevProps){
+    if(this.props.graphdata != prevProps.graphdata){
+      this.setState({graphdata : this.props.graphdata},function() {
+        this.LoadGraph();
+      });
+      
+    }
   }
 
   LoadGraph() {
+
+    if (this.state.graphdata){
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
@@ -43,25 +51,10 @@ export default class GraphView extends Component {
       // Creates the graph inside the given container
       var graph = new mxGraph(container);
 
-      // Enables rubberband selection
-      new mxRubberband(graph);
-
-
-
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
-
-      // Enables tooltips, new connections and panning
-      graph.setPanning(true);
-      graph.setTooltips(true);
-      graph.setConnectable(true);
-      graph.setEnabled(true);
-      graph.setEdgeLabelsMovable(false);
-      graph.setVertexLabelsMovable(false);
-      graph.setGridEnabled(true);
-      graph.setAllowDanglingEdges(false);
-
+    
       // styling
       var style = graph.getStylesheet().getDefaultVertexStyle();
       style[mxConstants.STYLE_STROKECOLOR] = 'gray';
@@ -82,58 +75,72 @@ export default class GraphView extends Component {
       style[mxConstants.STYLE_STROKEWIDTH] = '1.25';
       style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
 
-      graph.getModel().beginUpdate();
+
+
       try {
-        //mxGrapg component
-        var doc = mxUtils.createXmlDocument();
-        var node = doc.createElement("Node");
-        node.setAttribute("ComponentID", "[P01]");
+        
+        graph.getModel().beginUpdate();
 
-        var vx = graph.insertVertex(
-          parent,
-          null,
-          node,
-          240,
-          40,
-          150,
-          30,
-        );
 
-        var v1 = graph.insertVertex(
-          parent,
-          null,
-          "shape1",
-          20,
-          120,
-          80,
-          30,
-        );
-        var v2 = graph.insertVertex(parent, null, "shape2", 300, 120, 80, 30);
-        var v3 = graph.insertVertex(parent, null, "shape3", 620, 180, 80, 30);
-        var e1 = graph.insertEdge(
-          parent,
-          null,
-          "",
-          v1,
-          v2,
-        );
-        var e2 = graph.insertEdge(parent, null, "Edge 2", v2, v3);
-        var e3 = graph.insertEdge(parent, null, "Edge 3", v1, v3);
+        var dict = {};
+        // run through each element in json        
+      
+        // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30); 
+
+        if (this.state.graphdata.hasOwnProperty("modular_pkgs")){          
+        for(var parsedgraph in this.state.graphdata.modular_pkgs){
+          var first = true;
+          for (var element in this.state.graphdata.modular_pkgs[parsedgraph].graph){
+            
+            var name = element;
+              var graphElement = graph.insertVertex(parent, null, name, 20, 20, 80, 30);
+              
+              dict[name] = graphElement;
+
+            }
+          
+              for(var oracle in this.state.graphdata.modular_pkgs[parsedgraph].oracles){
+                
+                console.log(this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][0])
+
+                graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][0]]);
+              }
+
+            break;
+
+          }         
+
+
+          }
 
         //data
       } finally {
         // Updates the display
         graph.getModel().endUpdate();
+
+        // Creates a layout algorithm to be used with the graph
+        var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_EAST);
+
+        // Moves stuff wider apart than usual
+        layout.forceConstant = 140;
+        // if (dict["Adv"]) {
+        //     // layout.execute(parent, dict['Adv']);
+        // }
+      
+       
       }
 
-      // Enables rubberband (marquee) selection and a handler for basic keystrokes
-      var rubberband = new mxRubberband(graph);
-      var keyHandler = new mxKeyHandler(graph);
+      return(<div ref={this.GraphRef} className="graph-container" id="divGraph" />);
+
+    }
+
+
     }
   }
   render() {
-    return (
-<div ref={this.GraphRef} className="graph-container" id="divGraph" />);
+  
+      return (<div ref={this.GraphRef} className="graph-container" id="divGraph" />);
+   
 }
 
 }
