@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
 import {
   mxGraph,
-  mxWindow,
   mxHierarchicalLayout,
   mxClient,
   mxUtils,
@@ -39,6 +38,7 @@ export default class GraphView extends Component {
     if (this.state.graphdata){
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
+  
 
     // Checks if the browser is supported
     if (!mxClient.isBrowserSupported()) {
@@ -55,15 +55,17 @@ export default class GraphView extends Component {
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
 
-      // // Enables tooltips, new connections and panning
-      // graph.setPanning(true);
-      // graph.setTooltips(false);
-      // graph.setConnectable(false);
-      // graph.setEnabled(false);
-      // graph.setEdgeLabelsMovable(false);
-      // graph.setVertexLabelsMovable(false);
-      // graph.setGridEnabled(false);
-      // graph.setAllowDanglingEdges(false);
+
+      // Enables tooltips, new connections and panning
+      graph.setPanning(true);
+      graph.setTooltips(false);
+      graph.setConnectable(false);
+      graph.setEnabled(true);
+      graph.setEdgeLabelsMovable(false);
+      graph.setVertexLabelsMovable(true);
+      graph.setGridEnabled(false);
+      graph.setAllowDanglingEdges(false);
+      graph.setDisconnectOnMove(false);
 
     
       // styling
@@ -88,19 +90,26 @@ export default class GraphView extends Component {
 
 
 
-      try {
+
         
-        graph.getModel().beginUpdate();
-
-
-        var dict = {};
         // run through each element in json        
       
         // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30); 
 
         if (this.state.graphdata.hasOwnProperty("modular_pkgs")){          
         for(var parsedgraph in this.state.graphdata.modular_pkgs){
-          var first = true;
+        
+          try {
+        
+            graph.getModel().beginUpdate();
+    
+
+          var dict = {};
+
+          if(!this.state.graphdata.modular_pkgs[parsedgraph].graph.hasOwnProperty("Adv")){
+            this.state.graphdata.modular_pkgs[parsedgraph].graph.Adv = [];
+          }
+
           for (var element in this.state.graphdata.modular_pkgs[parsedgraph].graph){
          
             var graphElement = graph.insertVertex(parent, null, element, 20, 20, 80, 30);            
@@ -125,13 +134,6 @@ export default class GraphView extends Component {
 
               }
 
-            break;
-
-          }         
-
-
-          }
-
         //data
       } finally {
         // Updates the display
@@ -142,6 +144,7 @@ export default class GraphView extends Component {
 
         layout.intraCellSpacing=50;
         layout.interRankCellSpacing=100;
+        layout.resizeParent = true;
 
         // Moves stuff wider apart than usual
         layout.forceConstant = 500;
@@ -149,10 +152,21 @@ export default class GraphView extends Component {
             layout.execute(parent, dict['Adv']);
         }
       
+        // Translates graph down y axis 10 so it's not cut off! 
+        graph.getView().setTranslate(0,10);
+
        
       }
+        // Just to see one!
+        // break;
 
-      return(<div ref={this.GraphRef} className="graph-container" id="divGraph" />);
+          }         
+
+
+          }
+
+
+      return;
 
     }
 
@@ -161,7 +175,11 @@ export default class GraphView extends Component {
   }
   render() {
   
-      return (<div ref={this.GraphRef} className="graph-container" id="divGraph" />);
+      return (
+        <div className="graphview-container">
+      <div ref={this.GraphRef} className="graph-container" id="divGraph" />
+      </div>
+      );
    
 }
 

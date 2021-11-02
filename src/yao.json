@@ -1,0 +1,440 @@
+{
+    "modular_pkgs": {
+        "SEC^0(GB_{yao})": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["GB_{yao}", "GBL_{1..d}"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "GB_{yao}": [
+                    ["KEYS_1", "GETKEYS^{in}"],
+                    ["KEYS", "GETKEYS^{out}"]
+                ],
+                "KEYS_1": [],
+                "KEYS": []
+            },
+
+            "layout": { "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 110 }, "GB_{yao}": { "x": 120, "y": 30, "width": 90, "height": 50 }, "KEYS_1": { "x": 320, "y": 0, "width": 90, "height": 50, "color": "yellow" }, "KEYS": { "x": 320, "y": 60, "width": 90, "height": 50 } }, "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.95;exitY=0.15;entryX=0;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "GB_{yao}": "exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "entryX=0;entryY=0.8;exitX=0.8;exitY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB_{yao}": { "KEYS_1": "exitX=0.85;exitY=0.3;entryX=0;entryY=0.8;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS": "exitX=0.85;exitY=0.7;entryX=0;entryY=0.25;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" } }, "edge_points": { "@oracles_interface": [], "GB_{yao}": [] } }
+        },
+
+        "SEC^1(SIM_{yao})": {
+            "oracles": [
+                ["BITS", "SETBIT"],
+                ["SIM_{yao}", "GETA^{out}"],
+                ["SIM_{yao}", "GBL_{1..d}"],
+                ["KEYS", "GETKEYS"]
+            ],
+            "graph": {
+                "SIM_{yao}": [
+                    ["BITS", "CHECK_1"],
+                    ["EV_{1..d}", "CHECK_{2..d}"],
+                    ["EV_{1..d}", "EVAL_{1..d}"],
+                    ["KEYS", "GETA^{out}"]
+                ],
+                "EV_{1..d}": [
+                    ["BITS", "GETBIT"],
+                    ["KEYS", "SETBIT"]
+                ],
+                "BITS": [],
+                "KEYS": []
+            },
+            "layout": { "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 110 }, "SIM_{yao}": { "x": 100, "y": 30, "width": 90, "height": 50 }, "EV_{1..d}": { "x": 340, "y": 30, "width": 90, "height": 50 }, "BITS": { "x": 510, "y": 0, "width": 90, "height": 50, "color": "blue" }, "KEYS": { "x": 510, "y": 60, "width": 90, "height": 50 } }, "edges": { "@oracles_interface": { "BITS": "exitX=0.7;exitY=0.35;entryX=0;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "SIM_{yao}": "exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.75;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" }, "SIM_{yao}": { "BITS": "exitX=0.75;exitY=0.35;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_{1..d}": "exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.85;exitY=0.7;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV_{1..d}": { "BITS": "exitX=0.65;exitY=0.4;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS": "exitX=0.85;exitY=0.7;entryX=0.1;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" } }, "edge_points": { "@oracles_interface": [], "SIM_{yao}": [{ "x": 200, "y": 80 }], "EV_{1..d}": [] } }
+        },
+
+        "SEC^0(GB_{yao})-unrolled": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["GB^0_{yao,1}", "GBL_1"],
+                ["GB^0_{yao,2}", "GBL_2"],
+                ["GB^0_{yao,3}", "GBL_3"],
+                ["GB^0_{yao,d}", "GBL_d"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+            "graph": {
+                "KEYS_1": [],
+                "KEYS_2": [],
+                "KEYS_3": [],
+                "KEYS_4": [],
+
+                "GB^0_{yao,1}": [
+                    ["KEYS_1", "GETKEYS^{in}"],
+                    ["KEYS_2", "GETKEYS^{out}"]
+                ],
+                "GB^0_{yao,2}": [
+                    ["KEYS_2", "GETKEYS^{in}"],
+                    ["KEYS_3", "GETKEYS^{out}"]
+                ],
+                "GB^0_{yao,3}": [
+                    ["KEYS_3", "GETKEYS^{in}"],
+                    ["KEYS_4", "GETKEYS^{out}"]
+                ],
+                "GB^0_{yao,d}": [
+                    ["KEYS_d", "GETKEYS^{in}"],
+                    ["KEYS", "GETKEYS^{out}"]
+                ],
+
+                "KEYS_d": [],
+                "KEYS": []
+            },
+            "layout": { "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 360 }, "KEYS_1": { "x": 530, "y": 0, "width": 90, "height": 50 }, "KEYS_2": { "x": 530, "y": 60, "width": 90, "height": 50 }, "KEYS_3": { "x": 530, "y": 120, "width": 90, "height": 50 }, "KEYS_4": { "x": 530, "y": 180, "width": 90, "height": 50 }, "GB^0_{yao,1}": { "x": 160, "y": 30, "width": 90, "height": 50 }, "GB^0_{yao,2}": { "x": 160, "y": 90, "width": 90, "height": 50 }, "GB^0_{yao,3}": { "x": 160, "y": 150, "width": 90, "height": 50 }, "GB^0_{yao,d}": { "x": 160, "y": 270, "width": 90, "height": 50 }, "KEYS_d": { "x": 530, "y": 240, "width": 90, "height": 50 }, "KEYS": { "x": 530, "y": 300, "width": 90, "height": 50 } }, "edges": { "@oracles_interface": { "KEYS_1": "exitX=1;exitY=0.05;entryX=0.1;entryY=0.35;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "GB^0_{yao,1}": "exitX=1;exitY=0.15;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^0_{yao,2}": "exitX=0.9;exitY=0.35;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^0_{yao,3}": "exitX=0.5;exitY=0.5;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^0_{yao,d}": "exitX=0.9;exitY=0.75;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "KEYS": "exitX=1;exitY=0.95;entryX=0;entryY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^0_{yao,1}": { "KEYS_1": "exitX=0.75;exitY=0.35;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_2": "exitX=0.6;exitY=0.55;entryX=0.15;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^0_{yao,2}": { "KEYS_2": "exitX=0.85;exitY=0.3;entryX=0.05;entryY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS_3": "exitX=0.85;exitY=0.75;entryX=0;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^0_{yao,3}": { "KEYS_3": "exitX=0.9;exitY=0.25;entryX=0.1;entryY=0.75;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_4": "exitX=0.6;exitY=0.55;entryX=0;entryY=0.15;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^0_{yao,d}": { "KEYS_d": "exitX=0.75;exitY=0.35;entryX=0.05;entryY=0.75;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS": "exitX=0.6;exitY=0.55;entryX=0;entryY=0.15;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" } }, "edge_points": { "@oracles_interface": [], "GB^0_{yao,1}": [], "GB^0_{yao,2}": [], "GB^0_{yao,3}": [], "GB^0_{yao,d}": [] } }
+        },
+
+        "SEC^1(SIM_{yao})-unrolled": {
+            "oracles": [
+                ["BITS_1", "SETBIT"],
+                ["AKEYS_1", "GETA^{out}"],
+                ["GB^1_{yao,1}", "GBL_1"],
+                ["GB^1_{yao,2}", "GBL_2"],
+                ["GB^1_{yao,d}", "GBL_d"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+            "graph": {
+                "GB^1_{yao,1}": [
+                    ["AKEYS_1", "GETA^{in}"],
+                    ["AKEYS_1", "GETINA^{in}"],
+                    ["EV_1", "EVAL_1"],
+                    ["AKEYS_2", "GETA^{out}"]
+                ],
+                "GB^1_{yao,2}": [
+                    ["AKEYS_2", "GETA^{in}"],
+                    ["AKEYS_2", "GETINA^{in}"],
+                    ["EV_2", "EVAL_2"],
+                    ["AKEYS_3", "GETA^{out}"]
+                ],
+                "GB^1_{yao,d}": [
+                    ["AKEYS_d", "GETA^{in}"],
+                    ["AKEYS_d", "GETINA^{in}"],
+                    ["EV_d", "EVAL_d"],
+                    ["KEYS", "GETA^{out}"]
+                ],
+
+
+                "EV_1": [
+                    ["BITS_1", "GETBIT"],
+                    ["BITS_2", "SETBIT"]
+                ],
+                "EV_2": [
+                    ["BITS_2", "GETBIT"],
+                    ["BITS_3", "SETBIT"]
+                ],
+                "EV_d": [
+                    ["BITS_d", "GETBIT"],
+                    ["KEYS", "SETBIT"]
+                ],
+
+                "AKEYS_1": [
+                    ["BITS_1", "CHECK"]
+                ],
+                "AKEYS_2": [
+                    ["BITS_2", "CHECK"]
+                ],
+                "AKEYS_3": [
+                    ["BITS_3", "CHECK"]
+                ],
+                "AKEYS_d": [
+                    ["BITS_d", "CHECK"]
+                ],
+
+                "BITS_1": [],
+                "BITS_2": [],
+                "BITS_3": [],
+                "BITS_d": [],
+
+                "KEYS": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 90, "height": 430 }, "GB^1_{yao,1}": { "x": 160, "y": 70, "width": 90, "height": 50 }, "GB^1_{yao,2}": { "x": 160, "y": 170, "width": 90, "height": 50 }, "GB^1_{yao,d}": { "x": 160, "y": 350, "width": 90, "height": 50 }, "EV_1": { "x": 440, "y": 80, "width": 90, "height": 40 }, "EV_2": { "x": 440, "y": 180, "width": 90, "height": 40 }, "EV_d": { "x": 440, "y": 360, "width": 90, "height": 40 }, "AKEYS_1": { "x": 310, "y": 20, "width": 90, "height": 50 }, "AKEYS_2": { "x": 310, "y": 120, "width": 90, "height": 50 }, "AKEYS_3": { "x": 310, "y": 220, "width": 90, "height": 50 }, "AKEYS_d": { "x": 310, "y": 310, "width": 90, "height": 50 }, "BITS_1": { "x": 710, "y": 10, "width": 90, "height": 60 }, "BITS_2": { "x": 710, "y": 110, "width": 90, "height": 60 }, "BITS_3": { "x": 710, "y": 210, "width": 90, "height": 60 }, "BITS_d": { "x": 710, "y": 300, "width": 90, "height": 60 }, "KEYS": { "x": 710, "y": 380, "width": 90, "height": 60 } },
+                "edges": { "@oracles_interface": { "AKEYS_1": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,1}": "exitX=0.999;exitY=0.222;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,2}": "entryX=0;entryY=0.5;entryPerimeter=1;exitX=0.888;exitY=0.444;exitDx=0;exitDy=0;", "GB^1_{yao,d}": "exitX=0.999;exitY=0.888;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "KEYS": "exitX=0.555;exitY=0.555;entryX=0.111;entryY=0.777;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "BITS_1": "entryX=0.111;entryY=0.333;entryDx=0;entryDy=0;exitX=0.999;exitY=0.025;exitDx=0;" }, "GB^1_{yao,1}": { "AKEYS_1": "exitX=0.888;exitY=0.333;entryX=0.111;entryY=0.666;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "EV_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "AKEYS_2": "exitX=0.888;exitY=0.666;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "GB^1_{yao,2}": { "AKEYS_2": "exitX=0.999;exitY=0.222;entryX=0.111;entryY=0.666;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "EV_2": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "AKEYS_3": "exitX=0.888;exitY=0.666;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "GB^1_{yao,d}": { "AKEYS_d": "exitX=0.999;exitY=0.222;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_d": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "entryX=0;entryY=0.666;entryDx=0;entryDy=0;exitX=0.888;exitY=0.777;exitDx=0.;exitDy=0;" }, "EV_1": { "BITS_1": "exitX=0.777;exitY=0.333;entryX=0.222;entryY=0.666;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "BITS_2": "exitX=0.999;exitY=0.777;entryX=0.111;entryY=0.333;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "EV_2": { "BITS_2": "exitX=0.888;exitY=0.333;entryX=0.111;entryY=0.666;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "BITS_3": "exitX=0.777;exitY=0.666;entryX=0;entryY=0.333;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "EV_d": { "BITS_d": "exitX=0.888;exitY=0.333;entryX=0.111;entryY=0.666;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS": "exitX=0.999;exitY=0.777;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "AKEYS_1": { "BITS_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.555;entryDx=0;entryDy=0;" }, "AKEYS_2": { "BITS_2": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "AKEYS_3": { "BITS_3": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "AKEYS_d": { "BITS_d": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" } }
+            }
+        },
+
+        "\\mathcal{R}^i_{circ}{\\rightarrow}LSEC^1(GB_{yao,i})": {
+            "oracles": [
+                ["KEYS_1", "GETA^{out}"],
+                ["KEYS_1", "SETBIT"],
+                ["GB^1_{yao,1}", "GBL_1"],
+                ["GB^1_{yao,i-1}", "GBL_{i-1}"],
+                ["GB^1_{yao,i}", "GBL_i"],
+                ["GB^0_{yao,i+1}", "GBL_{i+1}"],
+                ["GB^0_{yao,i+2}", "GBL_{i+2}"],
+                ["GB^0_{yao,d}", "GBL_d"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+            "graph": {
+                "KEYS_1": [],
+                "KEYS": [],
+                "KEYS_2": [],
+                "KEYS_{i-1}": [],
+                "KEYS_i": [],
+                "KEYS_{i+1}": [],
+                "KEYS_{i+2}": [],
+                "KEYS_{i+3}": [],
+                "KEYS_d": [],
+
+                "GB^1_{yao,1}": [
+                    ["KEYS_1", "GETA^{in}"],
+                    ["KEYS_1", "GETINA^{in}"],
+                    ["EV_1", "EVAL"],
+                    ["KEYS_2", "GETA_{out}"]
+                ],
+                "EV_1": [
+                    ["KEYS_1", "GETBIT"],
+                    ["KEYS_2", "SETBIT"]
+                ],
+
+                "GB^1_{yao,i-1}": [
+                    ["KEYS_{i-1}", "GETA^{in}"],
+                    ["KEYS_{i-1}", "GETINA^{in}"],
+                    ["EV_{i-1}", "EVAL"],
+                    ["KEYS_i", "GETA_{out}"]
+                ],
+                "EV_{i-1}": [
+                    ["KEYS_{i-1}", "GETBIT"],
+                    ["KEYS_i", "SETBIT"]
+                ],
+
+                "GB^1_{yao,i}": [
+                    ["KEYS_i", "GETA^{in}"],
+                    ["KEYS_i", "GETINA^{in}"],
+                    ["EV_i", "EVAL"],
+                    ["KEYS_{i+1}", "GETA_{out}"]
+                ],
+                "EV_i": [
+                    ["KEYS_i", "GETBIT"],
+                    ["KEYS_{i+1}", "SETBIT"]
+                ],
+
+                "GB^0_{yao,i+1}": [
+                    ["KEYS_{i+1}", "GETKEYS^{in}"],
+                    ["KEYS_{i+2}", "GETKEYS^{out}"]
+                ],
+                "GB^0_{yao,i+2}": [
+                    ["KEYS_{i+2}", "GETKEYS^{in}"],
+                    ["KEYS_{i+3}", "GETKEYS^{out}"]
+                ],
+                "GB^0_{yao,d}": [
+                    ["KEYS_d", "GETKEYS^{in}"],
+                    ["KEYS", "GETKEYS^{out}"]
+                ]
+
+            },
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 660 }, "KEYS_1": { "x": 550, "y": 10, "width": 90, "height": 40 }, "KEYS": { "x": 550, "y": 610, "width": 90, "height": 40 }, "KEYS_2": { "x": 550, "y": 100, "width": 90, "height": 40 }, "KEYS_{i-1}": { "x": 550, "y": 160, "width": 90, "height": 40 }, "KEYS_i": { "x": 550, "y": 260, "width": 90, "height": 40 }, "KEYS_{i+1}": { "x": 550, "y": 340, "width": 90, "height": 40 }, "KEYS_{i+2}": { "x": 550, "y": 430, "width": 90, "height": 40 }, "KEYS_{i+3}": { "x": 550, "y": 510, "width": 90, "height": 40 }, "KEYS_d": { "x": 550, "y": 560, "width": 90, "height": 40 }, "GB^1_{yao,1}": { "x": 160, "y": 50, "width": 90, "height": 60 }, "EV_1": { "x": 410, "y": 60, "width": 90, "height": 40 }, "GB^1_{yao,i-1}": { "x": 160, "y": 200, "width": 90, "height": 60 }, "EV_{i-1}": { "x": 410, "y": 210, "width": 90, "height": 40 }, "GB^1_{yao,i}": { "x": 160, "y": 290, "width": 90, "height": 60 }, "EV_i": { "x": 410, "y": 300, "width": 90, "height": 40 }, "GB^0_{yao,i+1}": { "x": 160, "y": 380, "width": 90, "height": 60 }, "GB^0_{yao,i+2}": { "x": 160, "y": 460, "width": 90, "height": 60 }, "GB^0_{yao,d}": { "x": 160, "y": 570, "width": 90, "height": 60 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=1;exitY=0.035;entryX=0;entryY=0.15;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "GB^1_{yao,1}": "exitX=0.7;exitY=0.35;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,i-1}": "exitX=0.65;exitY=0.45;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,i}": "entryX=0;entryY=0.5;entryPerimeter=1;exitX=1;exitY=0.45;exitDx=0;exitDy=0;", "GB^0_{yao,i+1}": "exitX=0.7;exitY=0.55;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^0_{yao,i+2}": "exitX=0.95;exitY=0.7;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^0_{yao,d}": "exitX=0.8;exitY=0.75;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "KEYS": "exitX=1;exitY=0.98;entryX=0.1;entryY=0.8;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^1_{yao,1}": { "KEYS_1": "exitX=0.7;exitY=0.35;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS_2": "exitX=0.7;exitY=0.65;entryX=0;entryY=0.65;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "EV_1": { "KEYS_1": "exitX=0.75;exitY=0.4;entryX=0;entryY=0.85;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_2": "exitX=0.65;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" }, "GB^1_{yao,i-1}": { "KEYS_{i-1}": "exitX=0.85;exitY=0.25;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_{i-1}": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS_i": "exitX=0.65;exitY=0.6;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV_{i-1}": { "KEYS_{i-1}": "exitX=0.65;exitY=0.45;entryX=0;entryY=0.85;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_i": "exitX=0.65;exitY=0.6;entryX=0;entryY=0.2;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "GB^1_{yao,i}": { "KEYS_i": "exitX=0.65;exitY=0.4;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_i": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS_{i+1}": "exitX=0.7;exitY=0.65;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV_i": { "KEYS_i": "exitX=0.75;exitY=0.4;entryX=0.05;entryY=0.8;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_{i+1}": "exitX=0.85;exitY=0.65;entryX=0.05;entryY=0.2;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "GB^0_{yao,i+1}": { "KEYS_{i+1}": "exitX=0.75;exitY=0.4;entryX=0.05;entryY=0.8;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_{i+2}": "exitX=0.85;exitY=0.6;entryX=0;entryY=0.25;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "GB^0_{yao,i+2}": { "KEYS_{i+2}": "exitX=0.7;exitY=0.45;entryX=0.05;entryY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS_{i+3}": "exitX=0.9;exitY=0.65;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "GB^0_{yao,d}": { "KEYS_d": "exitX=0.85;exitY=0.4;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "KEYS": "exitX=0.9;exitY=0.65;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" } }
+            }
+        },
+
+
+        "LSEC^1_{1..d}(GB^1_{yao})": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["GB^1_{yao,1}", "GBL_1"],
+                ["GB^1_{yao,2}", "GBL_2"],
+                ["GB^1_{yao,d}", "GBL_d"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "GB^1_{yao,1}": [
+                    ["KEYS_1", "GETA^{in}"],
+                    ["KEYS_1", "GETINA^{in}"],
+                    ["EV_1", "EVAL_1"],
+                    ["KEYS_2", "GETA^{out}"]
+                ],
+                "GB^1_{yao,2}": [
+                    ["KEYS_2", "GETA^{in}"],
+                    ["KEYS_2", "GETINA^{in}"],
+                    ["EV_2", "EVAL_2"],
+                    ["KEYS_3", "GETA^{out}"]
+                ],
+                "GB^1_{yao,d}": [
+                    ["KEYS_d", "GETA^{in}"],
+                    ["KEYS_d", "GETINA^{in}"],
+                    ["EV_d", "EVAL_d"],
+                    ["KEYS", "GETA^{out}"]
+                ],
+
+                "EV_1": [
+                    ["KEYS_1", "GETBIT"],
+                    ["KEYS_2", "SETBIT"]
+                ],
+                "EV_2": [
+                    ["KEYS_2", "GETBIT"],
+                    ["KEYS_3", "SETBIT"]
+                ],
+                "EV_d": [
+                    ["KEYS_d", "GETBIT"],
+                    ["KEYS", "SETBIT"]
+                ],
+
+                "KEYS_1": [],
+                "KEYS_2": [],
+                "KEYS_3": [],
+                "KEYS_d": [],
+
+                "KEYS": []
+            },
+
+            "ghost": {
+                "KEYS_3": { "x": 190, "y": 250, "style": "exitX=0.999;exitY=0.05;entryX=0.111;entryY=0.7;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" },
+                "KEYS_d": { "x": 190, "y": 280, "style": "exitX=0.999;exitY=0.05;entryX=0.111;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 30, "height": 420 }, "GB^1_{yao,1}": { "x": 100, "y": 50, "width": 90, "height": 70 }, "GB^1_{yao,2}": { "x": 100, "y": 150, "width": 90, "height": 70 }, "GB^1_{yao,d}": { "x": 100, "y": 300, "width": 90, "height": 70 }, "EV_1": { "x": 350, "y": 60, "width": 90, "height": 40 }, "EV_2": { "x": 350, "y": 160, "width": 90, "height": 40 }, "EV_d": { "x": 340, "y": 320, "width": 90, "height": 40 }, "KEYS_1": { "x": 490, "y": 10, "width": 90, "height": 40 }, "KEYS_2": { "x": 490, "y": 110, "width": 90, "height": 40 }, "KEYS_3": { "x": 490, "y": 210, "width": 90, "height": 40 }, "KEYS_d": { "x": 490, "y": 280, "width": 90, "height": 40 }, "KEYS": { "x": 490, "y": 360, "width": 90, "height": 40 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.999;exitY=0.05;entryX=0.111;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "GB^1_{yao,1}": "exitX=0.999;exitY=0.222;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,2}": "exitX=0.999;exitY=0.444;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "GB^1_{yao,d}": "exitX=0.777;exitY=0.666;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "KEYS": "exitX=0.999;exitY=0.935;entryX=0;entryY=0.777;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB^1_{yao,1}": { "KEYS_1": "exitX=0.888;exitY=0.222;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS_2": "exitX=0.777;exitY=0.666;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "GB^1_{yao,2}": { "KEYS_2": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_2": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS_3": "exitX=0.888;exitY=0.777;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "GB^1_{yao,d}": { "KEYS_d": "exitX=0.888;exitY=0.222;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "EV_d": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.888;exitY=0.777;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV_1": { "KEYS_1": "exitX=0.888;exitY=0.333;entryX=0.222;entryY=0.666;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS_2": "exitX=0.888;exitY=0.666;entryX=0;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "EV_2": { "KEYS_2": "exitX=0.999;exitY=0.222;entryX=0.222;entryY=0.666;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS_3": "exitX=0.888;exitY=0.666;entryX=0.111;entryY=0.333;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "EV_d": { "KEYS_d": "exitX=0.999;exitY=0.222;entryX=0.222;entryY=0.666;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS": "exitX=0.999;exitY=0.777;entryX=0.222;entryY=0.333;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" } }
+            }
+        },
+
+
+        "LSEC^0_i(GB^0_{yao,i})-with-GB^0_{yao,i}": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["MODGB_i", "GBL_i"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "MODGB_i": [
+                    ["MODDENC", "DENC"]
+                ],
+                "MODDENC": [
+                    ["ENC^0_{1..n}", "ENC"],
+                    ["KEYS", "GETKEYS^{out}"]
+                ],
+                "ENC^0_{1..n}": [
+                    ["KEYS_1", "GETKEYS^{in}"]
+                ],
+                "KEYS_1": [],
+                "KEYS": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 10, "height": 180 }, "MODGB_i": { "x": 70, "y": 80, "width": 90, "height": 40 }, "MODDENC": { "x": 230, "y": 80, "width": 90, "height": 40 }, "ENC^0_{1..n}": { "x": 390, "y": 50, "width": 90, "height": 40 }, "KEYS_1": { "x": 560, "y": 10, "width": 90, "height": 40 }, "KEYS": { "x": 560, "y": 130, "width": 90, "height": 40 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.777;exitY=0.333;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "MODGB_i": "entryX=0;entryY=0.5;entryPerimeter=1;exitX=0.999;exitY=0.555;exitDx=0;exitDy=0;", "KEYS": "exitX=0.888;exitY=0.777;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "MODGB_i": { "MODDENC": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "MODDENC": { "ENC^0_{1..n}": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.888;exitY=0.666;entryX=0.222;entryY=0.333;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "ENC^0_{1..n}": { "KEYS_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0.111;entryY=0.666;entryDx=0;entryDy=0;" } }
+            }
+        },
+
+        "HYB_i": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["MODGB_i", "GBL_i"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "MODGB_i": [
+                    ["MODDENC", "DENC"]
+                ],
+                "MODDENC": [
+                    ["ENC^1_{1..n}", "ENC"],
+                    ["KEYS", "GETKEYS^{out}"]
+                ],
+                "ENC^1_{1..n}": [
+                    ["KEYS_1", "GETKEYS^{in}"],
+                    ["KEYS_1", "GETBIT"]
+                ],
+                "KEYS_1": [],
+                "KEYS": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 10, "height": 180 }, "MODGB_i": { "x": 70, "y": 80, "width": 90, "height": 40 }, "MODDENC": { "x": 230, "y": 80, "width": 90, "height": 40 }, "ENC^1_{1..n}": { "x": 390, "y": 50, "width": 90, "height": 40 }, "KEYS_1": { "x": 560, "y": 10, "width": 90, "height": 40 }, "KEYS": { "x": 560, "y": 130, "width": 90, "height": 40 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.777;exitY=0.333;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;", "MODGB_i": "entryX=0;entryY=0.5;entryPerimeter=1;exitX=0.999;exitY=0.555;exitDx=0;exitDy=0;", "KEYS": "exitX=0.888;exitY=0.777;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "MODGB_i": { "MODDENC": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "MODDENC": { "ENC^1_{1..n}": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.888;exitY=0.666;entryX=0.222;entryY=0.333;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" }, "ENC^1_{1..n}": { "KEYS_1": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0.111;entryY=0.666;entryDx=0;entryDy=0;" } }
+            }
+        },
+
+        "HYB_i-GDENC": {
+            "oracles": [
+                ["GDENC", "SETBIT"],
+                ["GDENC", "GETA^{out}"],
+                ["MODGB_i", "GBL_i"],
+                ["GDENC", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "MODGB_i": [
+                    ["GDENC", "DENC"]
+                ],
+                "GDENC": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": -10, "y": 0, "width": 20, "height": 140 }, "MODGB_i": { "x": 70, "y": 60, "width": 90, "height": 40 }, "GDENC": { "x": 230, "y": 0, "width": 420, "height": 150 } },
+                "edges": { "@oracles_interface": { "GDENC": "exitX=0.888;exitY=0.222;entryX=0.111;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "MODGB_i": "exitX=0.777;exitY=0.555;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "MODGB_i": { "GDENC": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.555;entryDx=0;entryDy=0;" } }
+            }
+        },
+
+        "LSEC^1_i(SIM_{yao,i})": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["MODGB_i", "GBL_i"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "MODGB_i": [
+                    ["SIM_{denc}", "DENC"]
+                ],
+                "SIM_{denc}": [
+                    ["EV", "EVAL"],
+                    ["KEYS", "GETA^{out}"],
+                    ["KEYS_1", "GETA^{in}"],
+                    ["KEYS_1", "GETINA^{in}"]
+                ],
+                "EV": [
+                    ["KEYS_1", "GETBIT"],
+                    ["KEYS", "SETBIT"]
+                ],
+                "KEYS_1": [],
+                "KEYS": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 10, "height": 200 }, "MODGB_i": { "x": 70, "y": 80, "width": 90, "height": 40 }, "SIM_{denc}": { "x": 230, "y": 60, "width": 90, "height": 80 }, "EV": { "x": 380, "y": 80, "width": 90, "height": 40 }, "KEYS_1": { "x": 560, "y": 10, "width": 90, "height": 40 }, "KEYS": { "x": 560, "y": 150, "width": 90, "height": 40 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "MODGB_i": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.999;exitY=0.888;exitDx=0;exitDy=0;entryX=0.111;entryY=0.666;entryDx=0;entryDy=0;" }, "MODGB_i": { "SIM_{denc}": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "SIM_{denc}": { "EV": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.888;exitY=0.777;exitDx=0;exitDy=0;entryX=0.222;entryY=0.444;entryDx=0;entryDy=0;", "KEYS_1": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV": { "KEYS_1": "exitX=0.666;exitY=0.444;entryX=0.222;entryY=0.666;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS": "exitX=0.666;exitY=0.555;entryX=0.111;entryY=0.222;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" } }
+            }
+        },
+
+        "LSEC^1_i(GB^1_{yao,i})-with-GB^1_{yao,i}": {
+            "oracles": [
+                ["KEYS_1", "SETBIT"],
+                ["KEYS_1", "GETA^{out}"],
+                ["MODGB_i", "GBL_i"],
+                ["KEYS", "GETKEYS^{in}"]
+            ],
+
+            "graph": {
+                "MODGB_i": [
+                    ["SIM_{denc}", "DENC"]
+                ],
+                "SIM_{denc}": [
+                    ["EV", "EVAL"],
+                    ["KEYS", "GETA^{out}"],
+                    ["KEYS_1", "GETA^{in}"],
+                    ["KEYS_1", "GETINA^{in}"]
+                ],
+                "EV": [
+                    ["KEYS_1", "GETBIT"],
+                    ["KEYS", "SETBIT"]
+                ],
+                "KEYS_1": [],
+                "KEYS": []
+            },
+
+            "layout": {
+                "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 200 }, "MODGB_i": { "x": 70, "y": 80, "width": 90, "height": 40 }, "SIM_{denc}": { "x": 230, "y": 60, "width": 90, "height": 80 }, "EV": { "x": 380, "y": 80, "width": 90, "height": 40 }, "KEYS_1": { "x": 560, "y": 10, "width": 90, "height": 40 }, "KEYS": { "x": 560, "y": 150, "width": 90, "height": 40 } },
+                "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.222;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "MODGB_i": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.999;exitY=0.888;exitDx=0;exitDy=0;entryX=0.111;entryY=0.666;entryDx=0;entryDy=0;" }, "MODGB_i": { "SIM_{denc}": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" }, "SIM_{denc}": { "EV": "exitX=0.5;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "exitX=0.888;exitY=0.777;exitDx=0;exitDy=0;entryX=0.222;entryY=0.444;entryDx=0;entryDy=0;", "KEYS_1": "exitX=0.999;exitY=0.111;entryX=0;entryY=0.5;entryPerimeter=1;exitDx=0;exitDy=0;" }, "EV": { "KEYS_1": "exitX=0.666;exitY=0.444;entryX=0.222;entryY=0.666;entryDx=0;entryDy=0;exitDx=0;exitDy=0;", "KEYS": "exitX=0.666;exitY=0.555;entryX=0.111;entryY=0.222;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" } }
+            }
+        }
+    }
+}

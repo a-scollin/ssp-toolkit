@@ -6,6 +6,10 @@ import {
   ReflexElement
 } from 'react-reflex'
 
+import {
+  mxWindow
+} from 'mxgraph-js';
+
 import "react-reflex/styles.css";
 
 
@@ -39,10 +43,11 @@ export default class Builder extends Component {
   }
 
   render() {
+
     return (      
       <ReflexContainer className="site-content" orientation="vertical">
       
-      <ReflexElement className="video-panels" flex={0.25} minSize="100">
+      <ReflexElement className="video-panels" flex={0.15} minSize="100">
       <form>
   <label>
     Graph input:
@@ -56,7 +61,7 @@ export default class Builder extends Component {
           <GraphView graphdata={this.state.graphdata}/>
         </ReflexElement>
         <ReflexSplitter />
-        <ReflexElement className="video-panels" flex={0.25} minSize="100">
+        <ReflexElement className="video-panels" flex={0.15} minSize="100">
 <Packages/>        
 </ReflexElement>
         
