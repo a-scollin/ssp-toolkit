@@ -6,9 +6,6 @@ import {
   ReflexElement
 } from 'react-reflex'
 
-import {
-  mxWindow
-} from 'mxgraph-js';
 
 import "react-reflex/styles.css";
 
@@ -19,7 +16,7 @@ import Packages from "./Packages";
 export default class Builder extends Component {
   constructor(props) {
     super(props);
-    this.state = {graphdata : null};    
+    this.state = {graphdata : null, modular_pkgs : null, selected : null};    
   }
 
   onChange(event) {
@@ -35,12 +32,31 @@ export default class Builder extends Component {
         return;
     }
     
-    this.setState({ graphdata: json_data });
+    this.setState({ graphdata: json_data }, function(){
+      this.createSelectItems();
+    });
     
+    
+
     };
   
     reader.readAsText(file);
   }
+
+  createSelectItems() {
+    let items = [];         
+    var i = 0;
+    for (var graphname in this.state.graphdata.modular_pkgs) {             
+         items.push(<option key= {i} value={graphname}>{graphname}</option>);   
+         i++;
+         //here I will be creating my options dynamically based on
+         //what props are currently passed to the parent component
+
+    }
+    
+    this.setState({modular_pkgs : items, selected : items[0].props.value})
+
+}  
 
   render() {
 
@@ -48,6 +64,9 @@ export default class Builder extends Component {
       <ReflexContainer className="site-content" orientation="vertical">
       
       <ReflexElement className="video-panels" flex={0.15} minSize="100">
+      <ReflexContainer orientation="horizontal">
+      <ReflexElement flex={0.2} minSize="100">
+
       <form>
   <label>
     Graph input:
@@ -55,10 +74,18 @@ export default class Builder extends Component {
   </label>
   <input type="submit" value="Reset" />
 </form>
+</ReflexElement>
+<ReflexSplitter/>
+<ReflexElement flex={0.2} minSize="100">
+<select onChange={(e) => this.setState({selected : e.target.value})} label="Select" multiple>
+       {this.state.modular_pkgs}
+  </select>
+</ReflexElement>
+</ReflexContainer>
   </ReflexElement>
   <ReflexSplitter />
         <ReflexElement className="workboard" minSize="50">
-          <GraphView graphdata={this.state.graphdata}/>
+          <GraphView selected={this.state.selected} graphdata={this.state.graphdata}/>
         </ReflexElement>
         <ReflexSplitter />
         <ReflexElement className="video-panels" flex={0.15} minSize="100">
