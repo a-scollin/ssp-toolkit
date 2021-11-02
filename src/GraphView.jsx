@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
 import {
   mxGraph,
-  mxRubberband,
+  mxWindow,
   mxHierarchicalLayout,
   mxClient,
   mxUtils,
@@ -54,6 +54,17 @@ export default class GraphView extends Component {
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
+
+      // // Enables tooltips, new connections and panning
+      // graph.setPanning(true);
+      // graph.setTooltips(false);
+      // graph.setConnectable(false);
+      // graph.setEnabled(false);
+      // graph.setEdgeLabelsMovable(false);
+      // graph.setVertexLabelsMovable(false);
+      // graph.setGridEnabled(false);
+      // graph.setAllowDanglingEdges(false);
+
     
       // styling
       var style = graph.getStylesheet().getDefaultVertexStyle();
@@ -91,19 +102,27 @@ export default class GraphView extends Component {
         for(var parsedgraph in this.state.graphdata.modular_pkgs){
           var first = true;
           for (var element in this.state.graphdata.modular_pkgs[parsedgraph].graph){
-            
-            var name = element;
-              var graphElement = graph.insertVertex(parent, null, name, 20, 20, 80, 30);
+         
+            var graphElement = graph.insertVertex(parent, null, element, 20, 20, 80, 30);            
               
-              dict[name] = graphElement;
+            dict[element] = graphElement;
 
             }
           
               for(var oracle in this.state.graphdata.modular_pkgs[parsedgraph].oracles){
-                
-                console.log(this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][0])
-
+              
                 graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[parsedgraph].oracles[oracle][0]]);
+              
+              }
+
+              for(var element in this.state.graphdata.modular_pkgs[parsedgraph].graph){
+              if (this.state.graphdata.modular_pkgs[parsedgraph].graph[element].length > 0){
+
+                for(var edge in this.state.graphdata.modular_pkgs[parsedgraph].graph[element]){
+                  graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[parsedgraph].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[parsedgraph].graph[element][edge][0]]);
+                }
+              }
+
               }
 
             break;
@@ -119,13 +138,16 @@ export default class GraphView extends Component {
         graph.getModel().endUpdate();
 
         // Creates a layout algorithm to be used with the graph
-        var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_EAST);
+        var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_WEST);
+
+        layout.intraCellSpacing=50;
+        layout.interRankCellSpacing=100;
 
         // Moves stuff wider apart than usual
-        layout.forceConstant = 140;
-        // if (dict["Adv"]) {
-        //     // layout.execute(parent, dict['Adv']);
-        // }
+        layout.forceConstant = 500;
+        if (dict.hasOwnProperty("Adv")) {
+            layout.execute(parent, dict['Adv']);
+        }
       
        
       }
