@@ -1,0 +1,165 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="KEYS_1" vertex="1" parent="1">
+      <mxGeometry x="390" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="KEYS_2" vertex="1" parent="1">
+      <mxGeometry x="390" y="110" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="KEYS_3" vertex="1" parent="1">
+      <mxGeometry x="390" y="220" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="KEYS_4" vertex="1" parent="1">
+      <mxGeometry x="390" y="330" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="GB^0_{yao,1}" vertex="1" parent="1">
+      <mxGeometry x="160" y="130" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="GB^0_{yao,2}" vertex="1" parent="1">
+      <mxGeometry x="160" y="240" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="GB^0_{yao,3}" vertex="1" parent="1">
+      <mxGeometry x="160" y="350" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="GB^0_{yao,d}" vertex="1" parent="1">
+      <mxGeometry x="160" y="460" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="KEYS_d" vertex="1" parent="1">
+      <mxGeometry x="390" y="440" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="KEYS" vertex="1" parent="1">
+      <mxGeometry x="390" y="550" width="80" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="" style="fillColor=none;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry y="45" width="10" height="550" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="SETBIT" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="22" y="88.57142857142857" />
+          <mxPoint x="85" y="50" />
+          <mxPoint x="315" y="50" />
+          <mxPoint x="378" y="11.666666666666668" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="GETA^{out}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="22" y="165.71428571428572" />
+          <mxPoint x="85" y="90" />
+          <mxPoint x="315" y="90" />
+          <mxPoint x="378" y="25" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="GBL_1" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="6">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="24" y="242.85714285714286" />
+          <mxPoint x="148" y="155" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="16" value="GBL_2" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="7">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="26" y="320" />
+          <mxPoint x="148" y="265" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="17" value="GBL_3" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="8">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="28" y="397.1428571428571" />
+          <mxPoint x="148" y="375" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="18" value="GBL_d" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="9">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="26" y="474.2857142857142" />
+          <mxPoint x="148" y="485" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="19" value="GETKEYS^{in}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="12" target="11">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="24" y="551.4285714285713" />
+          <mxPoint x="85" y="570" />
+          <mxPoint x="315" y="570" />
+          <mxPoint x="378" y="585" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="20" value="GETKEYS^{in}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="6" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="145" />
+          <mxPoint x="376" y="38.333333333333336" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="21" value="GETKEYS^{out}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="6" target="3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="165" />
+          <mxPoint x="378" y="125" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="22" value="GETKEYS^{in}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="7" target="3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="255" />
+          <mxPoint x="378" y="145" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="23" value="GETKEYS^{out}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="7" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="275" />
+          <mxPoint x="378" y="235" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="24" value="GETKEYS^{in}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="8" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="365" />
+          <mxPoint x="378" y="255" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="25" value="GETKEYS^{out}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="8" target="5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="385" />
+          <mxPoint x="378" y="355" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="26" value="GETKEYS^{in}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="9" target="10">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="475" />
+          <mxPoint x="378" y="465" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="27" value="GETKEYS^{out}" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="9" target="11">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="252" y="495" />
+          <mxPoint x="378" y="565" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

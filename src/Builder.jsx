@@ -36,8 +36,6 @@ export default class Builder extends Component {
       this.createSelectItems();
     });
     
-    
-
     };
   
     reader.readAsText(file);

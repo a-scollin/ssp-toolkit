@@ -2,27 +2,23 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
-import {
-  mxGraph,
-  mxHierarchicalLayout,
-  mxClient,
-  mxUtils,
-  mxEvent,
-  mxConstants,
-  mxEdgeStyle
-} from "mxgraph-js";
-
+import Moveable from "react-moveable";
 import 'react-reflex/styles.css'
-
 import { black } from "ansi-colors";
+
+var mx = require("mxgraph")({
+  mxImageBasePath: "./mxgraph/javascript/src/images",
+  mxBasePath: "../mxgraph/javascript/src"
+})
 
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
     this.state = {graphdata : props.graphdata, selected : props.selected, displayed : null};
     this.GraphRef = React.createRef()
-
   }
+  
+
 
   componentDidUpdate(prevProps){
     if(this.props.graphdata != prevProps.graphdata || this.props.selected != prevProps.selected){
@@ -43,18 +39,21 @@ export default class GraphView extends Component {
     if (this.state.graphdata){
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
-  
+
+    var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
+    wnd.setVisible(true);
+
     // Checks if the browser is supported
-    if (!mxClient.isBrowserSupported()) {
+    if (!mx.mxClient.isBrowserSupported()) {
       // Displays an error message if the browser is not supported.
-      mxUtils.error("Browser is not supported!", 200, false);
+      mx.mxUtils.error("Browser is not supported!", 200, false);
     } else {
       // Disables the built-in context menu
-      mxEvent.disableContextMenu(container);
+      mx.mxEvent.disableContextMenu(container);
 
       
       // Creates the graph inside the given container
-      var graph = new mxGraph(container);
+      var graph = new mx.mxGraph(container);
 
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
@@ -75,23 +74,23 @@ export default class GraphView extends Component {
     
       // styling
       var style = graph.getStylesheet().getDefaultVertexStyle();
-      style[mxConstants.STYLE_STROKECOLOR] = 'gray';
-      style[mxConstants.STYLE_STROKE] = 'gray';
-      style[mxConstants.STYLE_ROUNDED] = true;
-      style[mxConstants.STYLE_FILLCOLOR] = 'white';
-      style[mxConstants.STYLE_FONTCOLOR] = 'black';
-      style[mxConstants.STYLE_FONTSIZE] = '12';
-      style[mxConstants.STYLE_SPACING] = 4;
+      style[mx.mxConstants.STYLE_STROKECOLOR] = 'gray';
+      style[mx.mxConstants.STYLE_STROKE] = 'gray';
+      style[mx.mxConstants.STYLE_ROUNDED] = true;
+      style[mx.mxConstants.STYLE_FILLCOLOR] = 'white';
+      style[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
+      style[mx.mxConstants.STYLE_FONTSIZE] = '12';
+      style[mx.mxConstants.STYLE_SPACING] = 4;
 
       // edge style
       style = graph.getStylesheet().getDefaultEdgeStyle();
-      style[mxConstants.STYLE_STROKECOLOR] = '#0C0C0C';
-      style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
-      style[mxConstants.STYLE_ROUNDED] = true;
-      style[mxConstants.STYLE_FONTCOLOR] = 'black';
-      style[mxConstants.STYLE_FONTSIZE] = '10';
-      style[mxConstants.STYLE_STROKEWIDTH] = '1.25';
-      style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
+      style[mx.mxConstants.STYLE_STROKECOLOR] = '#0C0C0C';
+      style[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
+      style[mx.mxConstants.STYLE_ROUNDED] = true;
+      style[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
+      style[mx.mxConstants.STYLE_FONTSIZE] = '10';
+      style[mx.mxConstants.STYLE_STROKEWIDTH] = '1.25';
+      style[mx.mxConstants.STYLE_EDGE] = mx.mxEdgeStyle.ElbowConnector;
 
         // run through each element in json        
       
@@ -148,7 +147,7 @@ export default class GraphView extends Component {
         graph.getModel().endUpdate();
 
         // Creates a layout algorithm to be used with the graph
-        var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_WEST);
+        var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
 
         layout.intraCellSpacing=60;
         layout.interRankCellSpacing=150;
@@ -178,7 +177,13 @@ export default class GraphView extends Component {
 
 
         this.setState({displayed : graph})
-        
+
+
+        // No windows seem to be working
+        // var encoder = new mx.mxCodec();
+        // var node = encoder.encode(graph.getModel());
+        // mx.mxUtils.popup(mx.mxUtils.getPrettyXml(node), true);
+                
        
       }  
           }
@@ -191,10 +196,27 @@ export default class GraphView extends Component {
 
     }
   }
+
+
+
   render() {
   
       return (
+        
         <div className="graphview-container">
+
+  <Moveable
+  target={document.querySelector(".graph-container")}
+  container={null}
+  origin={true}
+
+  /* Resize event edges */
+  edge={false}
+
+  /* draggable */
+  draggable={true}
+  throttleDrag={0}
+/>
       <div ref={this.GraphRef} className="graph-container" id="divGraph" />
       </div>
       );
