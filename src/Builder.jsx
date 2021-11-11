@@ -9,7 +9,6 @@ import {
 
 import "react-reflex/styles.css";
 
-
 import GraphView from "./GraphView";
 import Packages from "./Packages";
 
@@ -59,8 +58,8 @@ export default class Builder extends Component {
   render() {
 
     return (      
-      <ReflexContainer className="site-content" orientation="vertical">
       
+      <ReflexContainer className="site-content" orientation="vertical">
       <ReflexElement className="video-panels" flex={0.15} minSize="100">
       <ReflexContainer orientation="horizontal">
       <ReflexElement flex={0.2} minSize="100">
@@ -87,7 +86,7 @@ export default class Builder extends Component {
         </ReflexElement>
         <ReflexSplitter />
         <ReflexElement className="video-panels" flex={0.15} minSize="100">
-<Packages/>        
+<Packages graphdata={this.state.graphdata}/>        
 </ReflexElement>
         
       </ReflexContainer>

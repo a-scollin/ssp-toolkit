@@ -9,9 +9,13 @@ import Builder from './Builder'
 import './styles.css';
 
 
+
         function App() {
 return ( 
+  <>
 <Builder/>
+
+  </>
     );
 }
 

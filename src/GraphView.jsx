@@ -8,7 +8,7 @@ import { black } from "ansi-colors";
 
 var mx = require("mxgraph")({
   mxImageBasePath: "./mxgraph/javascript/src/images",
-  mxBasePath: "../mxgraph/javascript/src"
+  mxBasePath: "./mxgraph/javascript/src"
 })
 
 export default class GraphView extends Component {
@@ -37,11 +37,12 @@ export default class GraphView extends Component {
     }
 
     if (this.state.graphdata){
+      
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
-    var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
-    wnd.setVisible(true);
+    // var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
+    // wnd.setVisible(true);
 
     // Checks if the browser is supported
     if (!mx.mxClient.isBrowserSupported()) {
@@ -204,19 +205,6 @@ export default class GraphView extends Component {
       return (
         
         <div className="graphview-container">
-
-  <Moveable
-  target={document.querySelector(".graph-container")}
-  container={null}
-  origin={true}
-
-  /* Resize event edges */
-  edge={false}
-
-  /* draggable */
-  draggable={true}
-  throttleDrag={0}
-/>
       <div ref={this.GraphRef} className="graph-container" id="divGraph" />
       </div>
       );
