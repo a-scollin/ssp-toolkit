@@ -1,4 +1,186 @@
 {
+    "monolithic_pkgs": {
+        "KEYS": {
+            "oracles": {
+                "SETBIT": {
+                    "code": "@assert z_j = @bot;z_j @gets z;@return ();",
+                    "params": ["j", "z"]
+                },
+
+                "GETBIT": {
+                    "code": "@assert z_j \\neq @bot; ;@return z_j",
+                    "params": ["j"]
+                },
+
+                "GETA^{out}": {
+                    "code": "@assert z_j \\neq @bot;\\mathsf{aflag} @gets 1;@if Z_j = @bot @then;    Z_j(0) @sample \\{0,1\\}^\\lambda;    Z_j(1) @sample \\{0,1\\}^\\lambda;@return Z_j(z_j);",
+                    "params": ["j"]
+                },
+
+                "GETA^{in}": {
+                    "code": "@assert z_j \\neq @bot;@assert \\mathsf{aflag} = 1;@assert Z_j @neq @bot;@return Z_j(z_j);",
+                    "params": ["j"]
+                },
+
+                "GETKEYS^{in}": {
+                    "code": "@assert z_j @neq @bot;@return z_j;",
+                    "params": ["j"]
+                },
+
+                "GETKEYS^{out}": {
+                    "code": "@assert z_j = @bot;z_j @gets z;@return ();",
+                    "params": ["j", "z"]
+                }
+            }
+
+        },
+
+
+        "MODGB": {
+            "oracles": {
+                "GBL": {
+                    "params": ["\\ell", "r", "op", "j"],
+                    "code": "@assert \\tilde{C} \\neq @bot;@assert \\ell, r, op @neq @bot;@assert |\\ell|, |r|, |op| = n;@for j = 1..n @do;    (\\ell,r,op)  @gets  (\\ell(j),r(j),op(j));    \\tilde{C}_j @gets DENC(\\ell,r,op);\\tilde{C} @gets \\tilde{C}_{1..n};@return \\tilde{C};"
+                }
+            }
+
+        },
+
+
+
+        "MODDENC": {
+            "oracles": {
+                "DENC": {
+                    "code": "\\tilde{g}_j @gets @bot;Z_j^{out} @gets GETKEYS^{out}(j);@for (b_{\\ell},b_r) \\in \\{0,1\\}^2 @do;@> b_j @gets op(b_{\\ell}, b_r);@> k^0_j @gets Z^{out}_j(b_j);@> c^0_{in} @gets ENC(b^{\\ell},k^0_j,0^\\lambda);@> c^1_{in} @gets ENC(b^{\\ell},0^\\lambda,0^\\lambda);@> c @sample ENC(b^r, c^0_{in}, c^1_{in});@> \\tilde{g}_j @gets \\tilde{g}_j \\cup c;@return \\tilde{g}_j;",
+                    "params": ["\\ell", "r", "op", "j"]
+                }
+            }
+
+        },
+
+        "SIM_{denc}": {
+            "oracles": {
+                "DENC": {
+                    "code": "\\tilde{g}_j @gets @bot;EVAL(j,\\ell,r,op);S_j^{out}(0) @gets GETA^{out}(j);S_r^{in}(0) @gets GETA^{in}(r);S_r^{in}(1) @gets GETINA^{in}(r);S_{\\ell}^{in}(0) @gets GETA^{in}(\\ell);S_{\\ell}^{in}(1) @gets GETINA^{in}(\\ell);@for (d_{\\ell},d_r) \\in \\{0,1\\}^2 @do;@> @if d_{\\ell} = d_r = 0 @then;@> @> k_j @gets S^{out}_j(0);@> @else k_j @gets 0^{\\lambda};@> k_r @gets S^{in}_r(d_r);@> c_{in} @sample enc_{k_r}(k_j);@> k_{\\ell} @gets S^{in}_{\\ell}(d_{\\ell});@> c @sample enc_{k_{\\ell}}(c_{in});@> \\tilde{g}_j @gets \\tilde{g}_j \\cup c;@return \\tilde{g}_j;",
+                    "params": ["\\ell", "r", "op", "j"]
+                }
+            }
+
+        },
+
+
+
+        "GB_{yao}": {
+            "oracles": {
+                "GBL_{1..d}": {
+                    "code": "",
+                    "params": []
+                }
+            }
+
+        },
+
+        "GB^0_{yao}": {
+            "oracles": {
+                "GBL": {
+                    "code": "",
+                    "params": []
+                }
+            }
+
+        },
+
+        "GB^1_{yao}": {
+            "oracles": {
+                "GBL": {
+                    "code": "",
+                    "params": []
+                }
+            }
+
+        },
+
+        "AKEYS": {
+            "oracles": {
+                "GETA^{in}": {
+                    "code": "",
+                    "params": []
+                },
+
+                "GETINA^{in}": {
+                    "code": "",
+                    "params": []
+                },
+
+                "GETA^{out}": {
+                    "code": "",
+                    "params": []
+                }
+
+            }
+
+        },
+
+
+        "ENC^0": {
+            "oracles": {
+                "ENC": {
+                    "code": "Z^{in} @gets GETKEYS^{in}();k @gets Z^{in}(b');c @sample enc_k(t^0);@return c;",
+                    "params": ["b'", "t^0", "t^1"]
+                }
+            }
+
+        },
+
+
+
+        "ENC^1": {
+            "oracles": {
+                "ENC": {
+                    "code": "Z^{in} @gets GETKEYS^{in}();z @gets GETBIT();k @gets Z^{in}(b');@if b' \\neq z @then;    c @sample enc_k(t^1);c @sample enc_k(t^0);@return c;",
+                    "params": ["b'", "t^0", "t^1"]
+                }
+            }
+
+        },
+
+
+        "BITS": {
+            "oracles": {
+                "CHECK": {
+                    "code": "@assert z_j \\neq @bot;",
+                    "params": ["j"]
+                },
+
+                "GETBIT": {
+                    "code": "@assert z_j \\neq @bot; ;@return z_j",
+                    "params": ["j"]
+                },
+
+                "SETBIT": {
+                    "code": "@assert z_j = @bot;z_j @gets z;@return ();",
+                    "params": ["j", "z"]
+                }
+
+            }
+
+        },
+
+
+        "EV": {
+            "oracles": {
+                "EVAL": {
+                    "code": "z^{in}_{\\ell} @gets GETBIT(\\ell);z^{in}_{r} @gets GETBIT(r);z^{out}_{j} @gets op(z^{in}_{\\ell}, z^{in}_{r});SETBIT(j, z^{out}_{j});@return ();",
+                    "params": ["j", "\\ell", "r", "op"]
+                }
+
+            }
+
+        }
+
+
+    },
+
     "modular_pkgs": {
         "SEC^0(GB_{yao})": {
             "oracles": [

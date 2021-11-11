@@ -21,7 +21,10 @@ export default class GraphView extends Component {
 
 
   componentDidUpdate(prevProps){
+    
     if(this.props.graphdata != prevProps.graphdata || this.props.selected != prevProps.selected){
+      console.log(this.props)
+    
       this.setState({graphdata : this.props.graphdata, selected : this.props.selected},() => {
         this.LoadGraph(this.props.selected);
       });
@@ -37,7 +40,7 @@ export default class GraphView extends Component {
     }
 
     if (this.state.graphdata){
-      
+
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
@@ -52,7 +55,8 @@ export default class GraphView extends Component {
       // Disables the built-in context menu
       mx.mxEvent.disableContextMenu(container);
 
-      
+      var editor = new mx.mxEditor(container);
+
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);
 
@@ -147,6 +151,8 @@ export default class GraphView extends Component {
         // Updates the display
         graph.getModel().endUpdate();
 
+      }
+
         // Creates a layout algorithm to be used with the graph
         var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
 
@@ -176,6 +182,29 @@ export default class GraphView extends Component {
         // Translates graph down y axis 10 so it's not cut off! 
         graph.getView().setTranslate(0,10);
 
+				// Configures automatic expand on mouseover
+				graph.popupMenuHandler.autoExpand = true;
+        
+			    // Installs context menu
+				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)
+				{
+					if(cell != null){
+					if(cell.hasOwnProperty("vertex")) {
+            if(cell.vertex){
+              var transform_submenu = menu.addItem('Apply Transformation', null, null);
+              menu.addItem('Expand', null, function()
+				    {
+              this.props.expand(cell);
+				    }.bind(this), transform_submenu);
+					menu.addItem('Decompose', null, function()
+				    {
+						alert('Decompose');
+				    }, transform_submenu);
+          menu.addItem('Compose', null, function()
+				    {
+						alert('Compose');
+				    }, transform_submenu);
+        }}}}.bind(this);
 
         this.setState({displayed : graph})
 
@@ -186,7 +215,7 @@ export default class GraphView extends Component {
         // mx.mxUtils.popup(mx.mxUtils.getPrettyXml(node), true);
                 
        
-      }  
+        
           }
 
 

@@ -51,7 +51,9 @@ export default class Packages extends Component {
 
           ]
           
-        }
+        },
+        displayAlign: "left", 
+        inlineAlign: "left"
       };
   }
 
@@ -94,7 +96,6 @@ export default class Packages extends Component {
             }
             }
 
-            console.log("here!")
             var codeItems = Object.keys(code).map((key, index) => {
                 return(
                 <div key={key}>
@@ -102,14 +103,14 @@ export default class Packages extends Component {
                     <hr/>
                     <MathJaxContext config={this.config} key={key+"context"}>
                 {Object.keys(code[key]).map((key1,index1) => {
-                    return(<><h2>{key1}</h2><hr/><MathJax>$${'\\displaylines{' + code[key][key1] + '}'}$$</MathJax><hr/></>)  
+                    return(<><h2>{key1}</h2><hr/><MathJax dynamic>$${'\\displaylines{' + code[key][key1] + '}'}$$</MathJax><hr/></>)  
                 })}
                 </MathJaxContext>
                 </div>
                 )
             });
                
-            this.setState({listItems : codeItems}, () => console.log(this.state.listItems))
+            this.setState({listItems : codeItems})
         }
     }
 
