@@ -57,7 +57,6 @@ h2 {
 }
 
 .workboard {
-    display: flex;
     background: #cfc;
     align-items: center;
     justify-content: center;

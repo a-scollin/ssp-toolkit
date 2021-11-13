@@ -14,22 +14,37 @@ var mx = require("mxgraph")({
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
-    this.state = {graphdata : props.graphdata, selected : props.selected, displayed : null};
+    this.state = {graphdata : props.graphdata, selected : props.selected, transform : props.transform, displayed : null};
     this.GraphRef = React.createRef()
+   console.log("INIT")
+  
   }
   
 
+  componentDidMount(prevProps){
+console.log("mount")
+ console.log(prevProps)
+console.log(this.props)
+console.log(this.state)
+
+if (this.state.graphdata != {} && this.state.selected != null){
+  this.LoadGraph(this.state.selected)
+}
+  }
 
   componentDidUpdate(prevProps){
-    
+
+console.log("update")
+console.log(prevProps)
+console.log(this.props)
+console.log(this.state)
+
     if(this.props.graphdata != prevProps.graphdata || this.props.selected != prevProps.selected){
-      console.log(this.props)
-    
       this.setState({graphdata : this.props.graphdata, selected : this.props.selected},() => {
         this.LoadGraph(this.props.selected);
       });
-      
     }
+     
   }
 
   LoadGraph(selected) {
@@ -55,8 +70,6 @@ export default class GraphView extends Component {
       // Disables the built-in context menu
       mx.mxEvent.disableContextMenu(container);
 
-      var editor = new mx.mxEditor(container);
-
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);
 
@@ -66,13 +79,13 @@ export default class GraphView extends Component {
 
 
       // Enables tooltips, new connections and panning
-      graph.setPanning(true);
+      graph.setPanning(false);
       graph.setTooltips(false);
       graph.setConnectable(false);
       graph.setEnabled(true);
       graph.setEdgeLabelsMovable(false);
-      graph.setVertexLabelsMovable(true);
-      graph.setGridEnabled(false);
+      graph.setVertexLabelsMovable(false);
+      graph.setGridEnabled(true);
       graph.setAllowDanglingEdges(false);
       graph.setDisconnectOnMove(false);
 
@@ -156,9 +169,9 @@ export default class GraphView extends Component {
         // Creates a layout algorithm to be used with the graph
         var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
 
-        layout.intraCellSpacing=60;
-        layout.interRankCellSpacing=150;
-        layout.parallelEdgeSpacing=40;
+        layout.intraCellSpacing=80;
+        layout.interRankCellSpacing=170;
+        layout.parallelEdgeSpacing=50;
         // Moves stuff wider apart than usual
         layout.forceConstant = 500;
         layout.execute(parent, dict['Adv']);
@@ -198,8 +211,8 @@ export default class GraphView extends Component {
 				    }.bind(this), transform_submenu);
 					menu.addItem('Decompose', null, function()
 				    {
-						alert('Decompose');
-				    }, transform_submenu);
+              this.props.decompose(cell);
+            }.bind(this), transform_submenu);
           menu.addItem('Compose', null, function()
 				    {
 						alert('Compose');

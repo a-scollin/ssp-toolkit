@@ -17,11 +17,12 @@ import '@nosferatu500/react-sortable-tree/style.css'; // This only needs to be i
 import GraphView from "./GraphView";
 import Packages from "./Packages";
 import Latex from "./Latex";
+import { height } from "dom-helpers";
 
 export default class Builder extends Component {
   constructor(props) {
     super(props);
-    this.state = {graphdata : null, modular_pkgs : null, selected : null};    
+    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : null};    
   }
 
 
@@ -31,7 +32,9 @@ export default class Builder extends Component {
       if (cell.value.split("_{").length == 2){
         
         
+        
         if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){
+          
           
 
           this.state.modular_pkgs.forEach((element) => {
@@ -43,6 +46,7 @@ export default class Builder extends Component {
               
               this.setState({graphdata : expandedgraphdata}, () => {
                 element.children.push({title : "$$" + this.state.selected + " - Expanded on " + cell.value + "$$", graphname : this.state.selected + " - Expanded on " + cell.value,children : []});
+                this.setState({transformation : this.state.selected + " - Expanded on " + cell.value});
               })
 
             }
@@ -58,10 +62,27 @@ export default class Builder extends Component {
     alert("Not expandable");
     }
     
+
+    decomposeGraph(cell){
+      var in_edges = 0;
+      var out_edges = 0;
+      for(var edge in cell.edges){
+        if(cell.edges[edge].target.value == cell.value){
+          in_edges++;
+        }else{
+          out_edges++;
+        }
+      }
+      console.log(in_edges)
+      console.log(out_edges)
+        
+    }
   
 
 
   onChange(event) {
+
+    
     var file = event.target.files[0];
     var reader = new FileReader();
     reader.onload = (event) => {
@@ -98,9 +119,28 @@ export default class Builder extends Component {
 
 }  
 
+
+notFinsihedTransform(rowInfo){
+  
+    if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change graph?")){
+      return
+    } else {
+      this.setState({selected : rowInfo.node.graphname, transformation : null});
+    }
+  
+}
+
   render() {
 
+    
+    let transform = this.state.transformation != null ? <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation} transform={true} graphdata={this.state.graphdata}/> : <Packages graphdata={this.state.graphdata}/>        
+
+    console.log(transform)
+   
+
     return (      
+      <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
+        <ReflexElement flex={0.9} className="site-content">
       <ReflexContainer className="site-content" orientation="vertical">
 
       <ReflexElement className="video-panels" flex={0.20} minSize="100">
@@ -121,24 +161,28 @@ export default class Builder extends Component {
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
           generateNodeProps={rowInfo => ({
-            buttons: [<button onClick={(event) => this.setState({selected : rowInfo.node.graphname})}>Select</button>]
+            buttons: [<button onClick={(event) => this.state.transformation == null ? this.setState({selected : rowInfo.node.graphname}) : this.notFinsihedTransform(rowInfo)}>Select</button>]
         })} 
         />
 </ReflexElement>
-</ReflexContainer>
+      </ReflexContainer>
   </ReflexElement>
   <ReflexSplitter />
         <ReflexElement className="workboard" minSize="50">
-          <GraphView expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
+          <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
         </ReflexElement>
-        <ReflexSplitter />
-        <ReflexElement className="video-panels" flex={0.15} minSize="100">
-<Packages graphdata={this.state.graphdata}/>        
+                <ReflexSplitter />
+        <ReflexElement flex={0.2} className="video-panels" >
+          {transform}
 </ReflexElement>
         
       </ReflexContainer>
-
-
+      </ReflexElement>
+      <ReflexSplitter/>
+        <ReflexElement className="video-panels">
+          Transformation tools here
+        </ReflexElement>
+      </ReflexContainer>
     );
   }
 }

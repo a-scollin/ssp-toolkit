@@ -36,7 +36,7 @@ const PCODE = {
 export default class Packages extends Component {
   constructor(props) {
     super(props);
-    this.state = {listItems : <ReflexElement flex={0.5}><div> {'<= Please load a graph.'} </div></ReflexElement>};
+    this.state = {graphdata : props.graphdata, listItems : <ReflexElement flex={0.5}><div> {''} </div></ReflexElement>};
     this.GraphRef = React.createRef()
     this.config = {
         loader: { load: ["[tex]/html"] },
@@ -57,6 +57,15 @@ export default class Packages extends Component {
       };
   }
 
+
+  componentDidMount(prevProps){
+    console.log("CODEMOUNT")
+    console.log(this.state)
+    if (this.state.graphdata != {}){
+    this.LoadCode();
+      }
+
+  }
 
 
   componentDidUpdate(prevProps){
