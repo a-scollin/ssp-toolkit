@@ -17,6 +17,13 @@ h1 {
     font-weight: bold;
 }
 
+.boxpad {
+    padding-top: 30px;
+    padding-right: 30px;
+    padding-bottom: 30px;
+    padding-left: 30px;
+}
+
 h2 {
     display: block;
     font-size: 1em;

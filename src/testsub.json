@@ -1,0 +1,18 @@
+{
+    "oracles": [
+        ["TEST1", "GBL_{1..d}"]
+    ],
+
+    "graph": {
+        "TEST1": [
+            ["TEST2", "TESTEDGE"],
+            ["TEST2", "TESTEDGE"]
+        ],
+        "TEST2": [
+            ["", "GETKEYS^{in}"],
+            ["", "GETKEYS^{out}"]
+        ]
+    },
+
+    "layout": { "nodes": { "@oracles_interface": { "x": 0, "y": 0, "width": 1, "height": 110 }, "GB_{yao}": { "x": 120, "y": 30, "width": 90, "height": 50 }, "KEYS_1": { "x": 320, "y": 0, "width": 90, "height": 50, "color": "yellow" }, "KEYS": { "x": 320, "y": 60, "width": 90, "height": 50 } }, "edges": { "@oracles_interface": { "KEYS_1": "exitX=0.95;exitY=0.15;entryX=0;entryY=0.25;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "GB_{yao}": "exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;", "KEYS": "entryX=0;entryY=0.8;exitX=0.8;exitY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" }, "GB_{yao}": { "KEYS_1": "exitX=0.85;exitY=0.3;entryX=0;entryY=0.8;exitDx=0;exitDy=0;entryDx=0;entryDy=0;", "KEYS": "exitX=0.85;exitY=0.7;entryX=0;entryY=0.25;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" } }, "edge_points": { "@oracles_interface": [], "GB_{yao}": [] } }
+}

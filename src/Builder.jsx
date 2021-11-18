@@ -48,7 +48,7 @@ export default class Builder extends Component {
               
               this.setState({graphdata : expandedgraphdata}, () => {
                 element.children.push({title : "$$" + this.state.selected + " - Expanded on " + cell.value + "$$", graphname : this.state.selected + " - Expanded on " + cell.value,children : []});
-                this.setState({transformation : this.state.selected + " - Expanded on " + cell.value});
+                this.setState({transformation : [this.state.selected + " - Expanded on " + cell.value, "expand"]});
               })
 
             }
@@ -66,21 +66,49 @@ export default class Builder extends Component {
     
 
     decomposeGraph(cell){
-      var in_edges = 0;
-      var out_edges = 0;
-      for(var edge in cell.edges){
-        if(cell.edges[edge].target.value == cell.value){
-          in_edges++;
-        }else{
-          out_edges++;
-        }
-      }
-      console.log(in_edges)
-      console.log(out_edges)
-        
+      if (cell != null){
+        if (cell.value.split("_{").length == 2){
+
+          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){
+          
+
+            this.state.modular_pkgs.forEach((element) => {
+              if (element.graphname == this.state.selected){
+
+              var in_edges = 0;
+              var out_edges = 0;
+              for(var edge in cell.edges){
+                if(cell.edges[edge].target.value == cell.value){
+                  in_edges++;
+                }else{
+                  out_edges++;
+                }
+              }
+          
+                var expandedgraphdata = this.state.graphdata 
+  
+                expandedgraphdata.modular_pkgs[this.state.selected + " - Decomposed on " + cell.value] = expandedgraphdata.modular_pkgs[this.state.selected]
+                
+                this.setState({graphdata : expandedgraphdata}, () => {
+                  element.children.push({title : "$$" + this.state.selected + " - Decomposed on " + cell.value + "$$", graphname : this.state.selected + " - Decomposed on " + cell.value,children : []});
+                  this.setState({transformation : [this.state.selected + " - Decomposed on " + cell.value, "decompose", in_edges, out_edges, cell.value]});
+                })
+  
+              }
+            });
+            
+            
+            return
+          }
+          
+      return  
+
     }
   
+  }
 
+  alert("Cannot decompose!");
+}
 
   onChange(event) {
 
@@ -122,14 +150,18 @@ export default class Builder extends Component {
 }  
 
 
-updateGraphData(newGraphData){
+updateGraphData(newGraphData, fin){
 
-console.log(newGraphData)
-console.log("NAGKEPRKGPAF")
+if(fin){
 
+this.setState({graphdata : newGraphData, transformation : null})
 
+}else{
+
+  this.setState({graphdata : newGraphData})
 }
 
+}
 
 notFinsihedTransform(rowInfo){
   
@@ -145,7 +177,7 @@ notFinsihedTransform(rowInfo){
 
     
     let transform = this.state.transformation != null ?   [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation[0]} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
     <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
   </ReflexElement>]
 
