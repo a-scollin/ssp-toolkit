@@ -19,6 +19,8 @@ import Packages from "./Packages";
 import Latex from "./Latex";
 import { height } from "dom-helpers";
 
+import TransformationTools from "./TransformationTools";
+
 export default class Builder extends Component {
   constructor(props) {
     super(props);
@@ -120,6 +122,15 @@ export default class Builder extends Component {
 }  
 
 
+updateGraphData(newGraphData){
+
+console.log(newGraphData)
+console.log("NAGKEPRKGPAF")
+
+
+}
+
+
 notFinsihedTransform(rowInfo){
   
     if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change graph?")){
@@ -133,7 +144,10 @@ notFinsihedTransform(rowInfo){
   render() {
 
     
-    let transform = this.state.transformation != null ? <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation} transform={true} graphdata={this.state.graphdata}/> : <Packages graphdata={this.state.graphdata}/>        
+    let transform = this.state.transformation != null ?   [<ReflexElement className="workboard" minSize="50" flex={0.5}>
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
+  </ReflexElement>]
 
     console.log(transform)
    
@@ -168,19 +182,21 @@ notFinsihedTransform(rowInfo){
       </ReflexContainer>
   </ReflexElement>
   <ReflexSplitter />
-        <ReflexElement className="workboard" minSize="50">
-          <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
+  <ReflexElement>
+    <ReflexContainer>
+        {transform}
+        </ReflexContainer>
         </ReflexElement>
                 <ReflexSplitter />
         <ReflexElement flex={0.2} className="video-panels" >
-          {transform}
+        <Packages graphdata={this.state.graphdata}/>
 </ReflexElement>
         
       </ReflexContainer>
       </ReflexElement>
       <ReflexSplitter/>
         <ReflexElement className="video-panels">
-          Transformation tools here
+          <TransformationTools update={this.updateGraphData.bind(this)} graphdata={this.state.graphdata} transformationselection={this.state.transformation}/>
         </ReflexElement>
       </ReflexContainer>
     );
