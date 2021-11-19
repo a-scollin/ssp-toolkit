@@ -34,13 +34,14 @@ if (this.state.graphdata != {} && this.state.selected != null){
 
   componentDidUpdate(prevProps){
 
-console.log("update")
+console.log("GRAPH update")
 console.log(prevProps)
 console.log(this.props)
 console.log(this.state)
 
     if(this.props.graphdata != prevProps.graphdata || this.props.selected != prevProps.selected){
       this.setState({graphdata : this.props.graphdata, selected : this.props.selected},() => {
+        console.log("HERER")
         this.LoadGraph(this.props.selected);
       });
     }
@@ -56,6 +57,8 @@ console.log(this.state)
 
     if (this.state.graphdata){
 
+      console.log("BOOM")
+    console.log(selected)
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 

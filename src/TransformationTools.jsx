@@ -99,7 +99,7 @@ decompose(event){
             return
         }
 
-        var newGraph = this.state.graphdata;
+        var newGraph = JSON.parse(JSON.stringify(this.state.graphdata));
 
         for(var edge in newGraph.modular_pkgs[this.state.selection].oracles){
             if (newGraph.modular_pkgs[this.state.selection].oracles[edge][0] == this.state.decomp) {

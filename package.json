@@ -17,6 +17,7 @@
         "mathjax-full": "^3.2.0",
         "mxgraph": "^4.2.2",
         "mxgraph-js": "^1.0.1",
+        "pako": "^2.0.4",
         "rc-slider": "^9.7.4",
         "react": "^17.0.2",
         "react-bootstrap": "^2.0.0-rc.0",
@@ -27,6 +28,7 @@
         "react-reflex": "^4.0.3",
         "react-scripts": "4.0.3",
         "react-split": "^2.0.13",
+        "react-xml-parser": "^1.1.8",
         "web-vitals": "^1.0.1"
     },
     "scripts": {
