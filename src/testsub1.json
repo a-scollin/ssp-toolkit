@@ -1,0 +1,17 @@
+{
+    "oracles": [
+        ["TEST1", "DENC"]
+    ],
+
+    "graph": {
+        "TEST1": [
+            ["TEST2", "TESTEDGE"],
+            ["TEST2", "TESTEDGE"]
+        ],
+        "TEST2": [
+            ["", "ENC"],
+            ["", "GETKEYS^{out}"]
+        ]
+    }
+
+}

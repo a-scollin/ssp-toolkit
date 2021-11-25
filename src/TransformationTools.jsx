@@ -72,7 +72,6 @@ decompose(event){
         return;
     }
     
-    
         var subGraph = json_data;
 
         if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
@@ -101,36 +100,86 @@ decompose(event){
 
         var newGraph = JSON.parse(JSON.stringify(this.state.graphdata));
 
-        for(var edge in newGraph.modular_pkgs[this.state.selection].oracles){
-            if (newGraph.modular_pkgs[this.state.selection].oracles[edge][0] == this.state.decomp) {
-                for (var subedge in subGraph.oracles) {
-                    if (subGraph.oracles[subedge][1] == newGraph.modular_pkgs[this.state.selection].oracles[edge][1]){
-                        
-                        newGraph.modular_pkgs[this.state.selection].oracles[edge][0] = subGraph.oracles[subedge][0]
+        var isOraclePack = false;
+
+        for( var oracle in newGraph.modular_pkgs[this.state.selection].oracles){
+
+            if (newGraph.modular_pkgs[this.state.selection].oracles[oracle][0] == this.state.decomp){
+                isOraclePack = true
+            }
+        
+        }
+
+        if (isOraclePack){
+            console.log("ISORACLE")
+            for(var edge in newGraph.modular_pkgs[this.state.selection].oracles){
+                if (newGraph.modular_pkgs[this.state.selection].oracles[edge][0] == this.state.decomp) {
+                    for (var subedge in subGraph.oracles) {
+                        if (subGraph.oracles[subedge][1] == newGraph.modular_pkgs[this.state.selection].oracles[edge][1]){
+                            
+                            newGraph.modular_pkgs[this.state.selection].oracles[edge][0] = subGraph.oracles[subedge][0]
+                        }
                     }
                 }
             }
+        }else{
+            console.log("ISntORACLE")
+
+        for( var pack in newGraph.modular_pkgs[this.state.selection].graph){
+            
+            if (pack != this.state.decomp) { 
+
+                for (var edge in newGraph.modular_pkgs[this.state.selection].graph[pack]){
+
+                    if(newGraph.modular_pkgs[this.state.selection].graph[pack][edge][0] == this.state.decomp){
+
+                        for (var oracle in subGraph.oracles){
+                            if(subGraph.oracles[oracle][1] == newGraph.modular_pkgs[this.state.selection].graph[pack][edge][1]){
+                                newGraph.modular_pkgs[this.state.selection].graph[pack][edge][0] = subGraph.oracles[oracle][0]
+                            }
+                    }
+        
+            }
+
+        }
+    }
+}
         }
 
+
+
+
+            for (var pack in subGraph.graph){
+                for (var sub_edge in subGraph.graph[pack]){
+                    for(var edge in newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]
+                    }
+                }
+                }
+
+            }
         
 
-                for (var edge in newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]){
-                    console.log(newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge])
-                    for( var subgraph in subGraph.graph){
-                        for( var subedge in subGraph.graph[subgraph]){
-                            
-                            if (subGraph.graph[subgraph][subedge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
+        var out_edge = []
 
-                                subGraph.graph[subgraph][subedge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]
-
-                            } 
-                        }
-                        
+        for( var edge in newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]){
+            for (var pack in subGraph.graph){
+                for (var sub_edge in subGraph.graph[pack]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]
                     }
-                    
-                
-            
+                }
+
+            }
         }
+
+      
+
+        // for(var pack in newGraph.modular_pkgs[this.state.selection].graph){
+        //     if newGraph.modular_pkgs[this.state.selection].graph[]
+        // }
+
 
         delete newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]; 
 
@@ -141,13 +190,18 @@ decompose(event){
 
         this.setState({graphdata : newGraph}, ()=>{
         this.udpateGraph(false)
-    })
+    });
 
-
-    };
-  
-    reader.readAsText(file);
 }
+    
+    reader.readAsText(file);
+
+    
+
+}
+  
+
+
 
   setup(){
 
