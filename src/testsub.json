@@ -9,8 +9,8 @@
             ["TEST2", "TESTEDGE"]
         ],
         "TEST2": [
-            ["", "GETKEYS^{in}"],
-            ["", "GETKEYS^{out}"]
+            ["", "GETKEYS^{out}"],
+            ["", "GETKEYS^{in}"]
         ]
     }
 

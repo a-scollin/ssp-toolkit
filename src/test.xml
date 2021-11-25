@@ -13,7 +13,7 @@
     </mxCell>
     <mxCell id="5" value="KEYS_4" vertex="1" parent="1">
       <mxGeometry x="390" y="330" width="80" height="50" as="geometry" />
-    </mxCell>
+    </mxCell> 
     <mxCell id="6" value="GB^0_{yao,1}" vertex="1" parent="1">
       <mxGeometry x="160" y="130" width="80" height="50" as="geometry" />
     </mxCell>

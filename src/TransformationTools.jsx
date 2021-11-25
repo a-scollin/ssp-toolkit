@@ -118,6 +118,7 @@ decompose(event){
                     console.log(newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge])
                     for( var subgraph in subGraph.graph){
                         for( var subedge in subGraph.graph[subgraph]){
+                            
                             if (subGraph.graph[subgraph][subedge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
 
                                 subGraph.graph[subgraph][subedge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]

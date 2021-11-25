@@ -20,6 +20,9 @@ import Latex from "./Latex";
 import { height } from "dom-helpers";
 
 import TransformationTools from "./TransformationTools";
+import { radioClasses } from "@mui/material";
+
+const pako = require('pako');
 
 export default class Builder extends Component {
   constructor(props) {
@@ -117,11 +120,11 @@ export default class Builder extends Component {
     var reader = new FileReader();
     reader.onload = (event) => {
       // The file's text will be printed here
-      
+    if (file.name.split('.').pop().toLowerCase() == "json"){
     try {
         var json_data = JSON.parse(event.target.result);
     } catch (e) {
-        alert("Please enter a JSON file");
+        alert("Please enter a valid JSON file");
         return;
     }
     
@@ -129,7 +132,36 @@ export default class Builder extends Component {
       this.createSelectItems();
     });
     
-    };
+    }else if (file.name.split('.').pop().toLowerCase() == "xml") {
+      try {
+
+        var XMLParser = require('react-xml-parser');
+        var xml = new XMLParser().parseFromString(event.target.result);    // Assume xmlText contains the example XML
+        
+        console.log("XML");
+        var cells = xml.children[0].children
+        
+        for(var cell in cells) { 
+          console.log(cells[cell])
+        }
+        alert("XML not supported yet!")
+        return;
+
+    } catch (e) {
+        alert("Please enter a valid XML file");
+        return;
+    }
+    
+    }else {
+      alert("Please enter a JSON or XML file.");
+      return;
+    }
+
+    this.setState({ graphdata: json_data }, function(){
+      this.createSelectItems();
+    });
+
+  }
   
     reader.readAsText(file);
   }

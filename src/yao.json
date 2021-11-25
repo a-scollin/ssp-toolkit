@@ -485,9 +485,9 @@
 
             "graph": {
                 "MODGB_i": [
-                    ["MODDENC", "DENC"]
+                    ["MODDENC_{a}", "DENC"]
                 ],
-                "MODDENC": [
+                "MODDENC_{a}": [
                     ["ENC^0_{1..n}", "ENC"],
                     ["KEYS", "GETKEYS^{out}"]
                 ],
