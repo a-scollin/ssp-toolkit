@@ -137,17 +137,14 @@ export default class Builder extends Component {
 
         var XMLParser = require('react-xml-parser');
         var xml = new XMLParser().parseFromString(event.target.result);    // Assume xmlText contains the example XML
+
+        json_data = this.resolve_xml_to_json(xml)
+        console.log(json_data)
         
-        console.log("XML");
-        var cells = xml.children[0].children
         
-        for(var cell in cells) { 
-          console.log(cells[cell])
-        }
-        alert("XML not supported yet!")
-        return;
 
     } catch (e) {
+        console.log(e)
         alert("Please enter a valid XML file");
         return;
     }
@@ -164,6 +161,123 @@ export default class Builder extends Component {
   }
   
     reader.readAsText(file);
+  }
+
+  resolve_xml_to_json(xml){
+
+    var json_data = {modular_pkgs : {}}
+
+    for(var diagram in xml.children){
+      json_data.modular_pkgs[xml.children[diagram].attributes.name] = this.resolve_diagram_to_json(xml.children[diagram].children[0].children[0].children)
+    }
+
+    return json_data
+    
+    
+  }
+
+  resolve_diagram_to_json(cells){
+    
+    var thegraph = {oracles : [], graph : {}}
+
+    var packids = {}
+
+    for(var cell in cells){
+
+      var thecell = cells[cell]
+
+      if (thecell.name != "mxCell") {
+        throw "Not correct format!";
+      }
+
+      if(!thecell.attributes.hasOwnProperty("value")){
+        continue;
+      }else{
+
+        if(!thecell.attributes.hasOwnProperty("connectable") & !thecell.attributes.hasOwnProperty("target") & !thecell.attributes.hasOwnProperty("source")){
+          
+          thegraph.graph[thecell.attributes.value] = []
+
+          packids[thecell.attributes.id] = thecell.attributes.value
+          
+        }
+        
+
+
+      }
+
+
+
+
+    }
+
+
+    for(var cell in cells){
+
+      var thecell = cells[cell]
+
+      if (thecell.name != "mxCell") {
+        throw "Not correct format!";
+      }
+
+      if(!thecell.attributes.hasOwnProperty("value")){
+        continue;
+      }else{
+
+        
+        if(thecell.attributes.hasOwnProperty("connectable")){
+          
+          for(var checkcell in cells){
+            var check = cells[checkcell]
+            if (check.attributes.id == thecell.attributes.parent){
+    
+              if(check.attributes.hasOwnProperty("source") & check.attributes.hasOwnProperty("target")){
+                // inner package edge
+                console.log(packids)
+
+                thegraph.graph[packids[check.attributes.source]].push([packids[check.attributes.target],thecell.attributes.value])
+                
+              }else if (check.attributes.hasOwnProperty("target")){
+                // oracle 
+           
+                thegraph.oracles.push([packids[check.attributes.target],thecell.attributes.value])
+              }
+    
+            }
+          }
+    
+    
+        }else if ((thecell.attributes.parent == '1' || thecell.attributes.parent.split('-').pop() == '1') && thecell.attributes.style.includes("Arrow") && thecell.attributes.value != ""){
+
+
+          console.log('thecell')
+          console.log(thecell)
+
+          if (thecell.attributes.hasOwnProperty("source") & thecell.attributes.hasOwnProperty("target")){
+            thegraph.graph[packids[thecell.attributes.source]].push([packids[thecell.attributes.target],thecell.attributes.value])
+          }else if  (thecell.attributes.hasOwnProperty("target")){
+            thegraph.oracles.push([packids[thecell.attributes.target],thecell.attributes.value])
+
+          }
+          
+          
+
+        }
+
+      }
+
+
+
+
+    }
+    
+    console.log("The graph")
+    console.log(thegraph)
+
+
+    return thegraph;
+
+
   }
 
   createSelectItems() {
