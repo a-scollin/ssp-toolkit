@@ -44,6 +44,8 @@ console.log(this.state)
       this.setState({graphdata : this.props.graphdata, selection : this.props.transformationselection[0], type : this.props.transformationselection[1]},() => {
         if (this.props.transformationselection != null){
             this.setup()
+        }else{
+            this.setState({options : []})
         }
     });} else if (this.props.transformationselection[1] == 'decompose'){
         console.log("Here")
@@ -51,6 +53,8 @@ console.log(this.state)
         this.setState({graphdata : this.props.graphdata, selection : this.props.transformationselection[0], type : this.props.transformationselection[1], in_edges : this.props.transformationselection[2], out_edges : this.props.transformationselection[3], decomp : this.props.transformationselection[4]},() => {
             if (this.props.transformationselection != null){
                 this.setup()
+            }else{
+                this.setState({options : []})
             }
         });
     }
