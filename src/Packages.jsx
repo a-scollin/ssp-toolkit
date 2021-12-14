@@ -13,7 +13,7 @@ import { MathJax, MathJaxContext } from "better-react-mathjax";
 import Tex2SVG from "react-hook-mathjax";
 import { ThemeConsumer } from "react-bootstrap/esm/ThemeProvider";
 import { isCompositeComponentWithType } from "react-dom/test-utils";
-
+import TextEditor from "./editor";
 
 const PCODE = {
     "@bin" : "{0, 1}",
@@ -145,14 +145,21 @@ export default class Packages extends Component {
   
 
   render() {
+
+    if(Object.keys(this.state.graphdata).length != 0){
+        var text = JSON.stringify(this.state.graphdata, null, '\t') 
+    }else{
+        var text = "Load a file!"
+    }
     
+
     return (
 <ReflexContainer orientation="horizontal"> 
         <ReflexElement flex={0.8}>
             {this.state.listItems}
             </ReflexElement>
             <ReflexSplitter/>
-            <ReflexElement className="panel panel--empty"></ReflexElement>
+            <ReflexElement><TextEditor text={text}></TextEditor></ReflexElement>
           </ReflexContainer>
     
     );}
