@@ -18,19 +18,12 @@ import { ThemeProvider } from "react-bootstrap";
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {graphdata : null, selection : null, type : null, options : []};
+    this.state = {selected_graphdata : null, selection : null, type : null, options : []};
     this.GraphRef = React.createRef()
     this.valdict = {}
    console.log("INIT")
   
   }
-
-componentDidMount(prevProps){
-    console.log("Transform mount")
-    console.log(prevProps)
-    console.log(this.props)
-    console.log(this.state)
-}
 
   componentDidUpdate(prevProps){
 
@@ -39,19 +32,19 @@ console.log(prevProps)
 console.log(this.props)
 console.log(this.state)
 
-    if(this.props.graphdata != null && this.props.transformationselection != prevProps.transformationselection && this.props.transformationselection != null){
-        if (this.props.transformationselection[1] == 'expand'){
-      this.setState({graphdata : this.props.graphdata, selection : this.props.transformationselection[0], type : this.props.transformationselection[1]},() => {
-        if (this.props.transformationselection != null){
+    if(this.props.selected_graphdata != null && this.props.transformationselection != prevProps.transformationselection && this.props.transformationselection != {}){
+        if (this.props.transformationselection['type'] == 'expand'){
+            this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type']},() => {
+            if (this.props.transformationselection != {}){
             this.setup()
         }else{
             this.setState({options : []})
         }
-    });} else if (this.props.transformationselection[1] == 'decompose'){
+    });} else if (this.props.transformationselection['type'] == 'decompose'){
         console.log("Here")
         console.log(this.props.transformationselection)
-        this.setState({graphdata : this.props.graphdata, selection : this.props.transformationselection[0], type : this.props.transformationselection[1], in_edges : this.props.transformationselection[2], out_edges : this.props.transformationselection[3], decomp : this.props.transformationselection[4]},() => {
-            if (this.props.transformationselection != null){
+        this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], in_edges : this.props.transformationselection['in_edges'], out_edges : this.props.transformationselection['out_edges'], cell : this.props.transformationselection['cell']},() => {
+            if (this.props.transformationselection != {}){
                 this.setup()
             }else{
                 this.setState({options : []})
@@ -64,6 +57,7 @@ console.log(this.state)
   }
 
 decompose(event){
+    console.time('decomp')
     var file = event.target.files[0];
     var reader = new FileReader();
     reader.onload = (event) => {
@@ -102,13 +96,13 @@ decompose(event){
             return
         }
 
-        var newGraph = JSON.parse(JSON.stringify(this.state.graphdata));
+        var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata));
 
         var isOraclePack = false;
 
-        for( var oracle in newGraph.modular_pkgs[this.state.selection].oracles){
+        for( var oracle in newGraph.oracles){
 
-            if (newGraph.modular_pkgs[this.state.selection].oracles[oracle][0] == this.state.decomp){
+            if (newGraph.oracles[oracle][0] == this.state.cell){
                 isOraclePack = true
             }
         
@@ -116,12 +110,12 @@ decompose(event){
 
         if (isOraclePack){
             console.log("ISORACLE")
-            for(var edge in newGraph.modular_pkgs[this.state.selection].oracles){
-                if (newGraph.modular_pkgs[this.state.selection].oracles[edge][0] == this.state.decomp) {
+            for(var edge in newGraph.oracles){
+                if (newGraph.oracles[edge][0] == this.state.cell) {
                     for (var subedge in subGraph.oracles) {
-                        if (subGraph.oracles[subedge][1] == newGraph.modular_pkgs[this.state.selection].oracles[edge][1]){
+                        if (subGraph.oracles[subedge][1] == newGraph.oracles[edge][1]){
                             
-                            newGraph.modular_pkgs[this.state.selection].oracles[edge][0] = subGraph.oracles[subedge][0]
+                            newGraph.oracles[edge][0] = subGraph.oracles[subedge][0]
                         }
                     }
                 }
@@ -129,17 +123,17 @@ decompose(event){
         }else{
             console.log("ISntORACLE")
 
-        for( var pack in newGraph.modular_pkgs[this.state.selection].graph){
+        for( var pack in newGraph.graph){
             
-            if (pack != this.state.decomp) { 
+            if (pack != this.state.cell) { 
 
-                for (var edge in newGraph.modular_pkgs[this.state.selection].graph[pack]){
+                for (var edge in newGraph.graph[pack]){
 
-                    if(newGraph.modular_pkgs[this.state.selection].graph[pack][edge][0] == this.state.decomp){
+                    if(newGraph.graph[pack][edge][0] == this.state.cell){
 
                         for (var oracle in subGraph.oracles){
-                            if(subGraph.oracles[oracle][1] == newGraph.modular_pkgs[this.state.selection].graph[pack][edge][1]){
-                                newGraph.modular_pkgs[this.state.selection].graph[pack][edge][0] = subGraph.oracles[oracle][0]
+                            if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
+                                newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]
                             }
                     }
         
@@ -155,9 +149,9 @@ decompose(event){
 
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
-                    for(var edge in newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]
+                    for(var edge in newGraph.graph[this.state.cell]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell][edge][0]
                     }
                 }
                 }
@@ -167,11 +161,11 @@ decompose(event){
 
         var out_edge = []
 
-        for( var edge in newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]){
+        for( var edge in newGraph.graph[this.state.cell]){
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][1]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp][edge][0]
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell][edge][0]
                     }
                 }
 
@@ -180,19 +174,19 @@ decompose(event){
 
       
 
-        // for(var pack in newGraph.modular_pkgs[this.state.selection].graph){
-        //     if newGraph.modular_pkgs[this.state.selection].graph[]
+        // for(var pack in newGraph.graph){
+        //     if newGraph.graph[]
         // }
 
 
-        delete newGraph.modular_pkgs[this.state.selection].graph[this.state.decomp]; 
+        delete newGraph.graph[this.state.cell]; 
 
         for(var subgraph in subGraph.graph){
-            newGraph.modular_pkgs[this.state.selection].graph[subgraph] = subGraph.graph[subgraph]
+            newGraph.graph[subgraph] = subGraph.graph[subgraph]
 
         }
 
-        this.setState({graphdata : newGraph}, ()=>{
+        this.setState({selected_graphdata : newGraph}, ()=>{
         this.udpateGraph(false)
     });
 
@@ -200,7 +194,7 @@ decompose(event){
     
     reader.readAsText(file);
 
-    
+    console.timeEnd('decomp')
 
 }
   
@@ -213,7 +207,7 @@ decompose(event){
 
     if (this.state.type == "expand"){
 
-        for (var node in this.state.graphdata.modular_pkgs[this.state.selection].graph){
+        for (var node in this.state.graphdata.graph){
             if (node.split("_{").length == 2){
                 options.push(<ReflexElement flex={0.8} key={node}>{node}
                 <div key={node} reference={node} className="boxpad">
@@ -267,20 +261,16 @@ expand(target){
     if(this.valdict[target.name] != target.value){
         this.valdict[target.name] = target.value
 
-        var newGraph = this.state.graphdata;
+        var newGraph = this.state.selected_graphdata;
 
-
-        for(var node in newGraph.modular_pkgs[this.state.selection].graph){
+        for(var node in newGraph.graph){
             if(node == target.name){
-
-
                 console.log(node)
-
                 break 
             }
         }
 
-    this.setState({graphdata : newGraph}, ()=>{
+    this.setState({selected_graphdata : newGraph}, ()=>{
         this.udpateGraph(false)
     })
     
@@ -290,9 +280,9 @@ expand(target){
 
   udpateGraph(fin=true){
       if(this.state.selection != null){
-        this.props.update(this.state.graphdata,fin);
+        this.props.update(this.state.selected_graphdata, this.state.selection, fin);
         if (fin){
-        this.setState({graphdata : null, selection : null, type : null, options : []});
+        this.setState({selected_graphdata : null, selection : null, type : null, options : []});
         this.valdict = {};
     }
 }

@@ -25,22 +25,23 @@ import { radioClasses } from "@mui/material";
 const pako = require('pako');
 
 export default class Builder extends Component {
+
+  // Initalise the main component 
+
   constructor(props) {
     super(props);
-    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : null};    
+    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}};    
   }
 
+  // Function to be passed to graph view for invoking an expansion 
 
   expandGraph(cell) {
     
     if (cell != null){
-      if (cell.value.split("_{").length == 2){
+
+      if (cell.value.split("_{").length == 2){   
         
-        
-        
-        if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){
-          
-          
+        if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){          
 
           this.state.modular_pkgs.forEach((element) => {
             if (element.graphname == this.state.selected){
@@ -51,7 +52,8 @@ export default class Builder extends Component {
               
               this.setState({graphdata : expandedgraphdata}, () => {
                 element.children.push({title : "$$" + this.state.selected + " - Expanded on " + cell.value + "$$", graphname : this.state.selected + " - Expanded on " + cell.value,children : []});
-                this.setState({transformation : [this.state.selected + " - Expanded on " + cell.value, "expand"]});
+                this.setState({transformation : {"selected" : this.state.selected + " - Expanded on " + cell.value, 
+                "type" : "expand"}});
               })
 
             }
@@ -67,25 +69,36 @@ export default class Builder extends Component {
     alert("Not expandable");
     }
     
+    // Function to be passed to graph view for invoking an decomposition 
 
     decomposeGraph(cell){
+
       if (cell != null){
+      
         if (cell.value.split("_{").length == 2){
 
-          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){
-          
+          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){    
 
             this.state.modular_pkgs.forEach((element) => {
+
               if (element.graphname == this.state.selected){
 
               var in_edges = 0;
+              
               var out_edges = 0;
+              
               for(var edge in cell.edges){
+              
                 if(cell.edges[edge].target.value == cell.value){
+              
                   in_edges++;
+              
                 }else{
+              
                   out_edges++;
+              
                 }
+              
               }
           
                 var expandedgraphdata = this.state.graphdata 
@@ -93,8 +106,13 @@ export default class Builder extends Component {
                 expandedgraphdata.modular_pkgs[this.state.selected + " - Decomposed on " + cell.value] = expandedgraphdata.modular_pkgs[this.state.selected]
                 
                 this.setState({graphdata : expandedgraphdata}, () => {
+
+                  console.log("RIGHTHERE")
+
                   element.children.push({title : "$$" + this.state.selected + " - Decomposed on " + cell.value + "$$", graphname : this.state.selected + " - Decomposed on " + cell.value,children : []});
-                  this.setState({transformation : [this.state.selected + " - Decomposed on " + cell.value, "decompose", in_edges, out_edges, cell.value]});
+              
+                  this.setState({transformation : {'selected' : this.state.selected + " - Decomposed on " + cell.value, 'type' : "decompose", 'in_edges' : in_edges, 'out_edges' : out_edges, 'cell' : cell.value}});
+              
                 })
   
               }
@@ -112,6 +130,8 @@ export default class Builder extends Component {
 
   alert("Cannot decompose!");
 }
+
+  // For parsing in the json or xml files 
 
   onChange(event) {
 
@@ -163,6 +183,8 @@ export default class Builder extends Component {
     reader.readAsText(file);
   }
 
+  // For resolving the 
+
   resolve_xml_to_json(xml){
 
     var json_data = {modular_pkgs : {}}
@@ -201,13 +223,8 @@ export default class Builder extends Component {
           packids[thecell.attributes.id] = thecell.attributes.value
           
         }
-        
-
-
+      
       }
-
-
-
 
     }
 
@@ -295,16 +312,31 @@ export default class Builder extends Component {
 
 }  
 
-
-updateGraphData(newGraphData, fin){
+updateGraphData(newGraphData, selected, fin){
+  console.log(" UPDATE")
 
 if(fin){
 
-this.setState({graphdata : newGraphData, transformation : null})
+this.setState(prevState => {
 
+  let graphdata = { ...prevState.graphdata };  
+  graphdata.modular_pkgs[selected] = newGraphData;                     // update the name property, assign a new value                 
+  let transformation = {};
+  return { graphdata, transformation };                                 // return new object jasper object
+  
+});
 }else{
 
-  this.setState({graphdata : newGraphData})
+  console.log("NOT FIN UPDATE")
+  this.setState(prevState => {
+
+    let graphdata = { ...prevState.graphdata }; 
+    console.log(graphdata) 
+    graphdata.modular_pkgs[selected] = newGraphData;                     // update the name property, assign a new value                 
+    console.log(graphdata)
+    return { graphdata };                                 // return new object jasper object
+  
+});
 }
 
 }
@@ -314,7 +346,7 @@ notFinsihedTransform(rowInfo){
     if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change graph?")){
       return
     } else {
-      this.setState({selected : rowInfo.node.graphname, transformation : null});
+      this.setState({selected : rowInfo.node.graphname, transformation : {}});
     }
   
 }
@@ -322,14 +354,24 @@ notFinsihedTransform(rowInfo){
   render() {
 
     
-    let transform = this.state.transformation != null ?   [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation[0]} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    let transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation['selected']} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
     <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
   </ReflexElement>]
 
-    console.log(transform)
-   
 
+    
+    if (Object.keys(this.state.transformation).length != 0) {
+    console.log('this.state.transformation')
+    console.log(Object.keys(this.state.transformation))
+    var transformation_graphdata = this.state.graphdata.modular_pkgs[this.state.transformation['selected']]    
+
+    }else{
+
+      var transformation_graphdata = null
+  
+    }
+    
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
         <ReflexElement flex={0.9} className="site-content">
@@ -353,7 +395,7 @@ notFinsihedTransform(rowInfo){
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
           generateNodeProps={rowInfo => ({
-            buttons: [<button onClick={(event) => this.state.transformation == null ? this.setState({selected : rowInfo.node.graphname}) : this.notFinsihedTransform(rowInfo)}>Select</button>]
+            buttons: [<button onClick={(event) => Object.keys(this.state.transformation).length == 0 ? this.setState({selected : rowInfo.node.graphname}) : this.notFinsihedTransform(rowInfo)}>Select</button>]
         })} 
         />
 </ReflexElement>
@@ -374,7 +416,7 @@ notFinsihedTransform(rowInfo){
       </ReflexElement>
       <ReflexSplitter/>
         <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} graphdata={this.state.graphdata} transformationselection={this.state.transformation}/>
+          <TransformationTools update={this.updateGraphData.bind(this)} selected_graphdata={transformation_graphdata} transformationselection={this.state.transformation}/>
         </ReflexElement>
       </ReflexContainer>
     );

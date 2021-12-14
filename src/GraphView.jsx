@@ -50,6 +50,9 @@ console.log(this.state)
 
   LoadGraph(selected) {
 
+    console.log("Graph loaded")
+    console.time(selected)
+
     // Clear last graph
     if(this.state.displayed) {
       this.state.displayed.destroy();
@@ -234,6 +237,7 @@ console.log(this.state)
         
           }
 
+      console.timeEnd(selected)
 
       return;
 
@@ -241,6 +245,7 @@ console.log(this.state)
 
 
     }
+
   }
 
 
