@@ -172,7 +172,18 @@ export default class Builder extends Component {
     var json_data = {modular_pkgs : {}}
 
     for(var diagram in xml.children){
-      json_data.modular_pkgs[xml.children[diagram].attributes.name] = this.resolve_diagram_to_json(xml.children[diagram].children[0].children[0].children)
+
+      var sub, data
+      [sub, data] = this.resolve_diagram_to_json(xml.children[diagram].children[0].children[0].children)
+
+
+      var title = xml.children[diagram].attributes.name
+
+      if(sub){
+        title += " - SUBGRAPH"
+      }
+      
+      json_data.modular_pkgs[title] = data 
     }
 
     return json_data
@@ -185,6 +196,8 @@ export default class Builder extends Component {
     var thegraph = {oracles : [], graph : {}}
 
     var packids = {}
+
+    var sub = false
 
     for(var cell in cells){
 
@@ -209,7 +222,6 @@ export default class Builder extends Component {
       }
 
     }
-
 
     for(var cell in cells){
 
@@ -240,6 +252,9 @@ export default class Builder extends Component {
                 // oracle 
            
                 thegraph.oracles.push([packids[check.attributes.target],thecell.attributes.value])
+              }else if (check.attributes.hasOwnProperty("source")){
+                sub = true
+                thegraph.graph[packids[check.attributes.source]].push(["",thecell.attributes.value])
               }
     
             }
@@ -269,12 +284,8 @@ export default class Builder extends Component {
 
 
     }
-    
-    console.log("The graph")
-    console.log(thegraph)
 
-
-    return thegraph;
+    return [sub, thegraph];
 
 
   }

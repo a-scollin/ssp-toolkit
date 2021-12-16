@@ -82,25 +82,62 @@ decompose(event){
               
         var out_edges = 0;
         
+        var match = false
+
         for(var edge in this.state.cell.edges){
         
           if(this.state.cell.edges[edge].target.value == this.state.cell.value){
         
-            in_edges++;
-        
+             match = false
+
+            for(var in_edge in subGraph.oracles){
+
+                if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_{")[0] == this.state.cell.edges[edge].value.split("_{")[0]){
+                    match = true
+                    break
+                }
+
+            }
+
+            if (!match){
+                alert("Please ensure in_edges match") 
+            }else{
+                in_edges++;
+            }
+            
+            
           }else{
         
-            out_edges++;
+            // match = false
+
+            // for(var pack_out in subGraph.graph){
+
+            //     for(var edge_out in subGraph.graph[pack_out]){
+
+            //         if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_{")[0] == this.state.cell.edges[edge].value.split("_{")[0]){
+            //             match = true
+            //             break
+            //         }
+
+            //     }
+
+              
+
+            // }
+
+            // if (!match){
+            //     alert("Please ensure in_edges match") 
+            // }else{
+                out_edges++;
+            // }
+            
+
+            
         
           }
         
         }
     
-        if(subGraph.oracles.length != in_edges) {
-            
-            alert("Please ensure in_edges match") 
-            return
-        }
 
         var out = 0;
         for(var node in subGraph.graph){
@@ -128,14 +165,16 @@ decompose(event){
         
         }
 
+        // Resolve ingoing edges, Realising now that this is actually wrong if theres a decomposition to be done on a package that has an oracle
+
         if (isOraclePack){
             console.log("ISORACLE")
             for(var edge in newGraph.oracles){
                 if (newGraph.oracles[edge][0] == this.state.cell.value) {
                     for (var subedge in subGraph.oracles) {
                         if (subGraph.oracles[subedge][1] == newGraph.oracles[edge][1]){
-                            
                             newGraph.oracles[edge][0] = subGraph.oracles[subedge][0]
+
                         }
                     }
                 }
@@ -152,8 +191,13 @@ decompose(event){
                     if(newGraph.graph[pack][edge][0] == this.state.cell.value){
 
                         for (var oracle in subGraph.oracles){
-                            if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
-                                newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]
+                            if(subGraph.oracles[oracle][1].split("_{")[0] == newGraph.graph[pack][edge][1].split("_{")[0]){
+                                if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
+                                    newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]    
+                                }else{
+                                    newGraph.graph[pack].push([subGraph.oracles[oracle][0],subGraph.oracles[oracle][1]])
+                                }
+                                
                             }
                     }
         
@@ -166,7 +210,7 @@ decompose(event){
 
 
 
-
+            // Resolve outgoing edges
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
                     for(var edge in newGraph.graph[this.state.cell.value]){
@@ -177,22 +221,6 @@ decompose(event){
                 }
 
             }
-        
-
-        var out_edge = []
-
-        for( var edge in newGraph.graph[this.state.cell.value]){
-            for (var pack in subGraph.graph){
-                for (var sub_edge in subGraph.graph[pack]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
-                    }
-                }
-
-            }
-        }
-
-      
 
         // for(var pack in newGraph.graph){
         //     if newGraph.graph[]
