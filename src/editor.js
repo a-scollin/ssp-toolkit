@@ -2,18 +2,20 @@ import React from "react";
 import ReactDOM from "react-dom";
 import AceEditor from "react-ace";
 
-import "ace-builds/src-noconflict/ace";
+import ace from "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-github";
+import langTools from "ace-builds/src-noconflict/ext-language_tools"
 
 var myCompleter ={
     getCompletions: function(editor, session, pos, prefix, callback) {
             var completions = [];
-            ["word1", "word2"].forEach(function(w) {
+            ["\"expand\" : { ... }", "\"decompose\" : { ... }", "\"compose\" : { ... }"].forEach(function(w) {
     
                 completions.push({
+                    caption: w.split(":")[0],
                     value: w,
-                    meta: "my completion",
+                    meta: "Transformation",
     
                 });
             });
@@ -21,8 +23,7 @@ var myCompleter ={
         }
     }
 
-const langTools = ace.acequire('ace/ext/language_tools');
-
+langTools.setCompleters([])
 langTools.addCompleter(myCompleter);
 
 function TextEditor(props) {
@@ -30,13 +31,13 @@ function TextEditor(props) {
   return (
 <>      <AceEditor
         mode="json"
-        theme="dreamweaver"
-        onChange={(value, stat) => {
-          console.log("onChange", value, stat);
-        }}
+        theme="github"
         value={props.text}
         name="UNIQUE_ID_OF_DIV"
         editorProps={{ $blockScrolling: true }}
+        setOptions={{
+            enableLiveAutocompletion: true,
+          }}
       />
  </>
   );
