@@ -82,24 +82,6 @@ export default class Builder extends Component {
             this.state.modular_pkgs.forEach((element) => {
 
               if (element.graphname == this.state.selected){
-
-              var in_edges = 0;
-              
-              var out_edges = 0;
-              
-              for(var edge in cell.edges){
-              
-                if(cell.edges[edge].target.value == cell.value){
-              
-                  in_edges++;
-              
-                }else{
-              
-                  out_edges++;
-              
-                }
-              
-              }
           
                 var expandedgraphdata = this.state.graphdata 
   
@@ -111,7 +93,7 @@ export default class Builder extends Component {
 
                   element.children.push({title : "$$" + this.state.selected + " - Decomposed on " + cell.value + "$$", graphname : this.state.selected + " - Decomposed on " + cell.value,children : []});
               
-                  this.setState({transformation : {'selected' : this.state.selected + " - Decomposed on " + cell.value, 'type' : "decompose", 'in_edges' : in_edges, 'out_edges' : out_edges, 'cell' : cell.value}});
+                  this.setState({transformation : {'selected' : this.state.selected + " - Decomposed on " + cell.value, 'type' : "decompose", 'cell' : cell}});
               
                 })
   

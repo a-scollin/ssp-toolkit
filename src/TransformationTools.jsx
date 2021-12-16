@@ -43,7 +43,7 @@ console.log(this.state)
     });} else if (this.props.transformationselection['type'] == 'decompose'){
         console.log("Here")
         console.log(this.props.transformationselection)
-        this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], in_edges : this.props.transformationselection['in_edges'], out_edges : this.props.transformationselection['out_edges'], cell : this.props.transformationselection['cell']},() => {
+        this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell']},() => {
             if (this.props.transformationselection != {}){
                 this.setup()
             }else{
@@ -77,7 +77,27 @@ decompose(event){
             return
         }
 
-        if(subGraph.oracles.length != this.state.in_edges) {
+
+        var in_edges = 0;
+              
+        var out_edges = 0;
+        
+        for(var edge in this.state.cell.edges){
+        
+          if(this.state.cell.edges[edge].target.value == this.state.cell.value){
+        
+            in_edges++;
+        
+          }else{
+        
+            out_edges++;
+        
+          }
+        
+        }
+    
+        if(subGraph.oracles.length != in_edges) {
+            
             alert("Please ensure in_edges match") 
             return
         }
@@ -91,7 +111,7 @@ decompose(event){
             }
         }
 
-        if (out != this.state.out_edges){
+        if (out != out_edges){
             alert("Please ensure out_edges match") 
             return
         }
@@ -102,7 +122,7 @@ decompose(event){
 
         for( var oracle in newGraph.oracles){
 
-            if (newGraph.oracles[oracle][0] == this.state.cell){
+            if (newGraph.oracles[oracle][0] == this.state.cell.value){
                 isOraclePack = true
             }
         
@@ -111,7 +131,7 @@ decompose(event){
         if (isOraclePack){
             console.log("ISORACLE")
             for(var edge in newGraph.oracles){
-                if (newGraph.oracles[edge][0] == this.state.cell) {
+                if (newGraph.oracles[edge][0] == this.state.cell.value) {
                     for (var subedge in subGraph.oracles) {
                         if (subGraph.oracles[subedge][1] == newGraph.oracles[edge][1]){
                             
@@ -125,11 +145,11 @@ decompose(event){
 
         for( var pack in newGraph.graph){
             
-            if (pack != this.state.cell) { 
+            if (pack != this.state.cell.value) { 
 
                 for (var edge in newGraph.graph[pack]){
 
-                    if(newGraph.graph[pack][edge][0] == this.state.cell){
+                    if(newGraph.graph[pack][edge][0] == this.state.cell.value){
 
                         for (var oracle in subGraph.oracles){
                             if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
@@ -149,9 +169,9 @@ decompose(event){
 
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
-                    for(var edge in newGraph.graph[this.state.cell]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell][edge][1]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell][edge][0]
+                    for(var edge in newGraph.graph[this.state.cell.value]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
                     }
                 }
                 }
@@ -161,11 +181,11 @@ decompose(event){
 
         var out_edge = []
 
-        for( var edge in newGraph.graph[this.state.cell]){
+        for( var edge in newGraph.graph[this.state.cell.value]){
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell][edge][1]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell][edge][0]
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1]){
+                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
                     }
                 }
 
@@ -179,7 +199,7 @@ decompose(event){
         // }
 
 
-        delete newGraph.graph[this.state.cell]; 
+        delete newGraph.graph[this.state.cell.value]; 
 
         for(var subgraph in subGraph.graph){
             newGraph.graph[subgraph] = subGraph.graph[subgraph]
