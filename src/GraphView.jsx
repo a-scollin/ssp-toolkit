@@ -79,10 +79,13 @@ console.log(this.state)
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);
 
+      
+
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
 
+      var layout = new mx.mxSwimlaneLayout(graph);
 
       // Enables tooltips, new connections and panning
       graph.setPanning(false);
@@ -95,6 +98,21 @@ console.log(this.state)
       graph.setAllowDanglingEdges(false);
       graph.setDisconnectOnMove(false);
 
+      var style = [];
+      style[mx.mxConstants.STYLE_SHAPE] = mx.mxConstants.SHAPE_SWIMLANE;
+      style[mx.mxConstants.STYLE_PERIMETER] = mx.mxPerimeter.RectanglePerimeter;
+      style[mx.mxConstants.STYLE_STROKECOLOR] = 'none';
+      style[mx.mxConstants.STYLE_FONTCOLOR] = '#606060';
+      style[mx.mxConstants.STYLE_FILLCOLOR] = 'none';
+      style[mx.mxConstants.STYLE_GRADIENTCOLOR] = 'white';
+      style[mx.mxConstants.STYLE_STARTSIZE] = 30;
+      style[mx.mxConstants.STYLE_ROUNDED] = false;
+      style[mx.mxConstants.STYLE_FONTSIZE] = 12;
+      style[mx.mxConstants.STYLE_FONTSTYLE] = 0;
+      style[mx.mxConstants.STYLE_HORIZONTAL] = false;
+      // To improve text quality for vertical labels in some old IE versions...
+      style[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#efefef';
+      graph.getStylesheet().putCellStyle('swimlane', style);
     
       // styling
       var style = graph.getStylesheet().getDefaultVertexStyle();
@@ -126,7 +144,10 @@ console.log(this.state)
           try {
         
             graph.getModel().beginUpdate();
-    
+            
+            var lane1 = graph.insertVertex(parent, null, this.state.selected, 0, 0, 1000, 500, 'swimlane');
+
+            lane1.setConnectable(false);
 
           var dict = {};
 
@@ -137,10 +158,10 @@ console.log(this.state)
           for (var element in this.state.graphdata.modular_pkgs[selected].graph){
          
             if(element == 'Adv'){
-              var graphElement = graph.insertVertex(parent, null, "", 20, 20, 10, 200);    
+              var graphElement = graph.insertVertex(lane1, null, "", 20, 20, 10, 200);    
               graphElement.style = 'fillColor=none;strokeColor=none;';        
             }else{
-              var graphElement = graph.insertVertex(parent, null, element, 20, 20, 80, 50);            
+              var graphElement = graph.insertVertex(lane1, null, element, 20, 20, 80, 50);            
             }
 
             
@@ -151,7 +172,7 @@ console.log(this.state)
           
               for(var oracle in this.state.graphdata.modular_pkgs[selected].oracles){
               
-                graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[selected].oracles[oracle][0]]);
+                graph.insertEdge(lane1, null,this.state.graphdata.modular_pkgs[selected].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[selected].oracles[oracle][0]]);
               
               }
 
@@ -159,7 +180,7 @@ console.log(this.state)
               if (this.state.graphdata.modular_pkgs[selected].graph[element].length > 0){
 
                 for(var edge in this.state.graphdata.modular_pkgs[selected].graph[element]){
-                  graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[selected].graph[element][edge][0]]);
+                  graph.insertEdge(lane1, null,this.state.graphdata.modular_pkgs[selected].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[selected].graph[element][edge][0]]);
                 }
               }
 
@@ -171,35 +192,48 @@ console.log(this.state)
         graph.getModel().endUpdate();
 
       }
+      
+      		// Executes the layout
+					layout.orientation = mx.mxConstants.DIRECTION_WEST;
 
-        // Creates a layout algorithm to be used with the graph
-        var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
+					layout.resizeParent = true;
 
-        layout.intraCellSpacing=80;
-        layout.interRankCellSpacing=170;
-        layout.parallelEdgeSpacing=50;
-        // Moves stuff wider apart than usual
-        layout.forceConstant = 500;
-        layout.execute(parent, dict['Adv']);
+          layout.moveParent = true;
+
+
+          layout.parallelEdgeSpacing = 20
+
+          layout.parentBorder = 100
+
+        // layout.execute(parent, dict['Adv']);
+
+        // // Translates graph down y axis 10 so it's not cut off! 
+        // graph.getView().setTranslate(0,10);
+  
+
+        dict['Adv'].getGeometry().height = 700
+
+
+
+      layout.execute(lane1, lane1.children)
+
+      layout.execute(parent, parent.children);
+
+        // // Creates a layout algorithm to be used with the graph
+        // var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
+
+        // layout.intraCellSpacing=80;
+        // layout.interRankCellSpacing=170;
+        // layout.parallelEdgeSpacing=50;
+        // // Moves stuff wider apart than usual
+        // layout.forceConstant = 500;
+
+        // layout.execute(parent, dict['Adv']);
        
-        var highest_y = 10;
-        var lowest_y = 10;
-
-        graph.getModel().getChildVertices(parent).forEach(function (item, index) {
-          if(item.geometry.y > highest_y){
-            highest_y = item.geometry.y
-          }
-          if(item.geometry.y < lowest_y){
-            lowest_y = item.geometry.y
-          }
-        });
-
-        dict['Adv'].getGeometry().height = highest_y - lowest_y
-
-        layout.execute(parent, dict['Adv']);
+   
 
         // Translates graph down y axis 10 so it's not cut off! 
-        graph.getView().setTranslate(0,10);
+        // graph.getView().setTranslate(0,10);
 
 				// Configures automatic expand on mouseover
 				graph.popupMenuHandler.autoExpand = true;
