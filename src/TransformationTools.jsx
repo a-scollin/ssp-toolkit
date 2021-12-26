@@ -256,7 +256,7 @@ decompose(event){
     if (this.state.type == "expand"){
 
         for (var node in this.state.graphdata.graph){
-            if (node.split("_{").length == 2){
+            if (node.split("...").length == 2){
                 options.push(<ReflexElement flex={0.8} key={node}>{node}
                 <div key={node} reference={node} className="boxpad">
                 <Slider style={{opacity : 1}}

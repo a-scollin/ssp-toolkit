@@ -85,8 +85,7 @@ console.log(this.state)
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
 
-      var layout = new mx.mxSwimlaneLayout(graph);
-
+    
       // Enables tooltips, new connections and panning
       graph.setPanning(false);
       graph.setTooltips(false);
@@ -172,7 +171,7 @@ console.log(this.state)
           
               for(var oracle in this.state.graphdata.modular_pkgs[selected].oracles){
               
-                graph.insertEdge(lane1, null,this.state.graphdata.modular_pkgs[selected].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[selected].oracles[oracle][0]]);
+                graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[selected].oracles[oracle][0]]);
               
               }
 
@@ -180,7 +179,7 @@ console.log(this.state)
               if (this.state.graphdata.modular_pkgs[selected].graph[element].length > 0){
 
                 for(var edge in this.state.graphdata.modular_pkgs[selected].graph[element]){
-                  graph.insertEdge(lane1, null,this.state.graphdata.modular_pkgs[selected].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[selected].graph[element][edge][0]]);
+                  graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[selected].graph[element][edge][0]]);
                 }
               }
 
@@ -193,6 +192,8 @@ console.log(this.state)
 
       }
       
+      var layout = new mx.mxSwimlaneLayout(graph);
+    
       		// Executes the layout
 					layout.orientation = mx.mxConstants.DIRECTION_WEST;
 
@@ -200,8 +201,7 @@ console.log(this.state)
 
           layout.moveParent = true;
 
-
-          layout.parallelEdgeSpacing = 20
+          layout.parallelEdgeSpacing = 0
 
           layout.parentBorder = 100
 
@@ -214,10 +214,9 @@ console.log(this.state)
         dict['Adv'].getGeometry().height = 700
 
 
-
-      layout.execute(lane1, lane1.children)
-
-      layout.execute(parent, parent.children);
+      layout.execute(lane1, lane1.children)   
+         
+      layout.execute(parent, parent.children);    
 
         // // Creates a layout algorithm to be used with the graph
         // var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
