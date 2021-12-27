@@ -41,7 +41,7 @@ export default class Builder extends Component {
 
       if (cell.value.split("_{").length == 2){   
         
-        if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){          
+
 
           this.state.modular_pkgs.forEach((element) => {
             if (element.graphname == this.state.selected){
@@ -61,7 +61,7 @@ export default class Builder extends Component {
           
           
           return
-        }
+        
 
       }
   

@@ -165,6 +165,7 @@ decompose(event){
         
         }
 
+
         // Resolve ingoing edges, Realising now that this is actually wrong if theres a decomposition to be done on a package that has an oracle
 
         if (isOraclePack){
@@ -214,7 +215,7 @@ decompose(event){
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
                     for(var edge in newGraph.graph[this.state.cell.value]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("*")[0]){
                         subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
                     }
                 }
@@ -255,7 +256,9 @@ decompose(event){
 
     if (this.state.type == "expand"){
 
-        for (var node in this.state.graphdata.graph){
+        console.log(this.state)
+
+        for (var node in this.state.selected_graphdata.graph){
             if (node.split("...").length == 2){
                 options.push(<ReflexElement flex={0.8} key={node}>{node}
                 <div key={node} reference={node} className="boxpad">
@@ -300,29 +303,69 @@ decompose(event){
 }
 
 expand(target){
-    
+  
+var newGraph = this.state.selected_graphdata;
 
-    if(!this.valdict.hasOwnProperty(target.name)){
-        this.valdict[target.name] = target.value
+
+
+var const_edges_to_add = []
+
+for(var edge in this.state.selected_graphdata.oracles){
+
+    if(this.state.selected_graphdata.oracles[edge][0] == target.name && this.state.selected_graphdata.oracles[edge][1].split("...").length == 2){
+    
+        const_edges_to_add.push(this.state.selected_graphdata.oracles[edge][1])
+
     }
-    
-    if(this.valdict[target.name] != target.value){
-        this.valdict[target.name] = target.value
 
-        var newGraph = this.state.selected_graphdata;
-
-        for(var node in newGraph.graph){
-            if(node == target.name){
-                console.log(node)
-                break 
-            }
-        }
-
-    this.setState({selected_graphdata : newGraph}, ()=>{
-        this.udpateGraph(false)
-    })
-    
 }
+
+for(var pack in this.state.selected_graphdata.graph){
+
+    for(var edge in this.state.selected_graphdata.graph[pack]){
+
+    if(this.state.selected_graphdata.graph[pack][edge][0] == target.name && this.state.selected_graphdata.graph[pack][edge][1].split("...").length == 2){
+    
+        const_edges_to_add.push(this.state.selected_graphdata.graph[pack][edge][1])
+
+    }
+
+}
+
+}
+
+for(var i = 1; i <= target.value; i++){
+    
+    console.log(const_edges_to_add)
+    
+
+
+
+}
+
+
+
+//     if(!this.valdict.hasOwnProperty(target.name)){
+//         this.valdict[target.name] = target.value
+//     }
+    
+//     if(this.valdict[target.name] != target.value){
+//         this.valdict[target.name] = target.value
+
+//         var newGraph = this.state.selected_graphdata;
+
+//         for(var node in newGraph.graph){
+//             if(node == target.name){
+//                 console.log(node)
+//                 break 
+//             }
+//         }
+
+//     this.setState({selected_graphdata : newGraph}, ()=>{
+//         this.udpateGraph(false)
+//     })
+    
+// }
     
 }
 
