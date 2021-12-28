@@ -13,6 +13,7 @@ import {
     ReflexElement
   } from 'react-reflex'
 import { ThemeProvider } from "react-bootstrap";
+import { getCheckboxUtilityClass } from "@mui/material";
 
 
 export default class TransformationTools extends Component {
@@ -21,6 +22,7 @@ export default class TransformationTools extends Component {
     this.state = {selected_graphdata : null, selection : null, type : null, options : []};
     this.GraphRef = React.createRef()
     this.valdict = {}
+    this.targetval = 0
    console.log("INIT")
   
   }
@@ -215,7 +217,7 @@ decompose(event){
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
                     for(var edge in newGraph.graph[this.state.cell.value]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("*")[0]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("}")[0]){
                         subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
                     }
                 }
@@ -247,21 +249,63 @@ decompose(event){
 
 }
   
+findchain(graph, node){
+
+    var chain = node
+
+    for(var edge in graph[node]){
+
+        if(graph[node][edge][0].split('...').length == 2){
+                
+                var chaining = this.findchain(graph,graph[node][edge][0])          
+                console.log(chaining)
+                chain += ',' + chaining; 
+                console.log(chain)  
+        }
+
+    }
+
+    return chain;
+            
+    }
+
 
 
 
   setup(){
 
+    var option_pairs = []
+
     var options = []
 
     if (this.state.type == "expand"){
 
-        console.log(this.state)
-
         for (var node in this.state.selected_graphdata.graph){
             if (node.split("...").length == 2){
-                options.push(<ReflexElement flex={0.8} key={node}>{node}
-                <div key={node} reference={node} className="boxpad">
+                
+                option_pairs.push(this.findchain(this.state.selected_graphdata.graph, node))
+                
+            }
+        }
+
+        var remove_pair = []
+
+        for (var pair in option_pairs){
+            for (var otherpair in option_pairs){
+                if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].includes(option_pairs[pair])){
+
+                    remove_pair.push(option_pairs[pair])
+
+                }
+            }
+
+        } 
+      
+        option_pairs = option_pairs.filter(item => !remove_pair.includes(item))
+
+        for(var pair in option_pairs){
+            options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
+                <div key={option_pairs[pair]} reference={option_pairs[pair]} className="boxpad">
                 <Slider style={{opacity : 1}}
   aria-label="Temperature"
   defaultValue={30}
@@ -270,12 +314,11 @@ decompose(event){
   marks
   min={1}
   max={10}
-  name={node}
+  name={option_pairs[pair]}
   onChange={ (e, val) => this.expand(e.target)}  />
 </div>
                 </ReflexElement>)
                 options.push(<ReflexSplitter/>)
-            }
         }
 
         options.pop()
@@ -306,19 +349,35 @@ expand(target){
   
 var newGraph = this.state.selected_graphdata;
 
+if(this.targetval == target.value){
+    return 
+}
 
+this.targetval = target.value
 
-var const_edges_to_add = []
+var chain = target.name.split(",")
 
-for(var edge in this.state.selected_graphdata.oracles){
+var const_edges_to_add = {}
 
-    if(this.state.selected_graphdata.oracles[edge][0] == target.name && this.state.selected_graphdata.oracles[edge][1].split("...").length == 2){
+for(var pack in chain){
+
+    for(var edge in this.state.selected_graphdata.oracles){
+
+        if(this.state.selected_graphdata.oracles[edge][0] == chain[pack] && this.state.selected_graphdata.oracles[edge][1].split("...").length == 2){
+        
+            // TODO Resolve constant edges, ie things that are many to one for each package, then resovle the new edges using the new expansion rules as defined 
+            // in the edge name * 
+
+            const_edges_to_add[chain[pack]] += this.state.selected_graphdata.oracles[edge][1]
     
-        const_edges_to_add.push(this.state.selected_graphdata.oracles[edge][1])
-
+        }
+    
     }
 
+
 }
+
+
 
 for(var pack in this.state.selected_graphdata.graph){
 
@@ -337,9 +396,6 @@ for(var pack in this.state.selected_graphdata.graph){
 for(var i = 1; i <= target.value; i++){
     
     console.log(const_edges_to_add)
-    
-
-
 
 }
 
