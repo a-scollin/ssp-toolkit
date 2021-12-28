@@ -168,6 +168,8 @@ decompose(event){
         }
 
 
+        var edges_for_removal = []
+
         // Resolve ingoing edges, Realising now that this is actually wrong if theres a decomposition to be done on a package that has an oracle
 
         if (isOraclePack){
@@ -185,7 +187,7 @@ decompose(event){
         }else{
             console.log("ISntORACLE")
 
-        for( var pack in newGraph.graph){
+        for(var pack in newGraph.graph){
             
             if (pack != this.state.cell.value) { 
 
@@ -196,8 +198,11 @@ decompose(event){
                         for (var oracle in subGraph.oracles){
                             if(subGraph.oracles[oracle][1].split("_{")[0] == newGraph.graph[pack][edge][1].split("_{")[0]){
                                 if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
-                                    newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]    
+                                    newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]        
                                 }else{
+                                    if (subGraph.oracles[oracle][1].split("_{")[0] == newGraph.graph[pack][edge][1].split("_{")[0]){
+                                        edges_for_removal.push(newGraph.graph[pack][edge])
+                                    }
                                     newGraph.graph[pack].push([subGraph.oracles[oracle][0],subGraph.oracles[oracle][1]])
                                 }
                                 
@@ -229,12 +234,17 @@ decompose(event){
         //     if newGraph.graph[]
         // }
 
-
         delete newGraph.graph[this.state.cell.value]; 
 
         for(var subgraph in subGraph.graph){
             newGraph.graph[subgraph] = subGraph.graph[subgraph]
+        }
 
+        console.log("edges_for_removal")
+        console.log(edges_for_removal)
+
+        for(var pack in newGraph.graph){
+            newGraph.graph[pack] = newGraph.graph[pack].filter(item => !edges_for_removal.includes(item))
         }
 
         this.setState({selected_graphdata : newGraph}, ()=>{
@@ -251,21 +261,27 @@ decompose(event){
   
 findchain(graph, node){
 
-    var chain = node
+   var longestchain = []
+
+    if (graph[node].length == 0){
+        return [node]
+    }
 
     for(var edge in graph[node]){
 
         if(graph[node][edge][0].split('...').length == 2){
                 
-                var chaining = this.findchain(graph,graph[node][edge][0])          
-                console.log(chaining)
-                chain += ',' + chaining; 
-                console.log(chain)  
-        }
+                var newchain = this.findchain(graph,graph[node][edge][0])
 
+                if (newchain.length > longestchain.length) {
+                    longestchain = newchain
+                }
+        
+            }
     }
 
-    return chain;
+    return [node, ...longestchain]
+    
             
     }
 
@@ -281,18 +297,22 @@ findchain(graph, node){
     if (this.state.type == "expand"){
 
         for (var node in this.state.selected_graphdata.graph){
-            if (node.split("...").length == 2){
+         for(var edge in this.state.selected_graphdata.graph[node]){  
+            if (this.state.selected_graphdata.graph[node][edge][0].split("...").length == 2 && this.state.selected_graphdata.graph[node][edge][1].split("#").length != 2){
                 
                 option_pairs.push(this.findchain(this.state.selected_graphdata.graph, node))
-                
+
             }
         }
+        }
+
+        console.log(option_pairs)
 
         var remove_pair = []
 
         for (var pair in option_pairs){
             for (var otherpair in option_pairs){
-                if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].includes(option_pairs[pair])){
+                if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].length > option_pairs[pair].length && option_pairs[pair].every(element => option_pairs[otherpair].includes(element))){
 
                     remove_pair.push(option_pairs[pair])
 
@@ -302,6 +322,8 @@ findchain(graph, node){
         } 
       
         option_pairs = option_pairs.filter(item => !remove_pair.includes(item))
+
+        option_pairs = Array.from(new Set(option_pairs.map(JSON.stringify)), JSON.parse)
 
         for(var pair in option_pairs){
             options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
@@ -355,28 +377,43 @@ if(this.targetval == target.value){
 
 this.targetval = target.value
 
-var chain = target.name.split(",")
+var chain = target.name
+
+var first = chain[0];
+
+var last = chain[chain.length-1]
 
 var const_edges_to_add = {}
 
+console.log(chain)
+
 for(var pack in chain){
 
-    for(var edge in this.state.selected_graphdata.oracles){
+    if(chain[pack] == last){
+        break
+    }
 
-        if(this.state.selected_graphdata.oracles[edge][0] == chain[pack] && this.state.selected_graphdata.oracles[edge][1].split("...").length == 2){
+
+    for(var edge in this.state.selected_graphdata.graph[chain[pack]]){
+
+        if(chain.includes(this.state.selected_graphdata.graph[chain[pack]][edge][0]) && this.state.selected_graphdata.graph[chain[pack]][edge][1].split("...").length == 2){
         
             // TODO Resolve constant edges, ie things that are many to one for each package, then resovle the new edges using the new expansion rules as defined 
             // in the edge name * 
-
-            const_edges_to_add[chain[pack]] += this.state.selected_graphdata.oracles[edge][1]
+            if (const_edges_to_add.hasOwnProperty(chain[pack])){
+                const_edges_to_add[chain[pack]].push(this.state.selected_graphdata.graph[chain[pack]][edge])
+            }else{
+                const_edges_to_add[chain[pack]] = [this.state.selected_graphdata.graph[chain[pack]][edge]]
+            }
     
         }
     
     }
 
-
 }
 
+console.log(const_edges_to_add)
+console.log("KEEMAN")
 
 
 for(var pack in this.state.selected_graphdata.graph){
@@ -393,9 +430,29 @@ for(var pack in this.state.selected_graphdata.graph){
 
 }
 
-for(var i = 1; i <= target.value; i++){
+for(var i = 0; i < target.value; i++){
     
     console.log(const_edges_to_add)
+
+    for(var pack in chain){
+        if(chain[pack] != first){
+
+            for(var linking in const_edges_to_add){
+                if (linking != chain[pack]){
+                    for(var edge in const_edges_to_add[linking]){
+
+                        if (const_edges_to_add[linking][edge][0] == chain[pack]){
+
+                            var number = chain[pack].split("_{")[1].split("...")[0] 
+
+                        }
+
+                    }
+                }
+            }
+
+        }
+    }
 
 }
 
