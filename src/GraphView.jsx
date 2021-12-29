@@ -236,6 +236,8 @@ console.log(this.state)
 
 				// Configures automatic expand on mouseover
 				graph.popupMenuHandler.autoExpand = true;
+
+        graph.fit()
         
 			    // Installs context menu
 				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)

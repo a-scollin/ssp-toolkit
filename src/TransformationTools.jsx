@@ -464,6 +464,8 @@ for(var pack in expandable){
                 
                 if (dyn_edges_to_add.hasOwnProperty(prev_pack)){
                     if(dyn_edges_to_add[prev_pack].hasOwnProperty(name_to)){
+                        console.log("HUFFLEPUFF")
+                        console.log(re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0])
                         dyn_edges_to_add[prev_pack][name_to].push({'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]})
                     }else{
                         dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
@@ -594,8 +596,11 @@ for(var pack in expandable){
 
 newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
-    this.setState({selected_graphdata : newGraph})
+    this.setState({selected_graphdata : newGraph}, () => {
+    this.udpateGraph(false)
+    })
 
+    
 
 // Expansion almost fully working YEEEHAWWWW! 
 

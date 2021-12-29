@@ -385,6 +385,12 @@ notFinsihedTransform(rowInfo){
 <ReflexSplitter/>
 <ReflexElement flex={0.6} minSize="100"> 
 <SortableTree
+          onVisibilityToggle={({treeData})=>{
+            console.log("treeData")
+            console.log(treeData)
+          }}
+          style={{width: '100px'}}
+          isVirtualized={false}
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
           generateNodeProps={rowInfo => ({
