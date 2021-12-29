@@ -325,6 +325,10 @@ findchain(graph, node){
 
         option_pairs = Array.from(new Set(option_pairs.map(JSON.stringify)), JSON.parse)
 
+        console.log("option_pairs")
+        console.log(option_pairs)
+
+
         for(var pair in option_pairs){
             options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
                 <div key={option_pairs[pair]} reference={option_pairs[pair]} className="boxpad">
@@ -379,83 +383,218 @@ this.targetval = target.value
 
 var chain = target.name
 
-var first = chain[0];
+var expandable = target.name.slice(1)
 
-var last = chain[chain.length-1]
+var expandable_names = expandable.map(x => x.split('_{')[0])
+
+var to_expand = {}
+
+console.log("expandable_names")
+console.log(expandable_names)
+var prev_pack = chain[0]
 
 var const_edges_to_add = {}
 
-console.log(chain)
+var dyn_edges_to_add = {}
 
-for(var pack in chain){
+var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
 
-    if(chain[pack] == last){
-        break
+for(var pack in expandable){
+
+    if(expandable[pack].split('...').length != 2){
+        alert("WRONG!")
+        return
     }
 
+    var name = expandable[pack].split('_{')[0]
 
-    for(var edge in this.state.selected_graphdata.graph[chain[pack]]){
+    var base = expandable[pack].split('...')[0]
 
-        if(chain.includes(this.state.selected_graphdata.graph[chain[pack]][edge][0]) && this.state.selected_graphdata.graph[chain[pack]][edge][1].split("...").length == 2){
+    base = base.charAt(base.length - 1)
+
+    to_expand[expandable[pack]] = {"name" : name, "base" : base}
+
+    for(var edge in this.state.selected_graphdata.graph[prev_pack]){
+
         
-            // TODO Resolve constant edges, ie things that are many to one for each package, then resovle the new edges using the new expansion rules as defined 
-            // in the edge name * 
-            if (const_edges_to_add.hasOwnProperty(chain[pack])){
-                const_edges_to_add[chain[pack]].push(this.state.selected_graphdata.graph[chain[pack]][edge])
+        if(expandable.includes(this.state.selected_graphdata.graph[prev_pack][edge][0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("...").length == 2){
+        
+            if (const_edges_to_add.hasOwnProperty(prev_pack)){
+                
+                var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("...")[0]
+                
+                edge_base = edge_base.charAt(edge_base.length - 1)
+
+                const_edges_to_add[prev_pack].push({'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]})
+            
             }else{
-                const_edges_to_add[chain[pack]] = [this.state.selected_graphdata.graph[chain[pack]][edge]]
+                
+                var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("...")[0]
+
+                edge_base = edge_base.charAt(edge_base.length - 1)
+
+                const_edges_to_add[prev_pack] = [{'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
             }
     
         }
-    
-    }
 
-}
+        if(prev_pack != chain[0]){
 
-console.log(const_edges_to_add)
-console.log("KEEMAN")
+        if(expandable_names.includes(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("*").length == 2){
+            
+            var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("*")[0]
 
+            edge_base = edge_base.charAt(edge_base.length - 1)
 
-for(var pack in this.state.selected_graphdata.graph){
+            var name_to = this.state.selected_graphdata.graph[prev_pack][edge][0]
 
-    for(var edge in this.state.selected_graphdata.graph[pack]){
+            var re = new RegExp(/^\d+/);
 
-    if(this.state.selected_graphdata.graph[pack][edge][0] == target.name && this.state.selected_graphdata.graph[pack][edge][1].split("...").length == 2){
-    
-        const_edges_to_add.push(this.state.selected_graphdata.graph[pack][edge][1])
+            if(this.state.selected_graphdata.graph[prev_pack][edge][0].split("...").length != 2){
+                
+                for(var match in expandable){
+                    if(expandable[match].split("_{")[0] == this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[0]){
+                        name_to = expandable[match]
 
-    }
-
-}
-
-}
-
-for(var i = 0; i < target.value; i++){
-    
-    console.log(const_edges_to_add)
-
-    for(var pack in chain){
-        if(chain[pack] != first){
-
-            for(var linking in const_edges_to_add){
-                if (linking != chain[pack]){
-                    for(var edge in const_edges_to_add[linking]){
-
-                        if (const_edges_to_add[linking][edge][0] == chain[pack]){
-
-                            var number = chain[pack].split("_{")[1].split("...")[0] 
-
-                        }
-
+                        break
                     }
                 }
+
+            }
+                
+                if (dyn_edges_to_add.hasOwnProperty(prev_pack)){
+                    if(dyn_edges_to_add[prev_pack].hasOwnProperty(name_to)){
+                        dyn_edges_to_add[prev_pack][name_to].push({'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]})
+                    }else{
+                        dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
+                    }
+                }else{
+                    dyn_edges_to_add[prev_pack] = {}
+                    dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0],'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
+                }
+        
+            }
+
+        }else{
+
+            // TODO RESOLVE CONSTATNT EDGES FOR ORACLES HERE 
+
+           
+        }
+
+    }
+
+    prev_pack = expandable[pack]
+
+}
+
+    console.log(dyn_edges_to_add)
+    console.log(const_edges_to_add)
+    console.log("KEEMAN")
+
+    for(var pack in to_expand){
+        
+        for(var i = 0; i < target.value; i++){
+
+            var num = parseInt(to_expand[pack]['base'])
+
+            var name_base = to_expand[pack]['name']
+
+            var new_package = name_base+'_{' +(num+i).toString()+'}'
+
+            newGraph.graph[new_package] = []
+
+        }
+        
+    }
+
+        
+    for(var pack in const_edges_to_add){
+
+        for(var edge in const_edges_to_add[pack]){
+
+            var num = parseInt(to_expand[const_edges_to_add[pack][edge]['name_to']]['base'])
+
+            var name_base = to_expand[const_edges_to_add[pack][edge]['name_to']]['name']
+
+            var edge_num = parseInt(const_edges_to_add[pack][edge]['base'])
+                
+            var edge_name_base = const_edges_to_add[pack][edge]['edge_name_base']
+
+            for(var i = 0; i < target.value; i++){
+
+                var new_package = name_base+'_{' +(num+i).toString()+'}'
+
+                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+
+                newGraph.graph[pack].push([new_package,new_edge])
+                
             }
 
         }
+
+    }
+
+    console.log("JUBILIYJEAKF")
+    console.log(dyn_edges_to_add)
+
+    for(var pack in dyn_edges_to_add){
+
+        for(var linking in dyn_edges_to_add[pack]){
+
+            for(var edge in dyn_edges_to_add[pack][linking]){
+
+            var num = parseInt(dyn_edges_to_add[pack][linking][edge]['pack_base'])
+
+            var name_base = to_expand[linking]['name']
+
+            var edge_num = parseInt(dyn_edges_to_add[pack][linking][edge]['base'])
+                
+            var edge_name_base = dyn_edges_to_add[pack][linking][edge]['edge_name_base']
+
+            var pack_base = to_expand[pack]['name']
+            
+            var pack_num = parseInt(to_expand[pack]['base'])
+
+            for(var i = 0; i < target.value; i++){
+
+                var new_linking_package = name_base+'_{' +(num+i).toString()+'}'
+
+                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+
+                var new_pack = pack_base+'_{' + (pack_num+i).toString()+'}'
+
+                console.log(new_pack)
+
+                newGraph.graph[new_pack].push([new_linking_package,new_edge])
+                
+            }
+
+        }
+
     }
 
 }
 
+var rm = []
+
+for(var pack in expandable){
+
+    for(var edge in newGraph.graph[chain[0]]){
+
+        if(newGraph.graph[chain[0]][edge][0] == expandable[pack]){
+            rm.push(newGraph.graph[chain[0]][edge])
+        }
+
+    }
+
+    delete newGraph.graph[expandable[pack]];
+
+}
+
+newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
+
+    this.setState({selected_graphdata : newGraph})
 
 
 //     if(!this.valdict.hasOwnProperty(target.name)){
