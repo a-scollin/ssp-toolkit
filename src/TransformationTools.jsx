@@ -597,6 +597,21 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
     this.setState({selected_graphdata : newGraph})
 
 
+// Expansion almost fully working YEEEHAWWWW! 
+
+// TODO :
+//  Add oracle suppourt for constant edges (scripted edges dont make sense for oracles)
+//  Add a displayed_graph, instead of altering selected_graphdata for display - The expansion method is one way.. 
+//  Think about edge cases with cycles and write explicit rules
+//  Add support for the # edges.. should be easy just add any edges at end to the package name, also add the ... 
+//  ... dth package at end when deleting.. 
+
+
+
+
+
+
+
 //     if(!this.valdict.hasOwnProperty(target.name)){
 //         this.valdict[target.name] = target.value
 //     }
