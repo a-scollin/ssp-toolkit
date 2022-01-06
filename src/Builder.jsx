@@ -291,7 +291,7 @@ export default class Builder extends Component {
     let items = [];         
     var i = 0;
     for (var graphname in this.state.graphdata.modular_pkgs) {   
-         items.push({title : '$$' + graphname + '$$', number : 0, graphname : graphname, children : []});   
+         items.push({title : '$$' + graphname + '$$', number : {"expand" : {}, "decompose" : {}, "composition" : {}}, graphname : graphname, children : []});   
          i++;
          //here I will be creating my options dynamically based on
          //what props are currently passed to the parent component
@@ -325,6 +325,8 @@ if(fin){
 }
 
 
+
+
 matchSortableTreeElmSave(element,newGraphData){
 
   if (element.graphname == this.state.transformation["basename"]){
@@ -332,19 +334,25 @@ matchSortableTreeElmSave(element,newGraphData){
 
     var graphname = this.state.transformation['selected']
 
-    var number = 0
+    var number = element.number[this.state.transformation['type']]
 
-      for(var child in element.children){
-        if (element.children[child].graphname == graphname && element.children[child].number >= number) {
-          number = element.children[child].number + 1
-        }
-      }
+    console.log('number')
+    console.log(number)
 
-      if(number != 0) {
-        graphname = graphname + ' (' + number.toString() + ') '
-      }
+    if(number.hasOwnProperty(graphname)){
 
-      element.children.push({title : '$$' + graphname + '$$', graphname : graphname, number : number, children : []})
+      number = number[graphname]
+
+      element.number[this.state.transformation['type']][graphname] += 1;
+ 
+      graphname = graphname + '  (' + number.toString() + ') '
+
+    }else{
+      element.number[this.state.transformation['type']][graphname] = 1
+    }
+
+
+      element.children.push({title : '$$' + graphname + '$$', graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}}, children : []})
       
       this.setState(prevState => {
 
