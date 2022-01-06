@@ -35,24 +35,15 @@ console.log(this.props)
 console.log(this.state)
 
     if(this.props.selected_graphdata != null && this.props.transformationselection != prevProps.transformationselection && this.props.transformationselection != {}){
-        if (this.props.transformationselection['type'] == 'expand'){
-            this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type']},() => {
-            if (this.props.transformationselection != {}){
-            this.setup()
-        }else{
-            this.setState({options : []})
-        }
-    });} else if (this.props.transformationselection['type'] == 'decompose'){
-        console.log("Here")
-        console.log(this.props.transformationselection)
-        this.setState({selected_graphdata : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell']},() => {
+      
+        this.setState({selected_graphdata : this.props.selected_graphdata, displayed : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell']},() => {
             if (this.props.transformationselection != {}){
                 this.setup()
             }else{
                 this.setState({options : []})
             }
         });
-    }
+    
 
     }
      
@@ -247,8 +238,8 @@ decompose(event){
             newGraph.graph[pack] = newGraph.graph[pack].filter(item => !edges_for_removal.includes(item))
         }
 
-        this.setState({selected_graphdata : newGraph}, ()=>{
-        this.udpateGraph(false)
+        this.setState({displayed : newGraph}, ()=>{
+        this.updateGraph(false)
     });
 
 }
@@ -596,8 +587,8 @@ for(var pack in expandable){
 
 newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
-    this.setState({selected_graphdata : newGraph}, () => {
-    this.udpateGraph(false)
+    this.setState({displayed : newGraph}, () => {
+    this.updateGraph(false)
     })
 
     
@@ -606,7 +597,6 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
 // TODO :
 //  Add oracle suppourt for constant edges (scripted edges dont make sense for oracles)
-//  Add a displayed_graph, instead of altering selected_graphdata for display - The expansion method is one way.. 
 //  Think about edge cases with cycles and write explicit rules
 //  Add support for the # edges.. should be easy just add any edges at end to the package name, also add the ... 
 //  ... dth package at end when deleting.. 
@@ -641,11 +631,11 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
     
 }
 
-  udpateGraph(fin=true){
+  updateGraph(fin){
       if(this.state.selection != null){
-        this.props.update(this.state.selected_graphdata, this.state.selection, fin);
+        this.props.update(this.state.displayed, fin);
         if (fin){
-        this.setState({selected_graphdata : null, selection : null, type : null, options : []});
+        this.setState({selected_graphdata : null, displayed : null, selection : null, type : null, options : []});
         this.valdict = {};
     }
 }
@@ -654,7 +644,7 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
   render() {
 
-    var save_tool =  this.state.selection != null ? <button onClick={this.udpateGraph.bind(this)}>Save</button> : <></>
+    var save_tool =  this.state.selection != null ? <button onClick={() => this.updateGraph(true)}>Save</button> : <></>
   
       return (
         <ReflexContainer orientation="vertical"> 

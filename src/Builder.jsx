@@ -18,9 +18,11 @@ import GraphView from "./GraphView";
 import Packages from "./Packages";
 import Latex from "./Latex";
 import { height } from "dom-helpers";
+import FileExplorerTheme from 'react-sortable-tree-theme-file-explorer';
 
 import TransformationTools from "./TransformationTools";
-import { radioClasses } from "@mui/material";
+import { radioClasses, touchRippleClasses } from "@mui/material";
+import { fontSize } from "@mui/system";
 
 const pako = require('pako');
 
@@ -30,48 +32,63 @@ export default class Builder extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}};    
+    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}};    
   }
 
   // Function to be passed to graph view for invoking an expansion 
 
   expandGraph(cell) {
-    
+
     if (cell != null){
 
       if (cell.value.split("_{").length == 2){   
         
+        for(var element in this.state.modular_pkgs) {
+                
+          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'decompose', cell)){
+            return 
+          }
 
-
-          this.state.modular_pkgs.forEach((element) => {
-            if (element.graphname == this.state.selected){
-
-              var expandedgraphdata = this.state.graphdata 
-
-              expandedgraphdata.modular_pkgs[this.state.selected + " - Expanded on " + cell.value] = expandedgraphdata.modular_pkgs[this.state.selected]
-              
-              this.setState({graphdata : expandedgraphdata}, () => {
-                element.children.push({title : "$$" + this.state.selected + " - Expanded on " + cell.value + "$$", graphname : this.state.selected + " - Expanded on " + cell.value,children : []});
-                this.setState({transformation : {"selected" : this.state.selected + " - Expanded on " + cell.value, 
-                "type" : "expand"}});
-              })
-
-            }
-          });
+        }
           
-          
-          return
-        
-
       }
   
     }
     alert("Not expandable");
     }
+
+    matchSortableTreeElmSetup(element, type, cell){
+
+        if (element.graphname == this.state.selected){
+
+            this.setState({transformation : {"selected" : this.state.selected + " - " + type + "ed on " + cell.value, 
+            "type" : type, "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
+
+
+            return true;
+         
+          }else{
+
+            for(var child in element.children) {
+              if(this.matchSortableTreeElmSetup(element.children[child], 'expand', cell)){
+                return true;
+              }
+
+            }
+
+          }
+
+          return false;
+        
+        }
+
+
+    
     
     // Function to be passed to graph view for invoking an decomposition 
 
     decomposeGraph(cell){
+
 
       if (cell != null){
       
@@ -79,38 +96,22 @@ export default class Builder extends Component {
 
           if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){    
 
-            this.state.modular_pkgs.forEach((element) => {
-
-              if (element.graphname == this.state.selected){
-          
-                var expandedgraphdata = this.state.graphdata 
-  
-                expandedgraphdata.modular_pkgs[this.state.selected + " - Decomposed on " + cell.value] = expandedgraphdata.modular_pkgs[this.state.selected]
+            for(var element in this.state.modular_pkgs) {
                 
-                this.setState({graphdata : expandedgraphdata}, () => {
-
-                  console.log("RIGHTHERE")
-
-                  element.children.push({title : "$$" + this.state.selected + " - Decomposed on " + cell.value + "$$", graphname : this.state.selected + " - Decomposed on " + cell.value,children : []});
-              
-                  this.setState({transformation : {'selected' : this.state.selected + " - Decomposed on " + cell.value, 'type' : "decompose", 'cell' : cell}});
-              
-                })
-  
+              if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'decompose', cell)){
+                return 
               }
-            });
+  
+            }
             
             
-            return
           }
           
-      return  
-
     }
   
   }
 
-  alert("Cannot decompose!");
+  alert("Not decomposable");
 }
 
   // For parsing in the json or xml files 
@@ -141,12 +142,11 @@ export default class Builder extends Component {
         var xml = new XMLParser().parseFromString(event.target.result);    // Assume xmlText contains the example XML
 
         json_data = this.resolve_xml_to_json(xml)
-        console.log(json_data)
+
         
         
 
     } catch (e) {
-        console.log(e)
         alert("Please enter a valid XML file");
         return;
     }
@@ -244,7 +244,6 @@ export default class Builder extends Component {
     
               if(check.attributes.hasOwnProperty("source") & check.attributes.hasOwnProperty("target")){
                 // inner package edge
-                console.log(packids)
 
                 thegraph.graph[packids[check.attributes.source]].push([packids[check.attributes.target],thecell.attributes.value])
                 
@@ -264,8 +263,6 @@ export default class Builder extends Component {
         }else if ((thecell.attributes.parent == '1' || thecell.attributes.parent.split('-').pop() == '1') && thecell.attributes.style.includes("Arrow") && thecell.attributes.value != ""){
 
 
-          console.log('thecell')
-          console.log(thecell)
 
           if (thecell.attributes.hasOwnProperty("source") & thecell.attributes.hasOwnProperty("target")){
             thegraph.graph[packids[thecell.attributes.source]].push([packids[thecell.attributes.target],thecell.attributes.value])
@@ -280,7 +277,7 @@ export default class Builder extends Component {
 
       }
 
-
+ 
 
 
     }
@@ -294,7 +291,7 @@ export default class Builder extends Component {
     let items = [];         
     var i = 0;
     for (var graphname in this.state.graphdata.modular_pkgs) {   
-         items.push({title : '$$' + graphname + '$$', graphname : graphname, children : []});   
+         items.push({title : '$$' + graphname + '$$', number : 0, graphname : graphname, children : []});   
          i++;
          //here I will be creating my options dynamically based on
          //what props are currently passed to the parent component
@@ -305,34 +302,76 @@ export default class Builder extends Component {
 
 }  
 
-updateGraphData(newGraphData, selected, fin){
-  console.log(" UPDATE")
+updateGraphData(newGraphData, fin){
 
 if(fin){
 
-this.setState(prevState => {
+  for(var element in this.state.modular_pkgs) {
+                
+    if(this.matchSortableTreeElmSave(this.state.modular_pkgs[element],newGraphData)){
+      return 
+    }
 
-  let graphdata = { ...prevState.graphdata };  
-  graphdata.modular_pkgs[selected] = newGraphData;                     // update the name property, assign a new value                 
-  let transformation = {};
-  return { graphdata, transformation };                                 // return new object jasper object
-  
-});
+  }  
+
+  alert("Couldn't save, did you delete the parent package?");
+
 }else{
 
-  console.log("NOT FIN UPDATE")
-  this.setState(prevState => {
 
-    let graphdata = { ...prevState.graphdata }; 
-    console.log(graphdata) 
-    graphdata.modular_pkgs[selected] = newGraphData;                     // update the name property, assign a new value                 
-    console.log(graphdata)
-    return { graphdata };                                 // return new object jasper object
+  this.setState({transformation_display : newGraphData})
+}
+
+}
+
+
+matchSortableTreeElmSave(element,newGraphData){
+
+  if (element.graphname == this.state.transformation["basename"]){
+
+
+    var graphname = this.state.transformation['selected']
+
+    var number = 0
+
+      for(var child in element.children){
+        if (element.children[child].graphname == graphname && element.children[child].number >= number) {
+          number = element.children[child].number + 1
+        }
+      }
+
+      if(number != 0) {
+        graphname = graphname + ' (' + number.toString() + ') '
+      }
+
+      element.children.push({title : '$$' + graphname + '$$', graphname : graphname, number : number, children : []})
+      
+      this.setState(prevState => {
+
+        let graphdata = { ...prevState.graphdata };  
+        graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
+        let transformation = {};
+        let transformation_display = {};
+        return { graphdata, transformation, transformation_display };                                 // return new object jasper object
+        
+      });
+
+      return true;
+   
+    }else{
+
+      for(var child in element.children) {
+        if(this.matchSortableTreeElmSave(element.children[child], newGraphData)){
+          return true;
+        }
+
+      }
+
+    }
+
+    return false;
   
-});
-}
-
-}
+  }
 
 notFinsihedTransform(rowInfo){
   
@@ -346,18 +385,22 @@ notFinsihedTransform(rowInfo){
 
   render() {
 
-    
-    let transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.transformation['selected']} transform={true} graphdata={this.state.graphdata}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected={this.state.selected} graphdata={this.state.graphdata}/>
+    if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
+    var transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
   </ReflexElement>]
-
+    }else{
+      var transform = <div>Load a graph!</div>
+    }
 
     
     if (Object.keys(this.state.transformation).length != 0) {
-    console.log('this.state.transformation')
-    console.log(Object.keys(this.state.transformation))
-    var transformation_graphdata = this.state.graphdata.modular_pkgs[this.state.transformation['selected']]    
+
+      var transformation_graphdata = this.state.transformation['base']    
+      
+      console.log("transformation_graphdata!!")
+      console.log(transformation_graphdata)
 
     }else{
 
@@ -389,8 +432,14 @@ notFinsihedTransform(rowInfo){
             console.log("treeData")
             console.log(treeData)
           }}
-          style={{width: '100px'}}
+          style={{  height: 'auto', width : 'auto',
+             fontSize : 12,
+             frameBorder : 1
+          }}
+
           isVirtualized={false}
+          theme={FileExplorerTheme}
+
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
           generateNodeProps={rowInfo => ({

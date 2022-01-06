@@ -14,54 +14,44 @@ var mx = require("mxgraph")({
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
-    this.state = {graphdata : props.graphdata, selected : props.selected, transform : props.transform, displayed : null};
+    this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, displayed : null};
     this.GraphRef = React.createRef()
-   console.log("INIT")
   
   }
   
 
   componentDidMount(prevProps){
-console.log("mount")
- console.log(prevProps)
-console.log(this.props)
-console.log(this.state)
 
-if (this.state.graphdata != {} && this.state.selected != null){
-  this.LoadGraph(this.state.selected)
+
+if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}){
+  this.LoadGraph()
 }
   }
 
   componentDidUpdate(prevProps){
 
-console.log("GRAPH update")
-console.log(prevProps)
-console.log(this.props)
-console.log(this.state)
 
-    if(this.props.graphdata != prevProps.graphdata || this.props.selected != prevProps.selected){
-      this.setState({graphdata : this.props.graphdata, selected : this.props.selected},() => {
-        console.log("HERER")
-        this.LoadGraph(this.props.selected);
+
+    if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.selected != prevProps.selected){
+      this.setState({selected_graphdata : this.props.selected_graphdata},() => {
+        this.LoadGraph();
       });
     }
      
   }
 
-  LoadGraph(selected) {
+  LoadGraph() {
 
-    console.log("Graph loaded")
-    console.time(selected)
+    
 
     // Clear last graph
     if(this.state.displayed) {
       this.state.displayed.destroy();
     }
 
-    if (this.state.graphdata){
+    if (this.state.selected_graphdata){
 
-      console.log("BOOM")
-    console.log(selected)
+
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
@@ -135,10 +125,7 @@ console.log(this.state)
 
         // run through each element in json        
       
-        // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30); 
-
-        if (this.state.graphdata.hasOwnProperty("modular_pkgs")){          
-        
+        // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30);         
         
           try {
         
@@ -150,11 +137,11 @@ console.log(this.state)
 
           var dict = {};
 
-          if(!this.state.graphdata.modular_pkgs[selected].graph.hasOwnProperty("Adv")){
-            this.state.graphdata.modular_pkgs[selected].graph.Adv = [];
+          if(!this.state.selected_graphdata.graph.hasOwnProperty("Adv")){
+            this.state.selected_graphdata.graph.Adv = [];
           }
 
-          for (var element in this.state.graphdata.modular_pkgs[selected].graph){
+          for (var element in this.state.selected_graphdata.graph){
          
             if(element == 'Adv'){
               var graphElement = graph.insertVertex(lane1, null, "", 20, 20, 10, 200);    
@@ -169,17 +156,17 @@ console.log(this.state)
 
             }
           
-              for(var oracle in this.state.graphdata.modular_pkgs[selected].oracles){
+              for(var oracle in this.state.selected_graphdata.oracles){
               
-                graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].oracles[oracle][1], dict['Adv'] ,dict[this.state.graphdata.modular_pkgs[selected].oracles[oracle][0]]);
+                graph.insertEdge(parent, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
               
               }
 
-              for(var element in this.state.graphdata.modular_pkgs[selected].graph){
-              if (this.state.graphdata.modular_pkgs[selected].graph[element].length > 0){
+              for(var element in this.state.selected_graphdata.graph){
+              if (this.state.selected_graphdata.graph[element].length > 0){
 
-                for(var edge in this.state.graphdata.modular_pkgs[selected].graph[element]){
-                  graph.insertEdge(parent, null,this.state.graphdata.modular_pkgs[selected].graph[element][edge][1], dict[element] ,dict[this.state.graphdata.modular_pkgs[selected].graph[element][edge][0]]);
+                for(var edge in this.state.selected_graphdata.graph[element]){
+                  graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
                 }
               }
 
@@ -270,10 +257,7 @@ console.log(this.state)
                 
        
         
-          }
-
-      console.timeEnd(selected)
-
+        
       return;
 
     }
