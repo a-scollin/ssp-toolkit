@@ -32,7 +32,11 @@
         "react-moveable": "^0.29.0",
         "react-reflex": "^4.0.3",
         "react-scripts": "4.0.3",
+        "react-sortable-tree": "^2.8.0",
+        "react-sortable-tree-theme-file-explorer": "^2.0.0",
+        "react-sortable-tree-theme-minimal": "^0.0.14",
         "react-split": "^2.0.13",
+        "react-virtualized": "^9.22.3",
         "react-xml-parser": "^1.1.8",
         "web-vitals": "^1.0.1"
     },
