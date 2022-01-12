@@ -116,7 +116,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="q-qxtmX_doLlz5FpcfCN-33" value="GETA*{out}" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="q-qxtmX_doLlz5FpcfCN-32">
+        <mxCell id="q-qxtmX_doLlz5FpcfCN-33" value="GETA^{out}" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="q-qxtmX_doLlz5FpcfCN-32">
           <mxGeometry x="0.1059" relative="1" as="geometry">
             <mxPoint x="5" y="-4" as="offset" />
           </mxGeometry>

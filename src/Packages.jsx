@@ -13,7 +13,6 @@ import { MathJax, MathJaxContext } from "better-react-mathjax";
 import Tex2SVG from "react-hook-mathjax";
 import { ThemeConsumer } from "react-bootstrap/esm/ThemeProvider";
 import { isCompositeComponentWithType } from "react-dom/test-utils";
-import TextEditor from "./editor";
 
 const PCODE = {
     "@bin" : "{0, 1}",
@@ -154,13 +153,10 @@ export default class Packages extends Component {
     
 
     return (
-<ReflexContainer orientation="horizontal"> 
-        <ReflexElement flex={0.8}>
+
+        <>
             {this.state.listItems}
-            </ReflexElement>
-            <ReflexSplitter/>
-            <ReflexElement><TextEditor text={text}></TextEditor></ReflexElement>
-          </ReflexContainer>
+            </>
     
     );}
 

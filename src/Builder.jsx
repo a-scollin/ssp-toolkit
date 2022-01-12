@@ -23,6 +23,7 @@ import FileExplorerTheme from 'react-sortable-tree-theme-file-explorer';
 import TransformationTools from "./TransformationTools";
 import { radioClasses, touchRippleClasses } from "@mui/material";
 import { fontSize } from "@mui/system";
+import MyAceComponent from "./editor.jsx";
 
 const pako = require('pako');
 
@@ -39,13 +40,14 @@ export default class Builder extends Component {
 
   expandGraph(cell) {
 
+
     if (cell != null){
 
       if (cell.value.split("_{").length == 2){   
         
         for(var element in this.state.modular_pkgs) {
                 
-          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'decompose', cell)){
+          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'expand', cell)){
             return 
           }
 
@@ -70,7 +72,7 @@ export default class Builder extends Component {
           }else{
 
             for(var child in element.children) {
-              if(this.matchSortableTreeElmSetup(element.children[child], 'expand', cell)){
+              if(this.matchSortableTreeElmSetup(element.children[child], type, cell)){
                 return true;
               }
 
@@ -88,7 +90,6 @@ export default class Builder extends Component {
     // Function to be passed to graph view for invoking an decomposition 
 
     decomposeGraph(cell){
-
 
       if (cell != null){
       
@@ -320,6 +321,8 @@ export default class Builder extends Component {
 
 updateGraphData(newGraphData, fin){
 
+
+
 if(fin){
 
   for(var element in this.state.modular_pkgs) {
@@ -334,8 +337,18 @@ if(fin){
 
 }else{
 
+  console.log("SKEPEKPSK")
+  console.log(newGraphData)
+  
+  if(newGraphData.hasOwnProperty("modular_pkgs")){
+
+
+    this.setState({graphdata : newGraphData})
+
+  }else{
 
   this.setState({transformation_display : newGraphData})
+  }
 }
 
 }
@@ -481,7 +494,14 @@ notFinsihedTransform(rowInfo){
         </ReflexElement>
                 <ReflexSplitter />
         <ReflexElement flex={0.2} className="video-panels" >
+        <ReflexContainer orientation="horizontal">
+        {/* <ReflexElement flex={0.5} className="video-panels" >
         <Packages graphdata={this.state.graphdata}/>
+        </ReflexElement> */}
+        <ReflexElement flex={1} className="video-panels" >
+        <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}/>
+        </ReflexElement>
+        </ReflexContainer>
 </ReflexElement>
         
       </ReflexContainer>

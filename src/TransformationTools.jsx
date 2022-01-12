@@ -135,13 +135,15 @@ decompose(event){
         var out = 0;
         for(var node in subGraph.graph){
             for(var edge in subGraph.graph[node]){
-                if (subGraph.graph[node][edge][0] == ""){
+                if (subGraph.graph[node][edge][0] == "" || subGraph.graph[node][edge][0] == "terminal_pkg"){
                     out++;
                 }
             }
         }
 
         if (out != out_edges){
+            console.log(out)
+            console.log(out_edges)
             alert("Please ensure out_edges match") 
             return
         }
@@ -280,6 +282,8 @@ findchain(graph, node){
 
 
   setup(){
+
+    console.log("JUBLI")
 
     var option_pairs = []
 

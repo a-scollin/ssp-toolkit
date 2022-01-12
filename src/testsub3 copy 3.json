@@ -1,0 +1,103 @@
+{
+    "oracles": [
+        [
+            "GByao^1_{1}",
+            "GBL_{1}"
+        ],
+        [
+            "GByao^1_{d}",
+            "GBL_{d}"
+        ],
+        [
+            "GByao^1_{2}",
+            "GBL_{2}"
+        ],
+        [
+            "GByao^1_{3}",
+            "GBL_{3}"
+        ],
+        [
+            "AKEYS_{1}",
+            "GETA^{out}"
+        ]
+    ],
+    "graph": {
+        "GByao^1_{1}": [
+            [
+                "AKEYS_{1}",
+                "GETA^{in},GETINA^{in}_{1}"
+            ],
+            [
+                "AKEYS_{2}",
+                "GETA^{out}_{2}"
+            ],
+            [
+                "terminal_pkg",
+                "EVAL_{1}"
+            ]
+        ],
+        "GByao^1_{d}": [
+            [
+                "AKEYS_{d}",
+                "GETA^{in},GETINA^{in}_{d}"
+            ],
+            [
+                "terminal_pkg",
+                "EVAL_{d}"
+            ],
+            [
+                "terminal_pkg",
+                "GETA^{out}"
+            ]
+        ],
+        "GByao^1_{2}": [
+            [
+                "AKEYS_{2}",
+                "GETA^{in},GETINA^{in}_{2}"
+            ],
+            [
+                "terminal_pkg",
+                "EVAL_{2}"
+            ],
+            [
+                "AKEYS_{3}",
+                "GETA^{out}_{3}"
+            ]
+        ],
+        "GByao^1_{3}": [
+            [
+                "AKEYS_{3}",
+                "GETA^{in},GETINA^{in}_{3}"
+            ],
+            [
+                "terminal_pkg",
+                "EVAL_{3}"
+            ]
+        ],
+        "AKEYS_{1}": [
+            [
+                "terminal_pkg",
+                "CHECK_{1}"
+            ]
+        ],
+        "AKEYS_{2}": [
+            [
+                "terminal_pkg",
+                "CHECK_{2}"
+            ]
+        ],
+        "AKEYS_{3}": [
+            [
+                "terminal_pkg",
+                "CHECK_{3}"
+            ]
+        ],
+        "AKEYS_{d}": [
+            [
+                "terminal_pkg",
+                "CHECK_{d}"
+            ]
+        ],
+        "terminal_pkg": []
+    }
+}
