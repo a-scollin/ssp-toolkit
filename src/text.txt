@@ -1,0 +1,100 @@
+
+
+var for_loop_dict = {}
+
+console.log(to_expand)
+for(var pack in to_expand){
+        
+        for_loop_dict[pack] = {'1st' : 0, '2nd' : target.value, '3rd' : 1}
+
+        if(pack.split(";") == 3){
+
+            for_loop_dict[pack] = pack.split(";")
+            
+            for_loop_dict[pack] = {'1st' : for_loop_dict[pack][0], '2nd' : for_loop_dict[pack][1], '3rd' : for_loop_dict[pack][2]}
+
+        }
+
+        console.log(for_loop_dict)
+
+        for(var i = for_loop_dict[pack]['1st']; i < for_loop_dict[pack]['2nd']; i + for_loop_dict[pack]['3rd']){
+
+            var num = parseInt(to_expand[pack]['base'])
+
+            var name_base = to_expand[pack]['name']
+
+            var new_package = name_base+'_{' +(num+i).toString()+'}'
+
+            newGraph.graph[new_package] = []
+
+        }
+        
+    }
+
+        
+    for(var pack in const_edges_to_add){
+
+        for(var edge in const_edges_to_add[pack]){
+
+            var num = parseInt(to_expand[const_edges_to_add[pack][edge]['name_to']]['base'])
+
+            var name_base = to_expand[const_edges_to_add[pack][edge]['name_to']]['name']
+
+            var edge_num = parseInt(const_edges_to_add[pack][edge]['base'])
+                
+            var edge_name_base = const_edges_to_add[pack][edge]['edge_name_base']
+
+            for(var i = for_loop_dict[pack]['1st']; i < for_loop_dict[pack]['2nd']; i + for_loop_dict[pack]['3rd']){
+
+                var new_package = name_base+'_{' +(num+i).toString()+'}'
+
+                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+
+                newGraph.graph[pack].push([new_package,new_edge])
+                
+            }
+
+        }
+
+    }
+
+    console.log("JUBILIYJEAKF")
+    console.log(dyn_edges_to_add)
+
+    for(var pack in dyn_edges_to_add){
+
+        for(var linking in dyn_edges_to_add[pack]){
+
+            for(var edge in dyn_edges_to_add[pack][linking]){
+
+            var num = parseInt(dyn_edges_to_add[pack][linking][edge]['pack_base'])
+
+            var name_base = to_expand[linking]['name']
+
+            var edge_num = parseInt(dyn_edges_to_add[pack][linking][edge]['base'])
+                
+            var edge_name_base = dyn_edges_to_add[pack][linking][edge]['edge_name_base']
+
+            var pack_base = to_expand[pack]['name']
+            
+            var pack_num = parseInt(to_expand[pack]['base'])
+
+            for(var i = for_loop_dict[pack]['1st']; i < for_loop_dict[pack]['2nd']; i + for_loop_dict[pack]['3rd']){
+
+                var new_linking_package = name_base+'_{' +(num+i).toString()+'}'
+
+                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+
+                var new_pack = pack_base+'_{' + (pack_num+i).toString()+'}'
+
+                console.log(new_pack)
+
+                newGraph.graph[new_pack].push([new_linking_package,new_edge])
+                
+            }
+
+        }
+
+    }
+
+}

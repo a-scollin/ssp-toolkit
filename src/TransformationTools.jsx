@@ -481,12 +481,19 @@ for(var pack in expandable){
 
 }
 
-    console.log(dyn_edges_to_add)
-    console.log(const_edges_to_add)
-    console.log("KEEMAN")
+// var for_loop_dict = {}
 
-    for(var pack in to_expand){
+
+console.log(to_expand)
+for(var pack in to_expand){
         
+        // for_loop_dict[pack] = true
+
+        // if(pack.split([;.split(';').length == 2){
+
+        // }
+
+
         for(var i = 0; i < target.value; i++){
 
             var num = parseInt(to_expand[pack]['base'])

@@ -137,13 +137,13 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
           var dict = {};
 
-          if(!this.state.selected_graphdata.graph.hasOwnProperty("Adv")){
-            this.state.selected_graphdata.graph.Adv = [];
+          if(!this.state.selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
+            this.state.selected_graphdata.graph.Adv_pkg = [];
           }
 
           for (var element in this.state.selected_graphdata.graph){
          
-            if(element == 'Adv'){
+            if(element == 'Adv_pkg' || element == 'terminal_pkg'){
               var graphElement = graph.insertVertex(lane1, null, "", 20, 20, 10, 200);    
               graphElement.style = 'fillColor=none;strokeColor=none;';        
             }else{
@@ -158,7 +158,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
           
               for(var oracle in this.state.selected_graphdata.oracles){
               
-                graph.insertEdge(parent, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
+                graph.insertEdge(parent, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
               
               }
 
@@ -198,7 +198,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
         // graph.getView().setTranslate(0,10);
   
 
-        dict['Adv'].getGeometry().height = 700
+        dict['Adv_pkg'].getGeometry().height = 700
 
 
       layout.execute(lane1, lane1.children)   

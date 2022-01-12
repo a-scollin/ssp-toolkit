@@ -138,8 +138,10 @@ export default class Builder extends Component {
     }else if (file.name.split('.').pop().toLowerCase() == "xml") {
       try {
 
+        
+
         var XMLParser = require('react-xml-parser');
-        var xml = new XMLParser().parseFromString(event.target.result);    // Assume xmlText contains the example XML
+        var xml = new XMLParser().parseFromString(event.target.result.replace(/&lt;(.*?)&gt;/g,""));    // Assume xmlText contains the example XML
 
         json_data = this.resolve_xml_to_json(xml)
 
@@ -252,15 +254,21 @@ export default class Builder extends Component {
            
                 thegraph.oracles.push([packids[check.attributes.target],thecell.attributes.value])
               }else if (check.attributes.hasOwnProperty("source")){
-                sub = true
-                thegraph.graph[packids[check.attributes.source]].push(["",thecell.attributes.value])
+                
+                if(!sub){
+                  sub = true
+                  thegraph.graph['terminal_pkg'] = []
+                }
+                
+                thegraph.graph[packids[check.attributes.source]].push(["terminal_pkg",thecell.attributes.value])
+              
               }
     
             }
           }
     
     
-        }else if ((thecell.attributes.parent == '1' || thecell.attributes.parent.split('-').pop() == '1') && thecell.attributes.style.includes("Arrow") && thecell.attributes.value != ""){
+        }else if ((thecell.attributes.parent == '1' || thecell.attributes.parent.split('-').pop() == '1') && (thecell.attributes.hasOwnProperty("edge") || thecell.attributes.style.includes("Arrow")) && thecell.attributes.value != ""){
 
 
 
@@ -269,6 +277,14 @@ export default class Builder extends Component {
           }else if  (thecell.attributes.hasOwnProperty("target")){
             thegraph.oracles.push([packids[thecell.attributes.target],thecell.attributes.value])
 
+          }else if  (thecell.attributes.hasOwnProperty("source")){
+
+            if(!sub){
+              sub = true
+              thegraph.graph['terminal_pkg'] = []
+            }
+            
+            thegraph.graph[packids[thecell.attributes.source]].push(['terminal_pkg',thecell.attributes.value])
           }
           
           
