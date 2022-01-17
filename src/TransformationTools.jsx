@@ -165,20 +165,22 @@ decompose(event){
 
         // Resolve ingoing edges, Realising now that this is actually wrong if theres a decomposition to be done on a package that has an oracle
 
-        if (isOraclePack){
-            console.log("ISORACLE")
-            for(var edge in newGraph.oracles){
-                if (newGraph.oracles[edge][0] == this.state.cell.value) {
-                    for (var subedge in subGraph.oracles) {
-                        if (subGraph.oracles[subedge][1] == newGraph.oracles[edge][1]){
-                            newGraph.oracles[edge][0] = subGraph.oracles[subedge][0]
+        for(var edge in newGraph.oracles){
+            if (newGraph.oracles[edge][0] == this.state.cell.value){
+                for (var subedge in subGraph.oracles) {
+                    
+                    if(subGraph.oracles[subedge][1].split("_{")[0] == newGraph.oracles[edge][1].split("_{")[0]){
 
-                        }
+                        edges_for_removal.push(newGraph.oracles[edge])
+
+                        newGraph.oracles.push(subGraph.oracles[subedge])
+
                     }
+                        
                 }
             }
-        }else{
-            console.log("ISntORACLE")
+        }
+            
 
         for(var pack in newGraph.graph){
             
@@ -202,7 +204,7 @@ decompose(event){
                             }
                     }
         
-            }
+            
 
         }
     }
@@ -235,6 +237,10 @@ decompose(event){
 
         console.log("edges_for_removal")
         console.log(edges_for_removal)
+
+        
+        newGraph.oracles = newGraph.oracles.filter(item => !edges_for_removal.includes(item))
+        
 
         for(var pack in newGraph.graph){
             newGraph.graph[pack] = newGraph.graph[pack].filter(item => !edges_for_removal.includes(item))
@@ -362,6 +368,18 @@ findchain(graph, node){
             </ReflexElement>)
 
             this.setState({options : options})
+    }else if (this.state.type == "equiv"){
+
+        
+
+ options.push(<button onClick={() => {alert("Add Equiv")}}>+</button>)
+ options.push(<button onClick={() => {alert("Remove Selected Equiv")}}>-</button>)
+ options.push(<button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>)
+ options.push(<button onClick={() => {alert("Swap Selected Equiv")}}>Swap</button>)
+
+this.setState({options : options})
+
+
     }
 
 }

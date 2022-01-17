@@ -18,7 +18,6 @@ import GraphView from "./GraphView";
 import Packages from "./Packages";
 import Latex from "./Latex";
 import { height } from "dom-helpers";
-import FileExplorerTheme from 'react-sortable-tree-theme-file-explorer';
 
 import TransformationTools from "./TransformationTools";
 import { radioClasses, touchRippleClasses } from "@mui/material";
@@ -113,6 +112,24 @@ export default class Builder extends Component {
   }
 
   alert("Not decomposable");
+}
+
+manageGraphEquivs(cell){
+
+  if (cell != null){
+  
+        for(var element in this.state.modular_pkgs) {
+            
+          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'equiv', cell)){
+            return 
+          }
+
+}
+
+}
+
+
+alert("Not Equiv?");
 }
 
   // For parsing in the json or xml files 
@@ -418,14 +435,32 @@ notFinsihedTransform(rowInfo){
       this.setState({selected : rowInfo.node.graphname, transformation : {}});
     }
   
-}
+  }
+
+
+  lineNumberOfSelected(){
+    
+    var text = JSON.stringify(this.state.graphdata, null, '\t')
+
+
+    var index = text.indexOf(this.state.selected); // => 18
+
+
+    var tempString = text.substring(0, index);
+
+    // Line number
+    return tempString.split('\n').length;
+
+  }
 
   render() {
 
+
+
     if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
     var transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
   </ReflexElement>]
     }else{
       var transform = <div>Load a graph!</div>
@@ -475,7 +510,7 @@ notFinsihedTransform(rowInfo){
           }}
 
           isVirtualized={false}
-          theme={FileExplorerTheme}
+          // theme={FileExplorerTheme}
 
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
@@ -499,7 +534,7 @@ notFinsihedTransform(rowInfo){
         <Packages graphdata={this.state.graphdata}/>
         </ReflexElement> */}
         <ReflexElement flex={1} className="video-panels" >
-        <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}/>
+        <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>
         </ReflexElement>
         </ReflexContainer>
 </ReflexElement>

@@ -5,6 +5,8 @@ import ReactDOM from "react-dom";
 import Moveable from "react-moveable";
 import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
+import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
+
 
 var mx = require("mxgraph")({
   mxImageBasePath: "./mxgraph/javascript/src/images",
@@ -174,36 +176,54 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
         //data
       } finally {
+
+        var layout = new mx.mxSwimlaneLayout(graph);
+    
+        // Executes the layout
+        layout.orientation = mx.mxConstants.DIRECTION_WEST;
+
+        layout.resizeParent = true;
+
+        layout.moveParent = true;
+
+        layout.parallelEdgeSpacing = 0
+
+        layout.maintainParentLocation = true;
+
+        
+
+        layout.parentBorder = 100
+
+      // layout.execute(parent, dict['Adv']);
+
+      // // Translates graph down y axis 10 so it's not cut off! 
+      // graph.getView().setTranslate(0,10);
+
+
+        dict['Adv_pkg'].getGeometry().height = 700
+
+
+        layout.execute(lane1, lane1.children)   
+                   
+        layout.execute(parent, parent.children);    
         // Updates the display
         graph.getModel().endUpdate();
 
       }
       
-      var layout = new mx.mxSwimlaneLayout(graph);
+
+
+      // const oldConvertValueToString = graph.convertValueToString;
+      // graph.convertValueToString = function(cell) {
+      //   if (typeof cell.value === "object" && cell.value.style) {
+      //     const div = document.createElement("div");
+      //     div.innerHTML = div.title = cell.value.name;
+      //     div.style = cell.value.style;
+      //     return div;
+      //   }
     
-      		// Executes the layout
-					layout.orientation = mx.mxConstants.DIRECTION_WEST;
-
-					layout.resizeParent = true;
-
-          layout.moveParent = true;
-
-          layout.parallelEdgeSpacing = 0
-
-          layout.parentBorder = 100
-
-        // layout.execute(parent, dict['Adv']);
-
-        // // Translates graph down y axis 10 so it's not cut off! 
-        // graph.getView().setTranslate(0,10);
-  
-
-        dict['Adv_pkg'].getGeometry().height = 700
-
-
-      layout.execute(lane1, lane1.children)   
-         
-      layout.execute(parent, parent.children);    
+      //   return oldConvertValueToString.call(this, cell);
+      // };
 
         // // Creates a layout algorithm to be used with the graph
         // var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
@@ -233,6 +253,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 					if(cell.hasOwnProperty("vertex")) {
             if(cell.vertex){
               var transform_submenu = menu.addItem('Apply Transformation', null, null);
+
               menu.addItem('Expand', null, function()
 				    {
               this.props.expand(cell);
@@ -241,10 +262,10 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 				    {
               this.props.decompose(cell);
             }.bind(this), transform_submenu);
-          menu.addItem('Compose', null, function()
+          menu.addItem('Equivalence', null, function()
 				    {
-						alert('Compose');
-				    }, transform_submenu);
+              this.props.manageEquivs(cell);
+            }.bind(this), transform_submenu);
         }}}}.bind(this);
 
         this.setState({displayed : graph})

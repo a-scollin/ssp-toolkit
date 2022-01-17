@@ -5,7 +5,9 @@ import AceEditor from "react-ace";
 import ace from "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-github";
+import 'brace/ext/searchbox';
 import langTools from "ace-builds/src-noconflict/ext-language_tools"
+
 
 var myCompleter ={
     getCompletions: function(editor, session, pos, prefix, callback) {
@@ -24,8 +26,15 @@ var myCompleter ={
     }
 
 
-const MyAceComponent = ({ text, onSubmit }) => {
-        const commands = [
+function MyAceComponent(props){
+
+      var getLineNumber = props.getLineNumber
+      var text = props.text
+      var onSubmit = props.onSubmit
+
+      console.log(props)
+
+        var commands = [
           {
             name: "submit",
             bindKey: { win: "Ctrl-S", mac: "Command-S" },
@@ -33,6 +42,17 @@ const MyAceComponent = ({ text, onSubmit }) => {
               console.log(editor)
               onSubmit(JSON.parse(editor.getValue()),false)
             } 
+          },
+          {
+            name: "jump_to_selected",
+            bindKey: { win: "Ctrl-J", mac: "Command-J" },
+            exec: (editor) => {
+
+              editor.resize(true);
+
+              editor.gotoLine(getLineNumber(),0);
+              
+            }
           }
         ];
       
