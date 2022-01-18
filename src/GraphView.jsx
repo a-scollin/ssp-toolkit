@@ -264,7 +264,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             }.bind(this), transform_submenu);
           menu.addItem('Equivalence', null, function()
 				    {
-              this.props.manageEquivs(cell);
+              this.props.substitute(cell);
             }.bind(this), transform_submenu);
         }}}}.bind(this);
 

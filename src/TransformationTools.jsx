@@ -14,12 +14,16 @@ import {
   } from 'react-reflex'
 import { ThemeProvider } from "react-bootstrap";
 import { getCheckboxUtilityClass } from "@mui/material";
+import { useThemeWithoutDefault } from "@mui/system";
+import MyAceComponent from "./editor.jsx";
+import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
+import { toJS } from "draft-js/lib/DefaultDraftBlockRenderMap";
 
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, selection : null, type : null, options : []};
+    this.state = {selected_graphdata : null, selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
     this.targetval = 0
@@ -36,14 +40,31 @@ console.log(this.state)
 
     if(this.props.selected_graphdata != null && this.props.transformationselection != prevProps.transformationselection && this.props.transformationselection != {}){
       
-        this.setState({selected_graphdata : this.props.selected_graphdata, displayed : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell']},() => {
+        this.setState({selected_graphdata : this.props.selected_graphdata, displayed : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell'], equivs : this.props.equivs},() => {
+            if (this.props.transformationselection != {}){
+                this.setup()
+                return
+            }else{
+                this.setState({options : []})
+                return
+            }
+        });
+    
+
+    }
+
+    if(this.state.equivs.length != this.props.equivs.length){
+        console.log("RIGHTHggggg")
+
+        this.setState({equivs : this.props.equivs}, () => {
             if (this.props.transformationselection != {}){
                 this.setup()
             }else{
                 this.setState({options : []})
             }
-        });
-    
+            
+        })
+       
 
     }
      
@@ -371,17 +392,120 @@ findchain(graph, node){
     }else if (this.state.type == "equiv"){
 
         
+ options.push()
+ options.push(
+     <ReflexElement flex={0.3} key="ui">
+ <button onClick={this.addEquiv.bind(this)}>+</button>
+ <button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
+ <button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
+ <button onClick={() => {alert("Swap Selected Equiv")}}>Swap</button>
+ </ReflexElement>
+ )
+ options.push(<ReflexSplitter/>)
+ options.push(<ReflexElement flex={0.7} key="equivs">
+     <ReflexContainer orientation="vertical">
+ {this.equiv_to_option()}
+ </ReflexContainer>
+ </ReflexElement>)
 
- options.push(<button onClick={() => {alert("Add Equiv")}}>+</button>)
- options.push(<button onClick={() => {alert("Remove Selected Equiv")}}>-</button>)
- options.push(<button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>)
- options.push(<button onClick={() => {alert("Swap Selected Equiv")}}>Swap</button>)
 
 this.setState({options : options})
 
+    }
+
+}
+
+addEquiv(){
+
+    console.log("BEANS")
+    var equiv_options = []
+
+    equiv_options.push(
+    <ReflexElement flex={0.4} key="lhs">
+    <MyAceComponent text={""} onSubmit={(newGraphData, fin) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    </ReflexElement>)
+
+    equiv_options.push(
+        <ReflexElement flex={0.1} key="middle">
+            <p style={{'text-align': 'center'}}>{'=>'}</p>
+        </ReflexElement>
+    )
+
+    equiv_options.push(
+    <ReflexElement flex={0.4} key="rhs">
+    <MyAceComponent text={""} onSubmit={(newGraphData, fin) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    </ReflexElement>)
+
+    equiv_options.push(
+    <ReflexElement flex={0.1} key="rhs">
+     <button onClick={this.submit_equiv.bind(this)}>Save Equiv</button>
+    </ReflexElement>
+)
+
+    var options = [...this.state.options]
+
+    options.pop()
+
+    options.push(<ReflexElement flex={0.7} key="equivs">
+             <ReflexContainer orientation="vertical">
+    {equiv_options}
+    </ReflexContainer>
+    </ReflexElement>)
+
+    this.setState({options : options})
+}
+
+
+submit_equiv(){
+
+    if(this.state.equiv_lhs == null || this.state.equiv_rhs == null){
+
+        alert("Equivs are not saved!");
+        return 
 
     }
 
+    if(!this.state.equiv_lhs.hasOwnProperty("graph") || !this.state.equiv_rhs.hasOwnProperty("graph")){
+
+        alert("JSON is not correct format")
+        return 
+    
+    }
+
+    if(Object.keys(this.state.equiv_lhs.graph).length == 0 && Object.keys(this.state.equiv_lhs.graph).length == 0){
+
+        alert("Both graphs can't be empty")
+        return
+    }
+
+    var newEquivs = [...this.state.equivs]
+
+    newEquivs.push([this.state.equiv_lhs,this.state.equiv_rhs])
+
+    this.setState({options : []}, () =>{
+        this.props.updateEquivsProp(newEquivs)
+    })
+
+    
+
+}
+
+equiv_to_option(){
+
+    var options = []
+
+    for(var equiv in  this.state.equivs){
+        
+        
+        options.push(<ReflexElement flex={1/this.state.equivs.length} key={equiv.toString()}><p style={{'text-align': 'center'}}>{Object.keys(this.state.equivs[equiv][0].graph).toString() + "=>" +  Object.keys(this.state.equivs[equiv][1].graph).toString()}</p></ReflexElement>)
+    
+        options.push(<ReflexSplitter/>)
+    
+    }
+
+    options.pop()
+
+    return options
 }
 
 expand(target){

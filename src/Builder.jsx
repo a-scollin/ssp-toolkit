@@ -13,6 +13,9 @@ import { MathJax, MathJaxContext } from "better-react-mathjax";
 
 import SortableTree from '@nosferatu500/react-sortable-tree';
 import '@nosferatu500/react-sortable-tree/style.css'; // This only needs to be imported once in your app
+import FileExplorerTheme from '@nosferatu500/theme-file-explorer';
+
+
 
 import GraphView from "./GraphView";
 import Packages from "./Packages";
@@ -32,7 +35,15 @@ export default class Builder extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}};    
+    
+    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}, equivs : []};    
+  }
+
+
+  updateEquivs(newEquivs){
+
+    this.setState({equivs : newEquivs})
+
   }
 
   // Function to be passed to graph view for invoking an expansion 
@@ -114,7 +125,7 @@ export default class Builder extends Component {
   alert("Not decomposable");
 }
 
-manageGraphEquivs(cell){
+substituteGraph(cell){
 
   if (cell != null){
   
@@ -459,8 +470,8 @@ notFinsihedTransform(rowInfo){
 
     if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
     var transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} manageEquivs={this.manageGraphEquivs.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
   </ReflexElement>]
     }else{
       var transform = <div>Load a graph!</div>
@@ -510,7 +521,7 @@ notFinsihedTransform(rowInfo){
           }}
 
           isVirtualized={false}
-          // theme={FileExplorerTheme}
+          theme={FileExplorerTheme}
 
           treeData={this.state.modular_pkgs}
           onChange={treeData => this.setState({ modular_pkgs : treeData })}
@@ -543,7 +554,7 @@ notFinsihedTransform(rowInfo){
       </ReflexElement>
       <ReflexSplitter/>
         <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} selected_graphdata={transformation_graphdata} transformationselection={this.state.transformation}/>
+          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={this.state.equivs} selected_graphdata={transformation_graphdata} transformationselection={this.state.transformation}/>
         </ReflexElement>
       </ReflexContainer>
     );

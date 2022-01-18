@@ -39,8 +39,12 @@ function MyAceComponent(props){
             name: "submit",
             bindKey: { win: "Ctrl-S", mac: "Command-S" },
             exec: (editor) => {
-              console.log(editor)
+              console.log("bengbengbon")
+              try {
               onSubmit(JSON.parse(editor.getValue()),false)
+              } catch {
+                alert("JSON is incorrectly formatted!")
+              }
             } 
           },
           {
