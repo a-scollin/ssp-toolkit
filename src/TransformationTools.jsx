@@ -19,11 +19,23 @@ import MyAceComponent from "./editor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
 import { toJS } from "draft-js/lib/DefaultDraftBlockRenderMap";
 
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
+import FormLabel from '@mui/material/FormLabel';
+
+import FormControl from '@mui/material/FormControl';
+import MenuItem from '@mui/material/MenuItem';
+
+
+
+import Select from 'react-select'
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
+    this.state = {selected_graphdata : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
     this.targetval = 0
@@ -31,6 +43,8 @@ export default class TransformationTools extends Component {
   
   }
 
+
+//   This is dumb ! 
   componentDidUpdate(prevProps){
 
 console.log("tramsupdate")
@@ -38,10 +52,10 @@ console.log(prevProps)
 console.log(this.props)
 console.log(this.state)
 
-    if(this.props.selected_graphdata != null && this.props.transformationselection != prevProps.transformationselection && this.props.transformationselection != {}){
+    if(this.props.transformationselection != prevProps.transformationselection){
       
-        this.setState({selected_graphdata : this.props.selected_graphdata, displayed : this.props.selected_graphdata, selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell'], equivs : this.props.equivs},() => {
-            if (this.props.transformationselection != {}){
+        this.setState({selected_graphdata : this.props.transformationselection['base'], displayed : this.props.transformationselection['base'], selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell'], equivs : this.props.equivs},() => {
+            if (Object.keys(this.props.transformationselection).length != 0){
                 this.setup()
                 return
             }else{
@@ -391,7 +405,9 @@ findchain(graph, node){
             this.setState({options : options})
     }else if (this.state.type == "equiv"){
 
-        
+        const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
+            return({ 'value' : x, 'label' : x })})
+
  options.push()
  options.push(
      <ReflexElement flex={0.3} key="ui">
@@ -404,7 +420,18 @@ findchain(graph, node){
  options.push(<ReflexSplitter/>)
  options.push(<ReflexElement flex={0.7} key="equivs">
      <ReflexContainer orientation="vertical">
+ <ReflexElement flex={0.5}>
  {this.equiv_to_option()}
+ </ReflexElement>
+ <ReflexElement flex={0.5}>
+ <Select 
+    isMulti
+    name="Ommited Packages"
+    options={packages}
+    className="basic-multi-select"
+    classNamePrefix="select"
+ />
+ </ReflexElement>
  </ReflexContainer>
  </ReflexElement>)
 
@@ -422,7 +449,7 @@ addEquiv(){
 
     equiv_options.push(
     <ReflexElement flex={0.4} key="lhs">
-    <MyAceComponent text={""} onSubmit={(newGraphData, fin) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    <MyAceComponent text={"{}"} onSubmit={(newGraphData, fin) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
     </ReflexElement>)
 
     equiv_options.push(
@@ -433,7 +460,7 @@ addEquiv(){
 
     equiv_options.push(
     <ReflexElement flex={0.4} key="rhs">
-    <MyAceComponent text={""} onSubmit={(newGraphData, fin) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    <MyAceComponent text={"{}"} onSubmit={(newGraphData, fin) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
     </ReflexElement>)
 
     equiv_options.push(
@@ -497,15 +524,35 @@ equiv_to_option(){
     for(var equiv in  this.state.equivs){
         
         
-        options.push(<ReflexElement flex={1/this.state.equivs.length} key={equiv.toString()}><p style={{'text-align': 'center'}}>{Object.keys(this.state.equivs[equiv][0].graph).toString() + "=>" +  Object.keys(this.state.equivs[equiv][1].graph).toString()}</p></ReflexElement>)
+        options.push(<FormControlLabel key={equiv+"equiv"} value={JSON.stringify(this.state.equivs[equiv])} control={<Radio />} label={Object.keys(this.state.equivs[equiv][0].graph).toString() + " === " +  Object.keys(this.state.equivs[equiv][1].graph).toString()} />)
+            
+    }
     
-        options.push(<ReflexSplitter/>)
-    
+
+    if(options.length == 0){
+
+        return(<p>Create an equiv</p>)
+
     }
 
-    options.pop()
+    this.setState({selected_equiv : JSON.stringify(this.state.equivs[0])})
 
-    return options
+    const handleChange = (event) => {
+        this.setState({selected_equiv: event.target.value});
+      };
+
+    return (<FormControl>
+        <FormLabel id="demo-radio-buttons-group-label">Equivs</FormLabel>
+        <RadioGroup
+          aria-labelledby="demo-radio-buttons-group-label"
+          name="radio-buttons-group"
+          value={JSON.stringify(this.state.equivs[0])}
+          onChange={handleChange.bind(this)}>
+        {options}
+        </RadioGroup>
+        </FormControl>)
+
+  
 }
 
 expand(target){

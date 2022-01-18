@@ -36,13 +36,17 @@ export default class Builder extends Component {
   constructor(props) {
     super(props);
     
-    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}, equivs : []};    
+    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}};    
   }
 
 
   updateEquivs(newEquivs){
 
-    this.setState({equivs : newEquivs})
+    var newGraphdata = {...this.state.graphdata}
+
+    newGraphdata["equivs"] = newEquivs
+
+    this.setState({graphdata : newGraphdata})
 
   }
 
@@ -478,18 +482,12 @@ notFinsihedTransform(rowInfo){
     }
 
     
-    if (Object.keys(this.state.transformation).length != 0) {
-
-      var transformation_graphdata = this.state.transformation['base']    
-      
-      console.log("transformation_graphdata!!")
-      console.log(transformation_graphdata)
-
+    if(this.state.graphdata.hasOwnProperty('equivs')){
+      var equivs = this.state.graphdata['equivs']
     }else{
-
-      var transformation_graphdata = null
-  
+      var equivs = []
     }
+    
     
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
@@ -554,7 +552,7 @@ notFinsihedTransform(rowInfo){
       </ReflexElement>
       <ReflexSplitter/>
         <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={this.state.equivs} selected_graphdata={transformation_graphdata} transformationselection={this.state.transformation}/>
+          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={equivs} transformationselection={this.state.transformation}/>
         </ReflexElement>
       </ReflexContainer>
     );
