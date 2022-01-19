@@ -12,7 +12,7 @@ import {
     ReflexSplitter,
     ReflexElement
   } from 'react-reflex'
-import { ThemeProvider } from "react-bootstrap";
+import { ListGroup, ThemeProvider } from "react-bootstrap";
 import { getCheckboxUtilityClass } from "@mui/material";
 import { useThemeWithoutDefault } from "@mui/system";
 import MyAceComponent from "./editor.jsx";
@@ -31,6 +31,7 @@ import MenuItem from '@mui/material/MenuItem';
 
 
 import Select from 'react-select'
+import { V } from "mathjax-full/js/output/common/FontData";
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -414,7 +415,7 @@ findchain(graph, node){
  <button onClick={this.addEquiv.bind(this)}>+</button>
  <button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
  <button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
- <button onClick={() => {alert("Swap Selected Equiv")}}>Swap</button>
+ <button onClick={this.substitute.bind(this)}>Swap</button>
  </ReflexElement>
  )
  options.push(<ReflexSplitter/>)
@@ -441,6 +442,406 @@ this.setState({options : options})
     }
 
 }
+
+substitute(){
+    console.log("HFAEFIAEHF")
+
+    var incoming_graph = this.build_incoming()
+
+    // const [ lhs, rhs ] = this.state.selected_equiv
+
+    const [ lhs, rhs, ext ] = [{
+        "oracles": [
+            [
+                "AKEYS",
+                "GETA^{in},GETINA^{in}"
+            ],
+            [
+                "AKEYS",
+                "GETA^{out}"
+            ],
+            [
+                "BITS",
+                "SETBIT"
+            ]
+        ],
+        "graph": {
+            "AKEYS": [
+                [
+                    "BITS",
+                    "CHECK"
+                ]
+            ],
+            "BITS": [],
+            "Adv_pkg": []
+        }, 
+        
+    },{
+        "oracles": [
+            [
+                "KEYS",
+                "GETA^{in},GETINA^{in}"
+            ],
+            [
+                "KEYS",
+                "GETA^{out}"
+            ],
+            [
+                "KEYS",
+                "SETBIT"
+            ]
+        ],
+        "graph": {
+            "KEYS": []
+        }
+    },[["KEYS","BITS"]]]
+    
+    const lhs_packs = Object.keys(lhs.graph)
+
+    const rhs_packs = Object.keys(lhs.graph)
+
+    var lhs_edges = []
+
+    for(var pack in lhs.graph){
+
+        for(var edge in lhs.graph[pack]){
+
+            lhs_edges.push(lhs.graph[pack][edge])
+
+        }
+
+    }
+
+    for(var oracle in lhs.oracles){
+
+            lhs_edges.push(["",lhs.oracles[oracle][1]])
+
+    }
+
+    // Resovle ingoing edges
+
+    console.log(this.state.selected_graphdata)
+
+    for(var pack in this.state.selected_graphdata.graph){
+        for(var edge in this.state.selected_graphdata.graph[pack]){
+
+            var edgedest = this.state.selected_graphdata.graph[pack][edge][0].split('_{')[0]
+            var edgename = this.state.selected_graphdata.graph[pack][edge][0].split('_{')[1]
+
+            // Check that all edges from the destination package go to the correct edges as in the equiv, then for the destinaztions of those edges if they have ingoing edges (checked by looping over the lhs graph)
+            // check in the main graph if that specific package has ingoing edges from the necesarry packages
+            if(lhs_packs.includes(edgedest)){
+
+
+                // console.log("PACL")
+                // console.log(pack)
+
+                var ret = this.check_complete(incoming_graph, this.state.selected_graphdata.graph[pack][edge][0],[...lhs_packs],[...lhs_edges])
+
+                if(ret[0]){
+                    
+                    var [result, packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = ret
+
+                    console.log("ISEQUIV")
+                    console.log(packs)
+                    console.log(visited)
+                    console.log(lhs_matched_edges)
+                    console.log(incoming_non_matched_edges)
+                    console.log(outgoing_non_matched_edges)                
+
+            }else{
+                console.log("NO")
+            }
+        }
+        }
+    }
+}
+
+build_incoming(){
+
+    var graphData = JSON.parse(JSON.stringify(this.state.selected_graphdata))
+
+    for(var node in graphData.graph){
+
+        if(Array.isArray(graphData.graph[node])){
+
+            var temp = graphData.graph[node]  
+            graphData.graph[node] = {
+                'outgoing' : temp,
+                'incoming' : []
+            }
+
+        }
+    }
+    
+    for(var oracle in this.state.selected_graphdata.oracles){
+
+         graphData.graph[this.state.selected_graphdata.oracles[oracle][0]].incoming.push(["",this.state.selected_graphdata.oracles[oracle][1]])
+
+    }
+
+    for(var pack in this.state.selected_graphdata.graph){
+
+        for(var edge in this.state.selected_graphdata.graph[pack]){
+
+            var dest = this.state.selected_graphdata.graph[pack][edge][0]
+            var edgename = this.state.selected_graphdata.graph[pack][edge][1]
+
+            graphData.graph[dest].incoming.push([pack,edgename])
+
+
+        }
+
+
+    }
+
+
+    return graphData
+}
+    
+recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
+
+
+
+    var packs = [matchingpack]
+
+    var lhs_matched_edges = []
+
+    var visited = visited_packs
+
+    var incoming_non_matched_edges = []
+    var outgoing_non_matched_edges = []
+
+    // console.log(matchingpack)
+    console.log(incoming_graph.graph)
+
+    // console.log(lhs_edges)
+    for(var edge in incoming_graph.graph[matchingpack].incoming){
+
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].incoming[edge][1].split('_{')[0]])
+
+        if(lhs_packs.includes(incoming_graph.graph[matchingpack].incoming[edge][0].split('_{')[0]) && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0])){
+
+            packs.push(incoming_graph.graph[matchingpack].incoming[edge][0])
+
+        }else if (lhs_edges.some(eq)){
+
+            lhs_matched_edges.push([incoming_graph.graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph.graph[matchingpack].incoming[edge][1]])
+            
+        }else{
+
+            incoming_non_matched_edges.push([incoming_graph.graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph.graph[matchingpack].incoming[edge][1]])
+
+        }
+     
+    }
+    
+    for(var edge in incoming_graph.graph[matchingpack].outgoing){
+
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].outgoing[edge][1].split('_{')[0]])
+       
+       // console.log(incoming_graph.graph[matchingpack].outgoing[edge])
+
+        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0])){
+
+          //      console.log("EFHAIEHFIAEHFI")
+            lhs_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
+
+        }else if (lhs_edges.some(eq)){
+
+            lhs_matched_edges.push(matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge])
+
+
+        }else{
+
+            outgoing_non_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
+
+        }
+
+    }
+
+    var more_packs = []
+    var more_lhs_matched_edges = []
+    var more_incoming_non_matched_edges = []
+    var more_outgoing_non_matched_edges = []
+
+    visited.push(matchingpack)
+
+    for(var pack in packs){
+        if(packs[pack] != matchingpack){
+
+            if(!visited.includes(packs[pack])){
+            
+            if(packs[pack] != ""){
+
+            var [packs_returned, lhs_matched_edges_returned, visited_returned, incoming_non_matched_edges_returned, outgoing_non_matched_edges_returned] = this.recurs_get_all(incoming_graph,packs[pack],visited,lhs_edges,lhs_packs)
+                
+            // console.log("RETURNED")
+            // console.log(packs_returned)
+            // console.log(visited_returned)
+            // console.log(lhs_matched_edges_returned)
+
+            more_packs.push(...packs_returned)
+            more_lhs_matched_edges.push(...lhs_matched_edges_returned)
+            // console.log(more_lhs_matched_edges)
+            visited.push(...visited_returned)
+            more_incoming_non_matched_edges.push(...incoming_non_matched_edges_returned)
+            more_outgoing_non_matched_edges.push(...outgoing_non_matched_edges_returned)
+        
+            }
+
+        }
+        }
+    }
+
+    packs.push(...more_packs)
+    lhs_matched_edges.push(...more_lhs_matched_edges)
+    incoming_non_matched_edges.push(...more_incoming_non_matched_edges)
+    outgoing_non_matched_edges.push(...more_outgoing_non_matched_edges)
+
+    // console.log("RETURN")
+
+
+    // console.log(packs)
+    // console.log(visited)
+
+    // console.log(lhs_matched_edges)
+
+
+
+    
+    return [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges]
+
+}
+
+check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
+
+    var lhs_packs = JSON.parse(JSON.stringify(lhs_packs_in))
+
+    var lhs_edges = JSON.parse(JSON.stringify(lhs_edges_in))
+
+    // console.log('matchingpack')
+    // console.log(matchingpack)
+
+    // console.log(lhs_packs)
+
+    var [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = this.recurs_get_all(incoming_graph,matchingpack,[],lhs_edges,lhs_packs)
+
+    // console.log("PASSSED")
+
+    // console.log(packs)
+    // console.log(visited)
+    // console.log(lhs_matched_edges)
+    // console.log(incoming_non_matched_edges)
+    // console.log(outgoing_non_matched_edges)
+
+    var edge_to_match = []
+
+    for(var edge in lhs_matched_edges){
+
+        if(lhs_packs.includes(lhs_matched_edges[edge][0].split("_{")[0])){
+
+            edge_to_match.push([lhs_matched_edges[edge][1].split('_{')[0],lhs_matched_edges[edge][2].split('_{')[0]])
+
+        }else if(lhs_packs.includes(lhs_matched_edges[edge][1].split("_{")[0])){
+
+            edge_to_match.push(["",lhs_matched_edges[edge][2].split('_{')[0]])
+
+        }else{
+            alert("WRONG")
+            return
+        }
+
+    }
+
+    // console.log("donesss")
+    // console.log(edge_to_match)
+    // console.log(lhs_edges)
+
+    for(var edge in lhs_edges){
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(lhs_edges[edge])
+
+        if(!edge_to_match.some(eq)){
+            return [false]
+        }
+
+    }
+
+    return [true,packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges]
+
+
+
+    // for(var edge in incoming_graph.graph[matchingpack].incoming){
+
+    //     if(lhs_edges.includes(incoming_graph.graph[matchingpack].incoming[edge][1].split("_{")[0])){
+            
+    //         if(incoming_graph.graph[matchingpack].incoming[edge][0] != ""){
+
+
+    //             if(this.check_complete(incoming_graph,incoming_graph.graph[matchingpack].incoming[edge][0],))
+
+    //         }
+
+
+    //         var index = lhs_edges.indexOf(incoming_graph.graph[matchingpack].incoming[edge][1].split("_{")[0])
+    
+    //         lhs_edges.splice(index, 1);
+            
+
+
+
+    //     }else{
+
+    //         return false
+
+    //     }
+        
+    // }
+
+   
+    // var edges_to_remove = []
+    
+
+    // for(var edge in incoming_graph.graph[matchingpack].outgoing){
+
+    //     var theedge = incoming_graph.graph[matchingpack].outgoing[edge]
+
+    //     if(lhs_edges.includes(theedge[1].split("_{")[0])){
+
+    //         if(this.check_complete(incoming_graph,theedge[0].split("_{")[0],theedge[1].split("_{")[0],[...lhs_packs],[...lhs_edges])){
+
+
+
+    //         }
+
+    //         edges_to_remove.push(incoming_graph.graph[matchingpack].outgoing[edge][1].split("_{")[0])        
+
+    //     }else{
+
+    //         return false
+
+    //     }
+
+    // }
+
+    // var index = lhs_packs.indexOf(matchingpack)
+    
+    // lhs_packs.splice(index, 1);
+
+
+}
+
+    // Resolve outgoing edges
+
+
+
+    // Delete instance of lhs
+
+
+
+    // Add instance of rhs
+
+
 
 addEquiv(){
 

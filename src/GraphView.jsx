@@ -168,7 +168,13 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
               if (this.state.selected_graphdata.graph[element].length > 0){
 
                 for(var edge in this.state.selected_graphdata.graph[element]){
-                  graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
+                  if(this.state.selected_graphdata.graph[element][edge][0] == ""){
+                    graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
+                    
+                  }else{
+                    graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
+
+                  }
                 }
               }
 

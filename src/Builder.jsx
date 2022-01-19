@@ -293,7 +293,7 @@ alert("Not Equiv?");
                   thegraph.graph['terminal_pkg'] = []
                 }
                 
-                thegraph.graph[packids[check.attributes.source]].push(["terminal_pkg",thecell.attributes.value])
+                thegraph.graph[packids[check.attributes.source]].push(["",thecell.attributes.value])
               
               }
     
@@ -317,7 +317,7 @@ alert("Not Equiv?");
               thegraph.graph['terminal_pkg'] = []
             }
             
-            thegraph.graph[packids[thecell.attributes.source]].push(['terminal_pkg',thecell.attributes.value])
+            thegraph.graph[packids[thecell.attributes.source]].push(["",thecell.attributes.value])
           }
           
           
