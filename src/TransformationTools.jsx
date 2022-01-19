@@ -32,6 +32,7 @@ import MenuItem from '@mui/material/MenuItem';
 
 import Select from 'react-select'
 import { V } from "mathjax-full/js/output/common/FontData";
+import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -446,6 +447,8 @@ this.setState({options : options})
 substitute(){
     console.log("HFAEFIAEHF")
 
+    this.allvisited = []
+
     var incoming_graph = this.build_incoming()
 
     // const [ lhs, rhs ] = this.state.selected_equiv
@@ -494,7 +497,9 @@ substitute(){
         "graph": {
             "KEYS": []
         }
-    },[["KEYS","BITS"]]]
+    },{
+        "BITS" : "KEYS"
+    }]
     
     const lhs_packs = Object.keys(lhs.graph)
 
@@ -518,15 +523,36 @@ substitute(){
 
     }
 
+
+    var rhsdict = {}
+
+    for(var oracle in rhs.oracles){
+
+        rhsdict[rhs.oracles[oracle][1]] = rhs.oracles[oracle][0]
+
+    }
+
+    alert(JSON.stringify(rhs))
+
+    for(var pack in rhs.graph){
+
+        for(var edge in rhs.graph[pack])
+
+        rhsdict[rhs.graph[pack][edge][1]] = rhs.graph[pack][edge][0]
+
+    }
+
     // Resovle ingoing edges
 
     console.log(this.state.selected_graphdata)
 
-    for(var pack in this.state.selected_graphdata.graph){
-        for(var edge in this.state.selected_graphdata.graph[pack]){
+    var newGraphData = JSON.parse(JSON.stringify(this.state.selected_graphdata))
 
-            var edgedest = this.state.selected_graphdata.graph[pack][edge][0].split('_{')[0]
-            var edgename = this.state.selected_graphdata.graph[pack][edge][0].split('_{')[1]
+    for(var pack in this.state.selected_graphdata.graph){
+        for(var outeredge in this.state.selected_graphdata.graph[pack]){
+
+            var edgedest = this.state.selected_graphdata.graph[pack][outeredge][0].split('_{')[0]
+            var edgename = this.state.selected_graphdata.graph[pack][outeredge][0].split('_{')[1]
 
             // Check that all edges from the destination package go to the correct edges as in the equiv, then for the destinaztions of those edges if they have ingoing edges (checked by looping over the lhs graph)
             // check in the main graph if that specific package has ingoing edges from the necesarry packages
@@ -536,7 +562,7 @@ substitute(){
                 // console.log("PACL")
                 // console.log(pack)
 
-                var ret = this.check_complete(incoming_graph, this.state.selected_graphdata.graph[pack][edge][0],[...lhs_packs],[...lhs_edges])
+                var ret = this.check_complete(incoming_graph, this.state.selected_graphdata.graph[pack][outeredge][0],[...lhs_packs],[...lhs_edges])
 
                 if(ret[0]){
                     
@@ -547,7 +573,101 @@ substitute(){
                     console.log(visited)
                     console.log(lhs_matched_edges)
                     console.log(incoming_non_matched_edges)
-                    console.log(outgoing_non_matched_edges)                
+                    console.log(outgoing_non_matched_edges)
+                    
+                    for(var edge in lhs_matched_edges){
+
+                        console.log(rhsdict)
+
+                        if(rhsdict.hasOwnProperty(lhs_matched_edges[edge][2].split("_{")[0])){
+
+                            var new_pkg_name = rhsdict[lhs_matched_edges[edge][2].split("_{")[0]]+ '_{' + lhs_matched_edges[edge][1].split("_{")[1]  
+
+                            var for_removal = []
+
+                            if(lhs_matched_edges[edge][0] == ""){
+                            
+                                newGraphData.oracles = [[new_pkg_name,lhs_matched_edges[edge][2]],...newGraphData.oracles.filter(x => JSON.stringify(x) != JSON.stringify([lhs_matched_edges[edge][1],lhs_matched_edges[edge][2]]))]
+                            
+
+                            }else{
+
+
+                            newGraphData.graph[lhs_matched_edges[edge][0]] = [[new_pkg_name,lhs_matched_edges[edge][2]] ,...newGraphData.graph[lhs_matched_edges[edge][0]].filter(x => JSON.stringify(x) != JSON.stringify([lhs_matched_edges[edge][1],lhs_matched_edges[edge][2]]))]
+
+                        }
+
+                        if(!newGraphData.graph.hasOwnProperty(new_pkg_name)){
+                            newGraphData.graph[new_pkg_name] = []
+                        }
+
+                        }
+
+                    }
+
+
+                    for(var edge in incoming_non_matched_edges){
+
+                        var from = incoming_non_matched_edges[edge][0]
+                        var to = incoming_non_matched_edges[edge][1]
+                        var ename = incoming_non_matched_edges[edge][2]
+
+                        if(!ext.hasOwnProperty(to.split("_{")[0])){
+                            alert("NO")
+                            return
+                        }else{
+                            var newname = ext[to.split("_{")[0]] + '_{' + to.split("_{")[1]
+
+                            if(from == ""){
+
+                                alert("oracle!")
+                                return
+
+                            }else{
+                                    
+                                newGraphData.graph[from] = [[newname,ename],...newGraphData.graph[from].filter(x => JSON.stringify(x) != JSON.stringify([to,ename]))] 
+                            
+                                if(!newGraphData.graph.hasOwnProperty(newname)){
+                                    newGraphData.graph[newname] = []
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    for(var edge in outgoing_non_matched_edges){
+                        alert("not done yet")
+                        return
+                        var from = outgoing_non_matched_edges[edge][0]
+                        var to = outgoing_non_matched_edges[edge][1]
+                        var ename = outgoing_non_matched_edges[edge][2]
+
+                        if(!ext.hasOwnProperty(from.split("_{")[0])){
+                            alert("NO")
+                            return
+                        }else{
+                            var newname = ext[from.split("_{")[0]] + '_{' + from.split("_{")[1]
+
+                            if(from == ""){
+
+                                alert("oracle!")
+                                return
+
+                            }else{
+                                    
+                                newGraphData.graph[newname] = [[to,ename],...newGraphData.graph[from].filter(x => JSON.stringify(x) != JSON.stringify([from,ename]))] 
+                            
+                            }
+
+                        }
+                    }
+
+                    for(var rmpack in visited){
+                        delete newGraphData.graph[visited[rmpack]]
+                    }
+
 
             }else{
                 console.log("NO")
@@ -555,6 +675,16 @@ substitute(){
         }
         }
     }
+
+    console.log("PLEASE")    
+    console.log(newGraphData)
+
+    
+    this.setState({displayed : newGraphData}, ()=>{
+        this.updateGraph(false)
+    });
+    
+
 }
 
 build_incoming(){
@@ -599,12 +729,15 @@ build_incoming(){
     return graphData
 }
     
-recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
+recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is_first){
 
 
-
-    var packs = [matchingpack]
-
+    if(is_first){
+        var packs = [matchingpack]
+    }else{
+        var packs = []
+    }
+    
     var lhs_matched_edges = []
 
     var visited = visited_packs
@@ -624,6 +757,9 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
 
             packs.push(incoming_graph.graph[matchingpack].incoming[edge][0])
 
+
+            // I think I need to add the edges in this case no ? 
+
         }else if (lhs_edges.some(eq)){
 
             lhs_matched_edges.push([incoming_graph.graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph.graph[matchingpack].incoming[edge][1]])
@@ -642,7 +778,11 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
        
        // console.log(incoming_graph.graph[matchingpack].outgoing[edge])
 
-        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0])){
+        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0] && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0]))){
+
+            packs.push(incoming_graph.graph[matchingpack].outgoing[edge][0])
+
+        }else if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0])){
 
           //      console.log("EFHAIEHFIAEHFI")
             lhs_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
@@ -674,7 +814,7 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
             
             if(packs[pack] != ""){
 
-            var [packs_returned, lhs_matched_edges_returned, visited_returned, incoming_non_matched_edges_returned, outgoing_non_matched_edges_returned] = this.recurs_get_all(incoming_graph,packs[pack],visited,lhs_edges,lhs_packs)
+            var [packs_returned, lhs_matched_edges_returned, visited_returned, incoming_non_matched_edges_returned, outgoing_non_matched_edges_returned] = this.recurs_get_all(incoming_graph,packs[pack],visited,lhs_edges,lhs_packs,false)
                 
             // console.log("RETURNED")
             // console.log(packs_returned)
@@ -684,7 +824,7 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs){
             more_packs.push(...packs_returned)
             more_lhs_matched_edges.push(...lhs_matched_edges_returned)
             // console.log(more_lhs_matched_edges)
-            visited.push(...visited_returned)
+            visited = visited_returned
             more_incoming_non_matched_edges.push(...incoming_non_matched_edges_returned)
             more_outgoing_non_matched_edges.push(...outgoing_non_matched_edges_returned)
         
@@ -725,7 +865,7 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     // console.log(lhs_packs)
 
-    var [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = this.recurs_get_all(incoming_graph,matchingpack,[],lhs_edges,lhs_packs)
+    var [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = this.recurs_get_all(incoming_graph,matchingpack,[],lhs_edges,lhs_packs,true)
 
     // console.log("PASSSED")
 
@@ -766,6 +906,15 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
         }
 
     }
+
+    var eq = (element) => JSON.stringify(element) == JSON.stringify(visited)
+
+    if(this.allvisited.some(eq)){
+            return [false]
+        }
+
+
+    this.allvisited.push(visited)
 
     return [true,packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges]
 
