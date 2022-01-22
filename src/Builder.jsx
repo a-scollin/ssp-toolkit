@@ -27,6 +27,9 @@ import { radioClasses, touchRippleClasses } from "@mui/material";
 import { fontSize } from "@mui/system";
 import MyAceComponent from "./editor.jsx";
 
+import IconExpansionTreeView from "./CustomTreeItem"
+
+
 const pako = require('pako');
 
 export default class Builder extends Component {
@@ -36,7 +39,7 @@ export default class Builder extends Component {
   constructor(props) {
     super(props);
     
-    this.state = {graphdata : new Object(null), modular_pkgs : null, selected : null, transformation : {}, transformation_display : {}};    
+    this.state = {graphdata : new Object(null), tree_data : null, selected : null, transformation : {}, transformation_display : {}};    
   }
 
 
@@ -59,48 +62,20 @@ export default class Builder extends Component {
 
       if (cell.value.split("_{").length == 2){   
         
-        for(var element in this.state.modular_pkgs) {
-                
-          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'expand', cell)){
-            return 
-          }
+        
+        this.setState({transformation : {"selected" : this.state.selected + " - expanded on " + cell.value, 
+        "type" : "expand", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
 
-        }
+        return
           
       }
   
     }
+
     alert("Not expandable");
-    }
-
-    matchSortableTreeElmSetup(element, type, cell){
-
-        if (element.graphname == this.state.selected){
-
-            this.setState({transformation : {"selected" : this.state.selected + " - " + type + "ed on " + cell.value, 
-            "type" : type, "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
-
-
-            return true;
-         
-          }else{
-
-            for(var child in element.children) {
-              if(this.matchSortableTreeElmSetup(element.children[child], type, cell)){
-                return true;
-              }
-
-            }
-
-          }
-
-          return false;
-        
-        }
-
-
     
-    
+  }
+
     // Function to be passed to graph view for invoking an decomposition 
 
     decomposeGraph(cell){
@@ -111,13 +86,13 @@ export default class Builder extends Component {
 
           if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){    
 
-            for(var element in this.state.modular_pkgs) {
-                
-              if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'decompose', cell)){
-                return 
-              }
-  
-            }
+
+             
+          this.setState({transformation : {"selected" : this.state.selected + " - decomposed on " + cell.value, 
+          "type" : "decompose", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
+
+
+           return 
             
             
           }
@@ -132,17 +107,13 @@ export default class Builder extends Component {
 substituteGraph(cell){
 
   if (cell != null){
-  
-        for(var element in this.state.modular_pkgs) {
-            
-          if(this.matchSortableTreeElmSetup(this.state.modular_pkgs[element], 'equiv', cell)){
-            return 
-          }
+
+             
+    this.setState({transformation : {"selected" : this.state.selected + " - composed on " + cell.value, 
+    "type" : "equiv", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
+    return 
 
 }
-
-}
-
 
 alert("Not Equiv?");
 }
@@ -340,14 +311,14 @@ alert("Not Equiv?");
     let items = [];         
     var i = 0;
     for (var graphname in this.state.graphdata.modular_pkgs) {   
-         items.push({title : '$$' + graphname + '$$', number : {"expand" : {}, "decompose" : {}, "composition" : {}}, graphname : graphname, children : []});   
+         items.push({title : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, graphname : graphname, children : []});   
          i++;
          //here I will be creating my options dynamically based on
          //what props are currently passed to the parent component
 
     }
     
-    this.setState({modular_pkgs : items, selected : items[0].graphname})
+    this.setState({tree_data : items, selected : items[0].graphname})
 
 }  
 
@@ -357,20 +328,31 @@ updateGraphData(newGraphData, fin){
 
 if(fin){
 
-  for(var element in this.state.modular_pkgs) {
+  for(var element in this.state.tree_data) {
                 
-    if(this.matchSortableTreeElmSave(this.state.modular_pkgs[element],newGraphData)){
+    if(this.matchSortableTreeElmSave(this.state.tree_data[element],newGraphData)){
       return 
     }
 
-  }  
+  }
 
-  alert("Couldn't save, did you delete the parent package?");
+  var graphname = this.state.transformation['selected']
+
+  this.setState(prevState => {
+
+    let tree_data = {...prevState.tree_data}
+    tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+    let graphdata = { ...prevState.graphdata };  
+    graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
+    let transformation = {};
+    let transformation_display = {};
+    return { graphdata, transformation, transformation_display, tree_data };                                 // return new object jasper object
+    
+  });
+
+  return
 
 }else{
-
-  console.log("SKEPEKPSK")
-  console.log(newGraphData)
   
   if(newGraphData.hasOwnProperty("modular_pkgs")){
 
@@ -384,9 +366,6 @@ if(fin){
 }
 
 }
-
-
-
 
 matchSortableTreeElmSave(element,newGraphData){
 
@@ -413,7 +392,7 @@ matchSortableTreeElmSave(element,newGraphData){
     }
 
 
-      element.children.push({title : '$$' + graphname + '$$', graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}}, children : []})
+      element.children.push({title : graphname, graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
       
       this.setState(prevState => {
 
@@ -442,14 +421,15 @@ matchSortableTreeElmSave(element,newGraphData){
   
   }
 
-notFinsihedTransform(rowInfo){
+selectGraph(graphname){
   
-    if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change graph?")){
+  if(Object.keys(this.state.transformation).length == 0 ){
+    this.setState({selected : graphname, transformation : {}});
+  }else if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change seleceted graph?")){
       return
     } else {
-      this.setState({selected : rowInfo.node.graphname, transformation : {}});
+      this.setState({selected : graphname, transformation : {}});
     }
-  
   }
 
 
@@ -492,68 +472,61 @@ notFinsihedTransform(rowInfo){
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
         <ReflexElement flex={0.9} className="site-content">
-      <ReflexContainer className="site-content" orientation="vertical">
+          <ReflexContainer className="site-content" orientation="vertical">
 
-      <ReflexElement className="video-panels" flex={0.20} minSize="100">
-      <ReflexContainer orientation="horizontal">
-      <ReflexElement flex={0.2} minSize="100">
+            <ReflexElement className="video-panels" flex={0.20} minSize="100">
+            <ReflexContainer orientation="horizontal">
+                {/* <ReflexElement flex={0.5} className="video-panels" >
+                <Packages graphdata={this.state.graphdata}/>
+                </ReflexElement> */}
+                <ReflexElement flex={1} className="video-panels" >
+                  <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>
+                </ReflexElement>
+              </ReflexContainer>
+              
+            </ReflexElement>
 
-      <form>
-  <label>
-    Graph input:
-    <input type="file" onChange={this.onChange.bind(this)} name="graph_file" />
-  </label>
-  <input type="submit" value="Reset" />
-</form>
-</ReflexElement>
-<ReflexSplitter/>
-<ReflexElement flex={0.6} minSize="100"> 
-<SortableTree
-          onVisibilityToggle={({treeData})=>{
-            console.log("treeData")
-            console.log(treeData)
-          }}
-          style={{  height: 'auto', width : 'auto',
-             fontSize : 12,
-             frameBorder : 1
-          }}
-
-          isVirtualized={false}
-          theme={FileExplorerTheme}
-
-          treeData={this.state.modular_pkgs}
-          onChange={treeData => this.setState({ modular_pkgs : treeData })}
-          generateNodeProps={rowInfo => ({
-            buttons: [<button onClick={(event) => Object.keys(this.state.transformation).length == 0 ? this.setState({selected : rowInfo.node.graphname}) : this.notFinsihedTransform(rowInfo)}>Select</button>]
-        })} 
-        />
-</ReflexElement>
-      </ReflexContainer>
-  </ReflexElement>
-  <ReflexSplitter />
-  <ReflexElement>
-    <ReflexContainer>
-        {transform}
-        </ReflexContainer>
-        </ReflexElement>
-                <ReflexSplitter />
-        <ReflexElement flex={0.2} className="video-panels" >
-        <ReflexContainer orientation="horizontal">
-        {/* <ReflexElement flex={0.5} className="video-panels" >
-        <Packages graphdata={this.state.graphdata}/>
-        </ReflexElement> */}
-        <ReflexElement flex={1} className="video-panels" >
-        <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>
-        </ReflexElement>
-        </ReflexContainer>
-</ReflexElement>
+            <ReflexSplitter />
+            
+            <ReflexElement>
+              <ReflexContainer>
+                {transform}
+              </ReflexContainer>
+            </ReflexElement>
+            
+            <ReflexSplitter />
         
-      </ReflexContainer>
-      </ReflexElement>
-      <ReflexSplitter/>
+            <ReflexElement flex={0.2} className="video-panels" >
+              <ReflexContainer orientation="horizontal">
+                <ReflexElement flex={0.2} minSize="100">
+
+                  <form>
+                    <label>
+                      Graph input:
+                      <input type="file" onChange={this.onChange.bind(this)} name="graph_file" />
+                    </label>
+                    <input type="submit" value="Reset" />
+                  </form>
+
+                </ReflexElement>
+
+                <ReflexSplitter/>
+                
+                <ReflexElement flex={0.6} pro minSize="100"> 
+                <IconExpansionTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+                </ReflexElement>
+              </ReflexContainer>
+            </ReflexElement>
+        
+          </ReflexContainer>
+        </ReflexElement>
+        
+        <ReflexSplitter/>
+        
         <ReflexElement className="video-panels">
           <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={equivs} transformationselection={this.state.transformation}/>
         </ReflexElement>
+      
       </ReflexContainer>
     );
   }

@@ -5,6 +5,8 @@
     "dependencies": {
         "@emotion/react": "^11.6.0",
         "@emotion/styled": "^11.6.0",
+        "@mui/icons-material": "^5.3.0",
+        "@mui/lab": "^5.0.0-alpha.65",
         "@mui/material": "^5.1.1",
         "@nosferatu500/react-sortable-tree": "^3.0.6",
         "@nosferatu500/theme-file-explorer": "^3.0.13",
