@@ -7,7 +7,7 @@ import TreeItem, { useTreeItem } from '@mui/lab/TreeItem';
 import clsx from 'clsx';
 import Typography from '@mui/material/Typography';
 
-export default function IconExpansionTreeView(outerprops) {
+export default function CustomTreeView(outerprops) {
 
     const CustomContent = React.forwardRef(function CustomContent(props, ref) {
         const {

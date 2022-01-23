@@ -9,6 +9,7 @@ import 'brace/ext/searchbox';
 import langTools from "ace-builds/src-noconflict/ext-language_tools"
 
 
+
 var myCompleter ={
     getCompletions: function(editor, session, pos, prefix, callback) {
             var completions = [];
@@ -23,7 +24,10 @@ var myCompleter ={
             });
 
 
-            ["\"graph\" : {\n \"\" : [\n[\"\",\"\"]\n] \n}", "\"oracles\" : [\n[\"\",\"\"]\n]", "\"transformations_to_run\" : { ... }", "\"transformations_history\" : { ... }"].forEach(function(w) {
+            ["\"graph\" : {\n \"\" : [\n[\"\",\"\"]\n] \n}", 
+            "\"oracles\" : [\n[\"\",\"\"]\n]",
+             "\"transformations_to_run\" : { ... }",
+              "\"transformations_history\" : { ... }"].forEach(function(w) {
     
               completions.push({
                   caption: w.split(":")[0],
@@ -52,7 +56,7 @@ var myCompleter ={
     }
 
 
-function MyAceComponent(props){
+function CodeEditor(props){
 
 
 
@@ -69,7 +73,7 @@ function MyAceComponent(props){
             exec: (editor) => {
               console.log("bengbengbon")
               try {
-              onSubmit(JSON.parse(editor.getValue()),false)
+              onSubmit(JSON.parse(editor.getValue()))
               } catch {
                 alert("JSON is incorrectly formatted!")
               }
@@ -117,5 +121,15 @@ function MyAceComponent(props){
       langTools.setCompleters([])
       langTools.addCompleter(myCompleter);
 
+    
 
-export default MyAceComponent;
+
+// CodeEditor.defaultProps = {
+//   mainEditor: false
+// };
+
+
+
+
+
+export default CodeEditor;

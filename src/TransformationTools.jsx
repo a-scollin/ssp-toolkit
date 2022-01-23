@@ -15,7 +15,7 @@ import {
 import { ListGroup, ThemeProvider } from "react-bootstrap";
 import { getCheckboxUtilityClass } from "@mui/material";
 import { useThemeWithoutDefault } from "@mui/system";
-import MyAceComponent from "./editor.jsx";
+import CodeEditor from "./uiComponents/CodeEditor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
 import { toJS } from "draft-js/lib/DefaultDraftBlockRenderMap";
 
@@ -999,7 +999,7 @@ addEquiv(){
 
     equiv_options.push(
     <ReflexElement flex={0.4} key="lhs">
-    <MyAceComponent text={"{}"} onSubmit={(newGraphData, fin) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
     </ReflexElement>)
 
     equiv_options.push(
@@ -1010,7 +1010,7 @@ addEquiv(){
 
     equiv_options.push(
     <ReflexElement flex={0.4} key="rhs">
-    <MyAceComponent text={"{}"} onSubmit={(newGraphData, fin) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
     </ReflexElement>)
 
     equiv_options.push(

@@ -11,23 +11,16 @@ import "react-reflex/styles.css";
 
 import { MathJax, MathJaxContext } from "better-react-mathjax";
 
-import SortableTree from '@nosferatu500/react-sortable-tree';
-import '@nosferatu500/react-sortable-tree/style.css'; // This only needs to be imported once in your app
-import FileExplorerTheme from '@nosferatu500/theme-file-explorer';
-
-
-
 import GraphView from "./GraphView";
 import Packages from "./Packages";
-import Latex from "./Latex";
-import { height } from "dom-helpers";
 
 import TransformationTools from "./TransformationTools";
-import { radioClasses, touchRippleClasses } from "@mui/material";
-import { fontSize } from "@mui/system";
-import MyAceComponent from "./editor.jsx";
+import CodeEditor from "./uiComponents/CodeEditor.jsx";
 
-import IconExpansionTreeView from "./CustomTreeItem"
+import CustomTreeView from "./uiComponents/CustomTreeView"
+
+import CustomIconButton from "./uiComponents/CustomIconButton";
+import Stack from '@mui/material/Stack';
 
 
 const pako = require('pako');
@@ -39,7 +32,7 @@ export default class Builder extends Component {
   constructor(props) {
     super(props);
     
-    this.state = {graphdata : new Object(null), tree_data : null, selected : null, transformation : {}, transformation_display : {}};    
+    this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation : {}, transformation_display : {}};    
   }
 
 
@@ -120,12 +113,12 @@ alert("Not Equiv?");
 
   // For parsing in the json or xml files 
 
-  onChange(event) {
+  resolveInput(file, callback){
 
     
-    var file = event.target.files[0];
     var reader = new FileReader();
     reader.onload = (event) => {
+
       // The file's text will be printed here
     if (file.name.split('.').pop().toLowerCase() == "json"){
     try {
@@ -135,9 +128,6 @@ alert("Not Equiv?");
         return;
     }
     
-    this.setState({ graphdata: json_data }, function(){
-      this.createSelectItems();
-    });
     
     }else if (file.name.split('.').pop().toLowerCase() == "xml") {
       try {
@@ -162,14 +152,98 @@ alert("Not Equiv?");
       return;
     }
 
-    this.setState({ graphdata: json_data }, function(){
-      this.createSelectItems();
-    });
+
+
+    callback(json_data)
+
+    return
 
   }
-  
-    reader.readAsText(file);
+
+  reader.readAsText(file);
+
+}
+
+  onProjectUpload(event) {
+
+    var file = event.target.files[0];
+    this.resolveInput(file, (json_data) => {
+      if(!json_data.hasOwnProperty("modular_pkgs")){
+        alert("Not correctly formatted JSON, needs modular_pkgs.")
+        return
+      }
+      if(Object.keys(this.state.graphdata).length !== 0){
+        if(!window.confirm("This will overwrite the current project, are you sure you want to continue?\nIf you want to add a graph to the current project use the + button.")){
+          return 
+        }
+      }
+      this.setState({ graphdata: json_data }, function(){
+        this.createSelectItems();
+      });
+    })
+
+
   }
+
+  createProj(){
+    alert("HERER")
+    if(Object.keys(this.state.graphdata).length !== 0){
+      if(!window.confirm("This will overwrite the current project, are you sure you want to continue?\nIf you want to add a graph to the current project use the + button.")){
+        return 
+      }
+    }
+    var graphname = window.prompt("Please enter a name for the initial graph:", "Graph name");
+    this.setState({graphdata: JSON.parse("{ \"modular_pkgs\" : {\"" + graphname + "\" : {\"graph\":{},\"oracles\" :[[]]}}, \"monolithic_pkgs\" :{}}")}, function() {
+      this.createSelectItems();
+    })
+    
+  }
+  
+
+
+  onGraphUpload(event){
+
+    var file = event.target.files[0];
+    this.resolveInput(file, (json_data) => {
+      
+      this.setState((prevState) => { 
+        let tree_data = [...prevState.tree_data]
+        let graphdata = { ...prevState.graphdata };  
+
+        if(json_data.hasOwnProperty("modular_pkgs")){
+
+          for(var graphname in json_data.modular_pkgs){
+
+            tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+            graphdata.modular_pkgs[graphname] = json_data.modular_pkgs[graphname];                     // update the name property, assign a new value                 
+
+          }
+
+            return { graphdata, tree_data }
+
+        }else{
+
+        if(json_data.hasOwnProperty("graph")){
+
+          var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
+          tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+          graphdata.modular_pkgs[graphname] = json_data;                     // update the name property, assign a new value                 
+          return { graphdata, tree_data };            
+
+        }else{
+
+          alert("Incorrectly formatted JSON, please ensure there is a \'graph\' key.")
+          return
+
+          }
+
+        }
+        
+      });
+    })
+  }
+  
+  
 
   // For resolving the 
 
@@ -324,8 +398,6 @@ alert("Not Equiv?");
 
 updateGraphData(newGraphData, fin){
 
-
-
 if(fin){
 
   for(var element in this.state.tree_data) {
@@ -340,12 +412,14 @@ if(fin){
 
   this.setState(prevState => {
 
-    let tree_data = {...prevState.tree_data}
-    tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+    let tree_data = [...prevState.tree_data]
     let graphdata = { ...prevState.graphdata };  
-    graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
     let transformation = {};
     let transformation_display = {};
+
+    tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+    graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
+
     return { graphdata, transformation, transformation_display, tree_data };                                 // return new object jasper object
     
   });
@@ -448,6 +522,29 @@ selectGraph(graphname){
 
   }
 
+  updateSelected(newGraphData){
+    this.setState(prevState =>{
+      
+      let graphdata = {...prevState.graphdata}
+      
+      graphdata.modular_pkgs[prevState.selected] = newGraphData
+
+      if(Object.keys(prevState.transformation).length !== 0){
+
+        let transformation = {...prevState.transformation}
+        let transformation_display = newGraphData
+
+        transformation['base'] = JSON.parse(JSON.stringify(newGraphData))
+
+        return {graphdata, transformation, transformation_display}
+
+      }
+
+      return {graphdata}
+
+    });
+  }
+ 
   render() {
 
 
@@ -457,8 +554,12 @@ selectGraph(graphname){
     <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
     <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
   </ReflexElement>]
+
+    var editor = [<CodeEditor text={JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected], null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+
     }else{
-      var transform = <div>Load a graph!</div>
+      var transform = <div></div>
+      var editor = <div></div>
     }
 
     
@@ -467,6 +568,8 @@ selectGraph(graphname){
     }else{
       var equivs = []
     }
+
+    
     
     
     return (      
@@ -480,7 +583,7 @@ selectGraph(graphname){
                 <Packages graphdata={this.state.graphdata}/>
                 </ReflexElement> */}
                 <ReflexElement flex={1} className="video-panels" >
-                  <MyAceComponent text={JSON.stringify(this.state.graphdata, null, '\t')} onSubmit={this.updateGraphData.bind(this)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>
+                  {editor}
                 </ReflexElement>
               </ReflexContainer>
               
@@ -498,22 +601,25 @@ selectGraph(graphname){
         
             <ReflexElement flex={0.2} className="video-panels" >
               <ReflexContainer orientation="horizontal">
-                <ReflexElement flex={0.2} minSize="100">
+                <ReflexElement flex={0.1} minSize="70">
 
-                  <form>
-                    <label>
-                      Graph input:
-                      <input type="file" onChange={this.onChange.bind(this)} name="graph_file" />
-                    </label>
-                    <input type="submit" value="Reset" />
-                  </form>
-
+                  
+                  <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
+                  <div><CustomIconButton type={["import"]} func={() => this.projUpload.click()}/> Upload new project file </div>
+                  <div><CustomIconButton type={["write"]} func={this.createProj.bind(this)}/> Create new project file </div>
+                   
                 </ReflexElement>
 
                 <ReflexSplitter/>
                 
-                <ReflexElement flex={0.6} pro minSize="100"> 
-                <IconExpansionTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+                <ReflexElement flex={0.9} minSize="100"> 
+                <Stack direction="row" spacing={1}>
+                <CustomIconButton type={["add","write"]} func={() => alert("Beans")}/> 
+                <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
+                <CustomIconButton type={["add","import"]} func={Object.keys(this.state.graphdata) !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
+                
+                </Stack>
+                <CustomTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
