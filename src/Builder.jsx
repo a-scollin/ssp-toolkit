@@ -21,6 +21,7 @@ import CustomTreeView from "./uiComponents/CustomTreeView"
 
 import CustomIconButton from "./uiComponents/CustomIconButton";
 import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 
 
 const pako = require('pako');
@@ -160,7 +161,13 @@ alert("Not Equiv?");
 
   }
 
+  try {
+
   reader.readAsText(file);
+
+  } catch (e) {
+    return
+  }
 
 }
 
@@ -567,10 +574,7 @@ selectGraph(graphname){
       var equivs = this.state.graphdata['equivs']
     }else{
       var equivs = []
-    }
-
-    
-    
+    }    
     
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
@@ -603,22 +607,24 @@ selectGraph(graphname){
               <ReflexContainer orientation="horizontal">
                 <ReflexElement flex={0.1} minSize="70">
 
-                  
+                <Stack direction="row" spacing={1}>
+
                   <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
-                  <div><CustomIconButton type={["import"]} func={() => this.projUpload.click()}/> Upload new project file </div>
-                  <div><CustomIconButton type={["write"]} func={this.createProj.bind(this)}/> Create new project file </div>
-                   
+                  <CustomIconButton tip="Import project file" type={["import"]} func={() => this.projUpload.click()}/>
+                  <CustomIconButton tip="Create new project file" type={["write"]} func={this.createProj.bind(this)}/>
+                  
+                   </Stack>
                 </ReflexElement>
 
                 <ReflexSplitter/>
                 
                 <ReflexElement flex={0.9} minSize="100"> 
                 <Stack direction="row" spacing={1}>
-                <CustomIconButton type={["add","write"]} func={() => alert("Beans")}/> 
                 <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
-                <CustomIconButton type={["add","import"]} func={Object.keys(this.state.graphdata) !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
-                
+                <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
+                <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("Beans")}/> 
                 </Stack>
+                <Divider />
                 <CustomTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
               </ReflexContainer>

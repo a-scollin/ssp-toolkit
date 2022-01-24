@@ -5,6 +5,8 @@ import CreateIcon from '@mui/icons-material/Create';
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
+import Tooltip from '@mui/material/Tooltip';
+
 export default function CustomIconButton(props) {
     
     let items = []
@@ -36,11 +38,16 @@ export default function CustomIconButton(props) {
               }
 
     }
+
+    let tip = props.tip
     
     return (
+
+        <Tooltip title={tip}>
         <IconButton onClick={props.func} aria-label="delete">
             {items}
         </IconButton>
+        </Tooltip>
     );
   }
   
