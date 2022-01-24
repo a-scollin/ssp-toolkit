@@ -22,6 +22,7 @@ import CustomTreeView from "./uiComponents/CustomTreeView"
 import CustomIconButton from "./uiComponents/CustomIconButton";
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
+import { useFormControlUnstyled } from "@mui/material";
 
 
 const pako = require('pako');
@@ -54,7 +55,7 @@ export default class Builder extends Component {
 
     if (cell != null){
 
-      if (cell.value.split("_{").length == 2){   
+      if (cell.value.split("_[").length == 2){   
         
         
         this.setState({transformation : {"selected" : this.state.selected + " - expanded on " + cell.value, 
@@ -76,9 +77,8 @@ export default class Builder extends Component {
 
       if (cell != null){
       
-        if (cell.value.split("_{").length == 2){
 
-          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_{")[0] == node.split("_{")[0]).length == 1){    
+          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_[")[0] == node.split("_[")[0]).length == 1){    
 
 
              
@@ -91,7 +91,7 @@ export default class Builder extends Component {
             
           }
           
-    }
+    
   
   }
 
@@ -153,9 +153,28 @@ alert("Not Equiv?");
       return;
     }
 
+    var new_data = {}
 
+    new_data['modular_pkgs'] = {}
 
-    callback(json_data)
+    if(json_data.hasOwnProperty("modular_pkgs")){
+
+      for(var graph in json_data.modular_pkgs){
+
+        new_data.modular_pkgs[graph] = json_data.modular_pkgs[graph]
+  
+      }
+
+    }
+
+    if(json_data.hasOwnProperty("monolithic_pkgs")){
+
+      new_data['monolithic_pkgs'] = json_data['monolithic_pkgs']
+
+    }
+ 
+
+    callback(new_data)
 
     return
 
@@ -170,6 +189,7 @@ alert("Not Equiv?");
   }
 
 }
+
 
   onProjectUpload(event) {
 
@@ -283,6 +303,12 @@ alert("Not Equiv?");
     var thegraph = {oracles : [], graph : {}}
 
     var packids = {}
+    
+    var pack_base_names = []
+
+    var pack_names = []
+
+    var pack_index = {}
 
     var sub = false
 
@@ -290,7 +316,7 @@ alert("Not Equiv?");
 
       var thecell = cells[cell]
 
-      if (thecell.name != "mxCell") {
+      if(thecell.name !== "mxCell"){
         throw "Not correct format!";
       }
 
@@ -300,9 +326,83 @@ alert("Not Equiv?");
 
         if(!thecell.attributes.hasOwnProperty("connectable") & !thecell.attributes.hasOwnProperty("target") & !thecell.attributes.hasOwnProperty("source")){
           
-          thegraph.graph[thecell.attributes.value] = []
+          pack_base_names.push(thecell.attributes.value.split("_[")[0])
+          pack_names.push(thecell.attributes.value)
+        }
+      
+      }
 
-          packids[thecell.attributes.id] = thecell.attributes.value
+    }
+
+    var dupl = pack_names.reduce(function(list, item, index, array) { 
+      if (array.indexOf(item, index + 1) !== -1 && list.indexOf(item) === -1) {
+        list.push(item);
+      }
+
+      return list;
+    }, []);
+
+    if(dupl.length > 0){
+
+      for(var pack in dupl){
+
+        if(dupl[pack].split("_[").length == 2){
+
+          throw "Multiple packages of same name with same index."
+
+        }
+       
+        alert("Warning! \"" + dupl[pack] + "\" appears multiple times, this packages index will be resolved automatically.")
+          
+        var max_index = 0
+ 
+        for(var innerpack in pack_names){
+
+          if(pack_names[innerpack].split('_[')[0] === dupl[pack] && pack_names[innerpack].split('_[').length === 2){
+
+            // is numeric
+            if(/^\d+$/.test(pack_names[innerpack].split('_[')[1].split(']')[0])){
+
+            var index = parseInt(pack_names[innerpack].split('_[')[1].split(']')[0])
+            if(index > max_index){
+
+              max_index = index
+
+            }
+
+            }
+          }
+        }
+
+        pack_index[dupl[pack]] = max_index
+
+      }
+
+    }
+
+    for(var cell in cells){
+
+      var thecell = cells[cell]
+
+      if(!thecell.attributes.hasOwnProperty("value")){
+        continue;
+      }else{
+
+        if(!thecell.attributes.hasOwnProperty("connectable") & !thecell.attributes.hasOwnProperty("target") & !thecell.attributes.hasOwnProperty("source")){
+          
+          var pack_name = thecell.attributes.value
+
+          if(pack_index.hasOwnProperty(pack_name)){
+
+            pack_index[pack_name] += 1
+
+            pack_name = pack_name + '_['+ pack_index[pack_name] +']'
+
+          }
+
+          thegraph.graph[pack_name] = []
+
+          packids[thecell.attributes.id] = pack_name
           
         }
       

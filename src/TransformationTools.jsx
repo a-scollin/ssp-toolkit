@@ -122,7 +122,7 @@ decompose(event){
 
             for(var in_edge in subGraph.oracles){
 
-                if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_{")[0] == this.state.cell.edges[edge].value.split("_{")[0]){
+                if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_[")[0] == this.state.cell.edges[edge].value.split("_[")[0]){
                     match = true
                     break
                 }
@@ -144,7 +144,7 @@ decompose(event){
 
             //     for(var edge_out in subGraph.graph[pack_out]){
 
-            //         if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_{")[0] == this.state.cell.edges[edge].value.split("_{")[0]){
+            //         if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_[")[0] == this.state.cell.edges[edge].value.split("_[")[0]){
             //             match = true
             //             break
             //         }
@@ -184,7 +184,6 @@ decompose(event){
             alert("Please ensure out_edges match") 
             return
         }
-
         var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata));
 
         var isOraclePack = false;
@@ -206,7 +205,7 @@ decompose(event){
             if (newGraph.oracles[edge][0] == this.state.cell.value){
                 for (var subedge in subGraph.oracles) {
                     
-                    if(subGraph.oracles[subedge][1].split("_{")[0] == newGraph.oracles[edge][1].split("_{")[0]){
+                    if(subGraph.oracles[subedge][1].split("_[")[0] == newGraph.oracles[edge][1].split("_[")[0]){
 
                         edges_for_removal.push(newGraph.oracles[edge])
 
@@ -228,11 +227,11 @@ decompose(event){
                     if(newGraph.graph[pack][edge][0] == this.state.cell.value){
 
                         for (var oracle in subGraph.oracles){
-                            if(subGraph.oracles[oracle][1].split("_{")[0] == newGraph.graph[pack][edge][1].split("_{")[0]){
+                            if(subGraph.oracles[oracle][1].split("_[")[0] == newGraph.graph[pack][edge][1].split("_[")[0]){
                                 if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
                                     newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]        
                                 }else{
-                                    if (subGraph.oracles[oracle][1].split("_{")[0] == newGraph.graph[pack][edge][1].split("_{")[0]){
+                                    if (subGraph.oracles[oracle][1].split("_[")[0] == newGraph.graph[pack][edge][1].split("_[")[0]){
                                         edges_for_removal.push(newGraph.graph[pack][edge])
                                     }
                                     newGraph.graph[pack].push([subGraph.oracles[oracle][0],subGraph.oracles[oracle][1]])
@@ -254,7 +253,7 @@ decompose(event){
             for (var pack in subGraph.graph){
                 for (var sub_edge in subGraph.graph[pack]){
                     for(var edge in newGraph.graph[this.state.cell.value]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("}")[0]){
+                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("]")[0]){
                         subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
                     }
                 }
@@ -466,6 +465,10 @@ substitute(){
             [
                 "BITS",
                 "SETBIT"
+            ],
+            [
+                "BITS",
+                "GETBIT"
             ]
         ],
         "graph": {
@@ -492,6 +495,10 @@ substitute(){
             [
                 "KEYS",
                 "SETBIT"
+            ],
+            [
+                "KEYS",
+                "GETBIT"
             ]
         ],
         "graph": {
@@ -551,8 +558,8 @@ substitute(){
     for(var pack in this.state.selected_graphdata.graph){
         for(var outeredge in this.state.selected_graphdata.graph[pack]){
 
-            var edgedest = this.state.selected_graphdata.graph[pack][outeredge][0].split('_{')[0]
-            var edgename = this.state.selected_graphdata.graph[pack][outeredge][0].split('_{')[1]
+            var edgedest = this.state.selected_graphdata.graph[pack][outeredge][0].split('_[')[0]
+            var edgename = this.state.selected_graphdata.graph[pack][outeredge][0].split('_[')[1]
 
             // Check that all edges from the destination package go to the correct edges as in the equiv, then for the destinaztions of those edges if they have ingoing edges (checked by looping over the lhs graph)
             // check in the main graph if that specific package has ingoing edges from the necesarry packages
@@ -579,9 +586,9 @@ substitute(){
 
                         console.log(rhsdict)
 
-                        if(rhsdict.hasOwnProperty(lhs_matched_edges[edge][2].split("_{")[0])){
+                        if(rhsdict.hasOwnProperty(lhs_matched_edges[edge][2].split("_[")[0])){
 
-                            var new_pkg_name = rhsdict[lhs_matched_edges[edge][2].split("_{")[0]]+ '_{' + lhs_matched_edges[edge][1].split("_{")[1]  
+                            var new_pkg_name = rhsdict[lhs_matched_edges[edge][2].split("_[")[0]]+ '_[' + lhs_matched_edges[edge][1].split("_[")[1]  
 
                             var for_removal = []
 
@@ -612,11 +619,11 @@ substitute(){
                         var to = incoming_non_matched_edges[edge][1]
                         var ename = incoming_non_matched_edges[edge][2]
 
-                        if(!ext.hasOwnProperty(to.split("_{")[0])){
+                        if(!ext.hasOwnProperty(to.split("_[")[0])){
                             alert("NO")
                             return
                         }else{
-                            var newname = ext[to.split("_{")[0]] + '_{' + to.split("_{")[1]
+                            var newname = ext[to.split("_[")[0]] + '_[' + to.split("_[")[1]
 
                             if(from == ""){
 
@@ -644,11 +651,11 @@ substitute(){
                         var to = outgoing_non_matched_edges[edge][1]
                         var ename = outgoing_non_matched_edges[edge][2]
 
-                        if(!ext.hasOwnProperty(from.split("_{")[0])){
+                        if(!ext.hasOwnProperty(from.split("_[")[0])){
                             alert("NO")
                             return
                         }else{
-                            var newname = ext[from.split("_{")[0]] + '_{' + from.split("_{")[1]
+                            var newname = ext[from.split("_[")[0]] + '_[' + from.split("_[")[1]
 
                             if(from == ""){
 
@@ -751,9 +758,9 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
     // console.log(lhs_edges)
     for(var edge in incoming_graph.graph[matchingpack].incoming){
 
-        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].incoming[edge][1].split('_{')[0]])
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].incoming[edge][1].split('_[')[0]])
 
-        if(lhs_packs.includes(incoming_graph.graph[matchingpack].incoming[edge][0].split('_{')[0]) && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0])){
+        if(lhs_packs.includes(incoming_graph.graph[matchingpack].incoming[edge][0].split('_[')[0]) && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0])){
 
             packs.push(incoming_graph.graph[matchingpack].incoming[edge][0])
 
@@ -774,15 +781,15 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
     
     for(var edge in incoming_graph.graph[matchingpack].outgoing){
 
-        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].outgoing[edge][1].split('_{')[0]])
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].outgoing[edge][1].split('_[')[0]])
        
        // console.log(incoming_graph.graph[matchingpack].outgoing[edge])
 
-        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0] && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0]))){
+        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_[')[0] && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0]))){
 
             packs.push(incoming_graph.graph[matchingpack].outgoing[edge][0])
 
-        }else if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_{')[0])){
+        }else if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_[')[0])){
 
           //      console.log("EFHAIEHFIAEHFI")
             lhs_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
@@ -879,13 +886,13 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     for(var edge in lhs_matched_edges){
 
-        if(lhs_packs.includes(lhs_matched_edges[edge][0].split("_{")[0])){
+        if(lhs_packs.includes(lhs_matched_edges[edge][0].split("_[")[0])){
 
-            edge_to_match.push([lhs_matched_edges[edge][1].split('_{')[0],lhs_matched_edges[edge][2].split('_{')[0]])
+            edge_to_match.push([lhs_matched_edges[edge][1].split('_[')[0],lhs_matched_edges[edge][2].split('_[')[0]])
 
-        }else if(lhs_packs.includes(lhs_matched_edges[edge][1].split("_{")[0])){
+        }else if(lhs_packs.includes(lhs_matched_edges[edge][1].split("_[")[0])){
 
-            edge_to_match.push(["",lhs_matched_edges[edge][2].split('_{')[0]])
+            edge_to_match.push(["",lhs_matched_edges[edge][2].split('_[')[0]])
 
         }else{
             alert("WRONG")
@@ -922,7 +929,7 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     // for(var edge in incoming_graph.graph[matchingpack].incoming){
 
-    //     if(lhs_edges.includes(incoming_graph.graph[matchingpack].incoming[edge][1].split("_{")[0])){
+    //     if(lhs_edges.includes(incoming_graph.graph[matchingpack].incoming[edge][1].split("_[")[0])){
             
     //         if(incoming_graph.graph[matchingpack].incoming[edge][0] != ""){
 
@@ -932,7 +939,7 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
     //         }
 
 
-    //         var index = lhs_edges.indexOf(incoming_graph.graph[matchingpack].incoming[edge][1].split("_{")[0])
+    //         var index = lhs_edges.indexOf(incoming_graph.graph[matchingpack].incoming[edge][1].split("_[")[0])
     
     //         lhs_edges.splice(index, 1);
             
@@ -955,15 +962,15 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     //     var theedge = incoming_graph.graph[matchingpack].outgoing[edge]
 
-    //     if(lhs_edges.includes(theedge[1].split("_{")[0])){
+    //     if(lhs_edges.includes(theedge[1].split("_[")[0])){
 
-    //         if(this.check_complete(incoming_graph,theedge[0].split("_{")[0],theedge[1].split("_{")[0],[...lhs_packs],[...lhs_edges])){
+    //         if(this.check_complete(incoming_graph,theedge[0].split("_[")[0],theedge[1].split("_[")[0],[...lhs_packs],[...lhs_edges])){
 
 
 
     //         }
 
-    //         edges_to_remove.push(incoming_graph.graph[matchingpack].outgoing[edge][1].split("_{")[0])        
+    //         edges_to_remove.push(incoming_graph.graph[matchingpack].outgoing[edge][1].split("_[")[0])        
 
     //     }else{
 
@@ -1119,7 +1126,7 @@ var chain = target.name
 
 var expandable = target.name.slice(1)
 
-var expandable_names = expandable.map(x => x.split('_{')[0])
+var expandable_names = expandable.map(x => x.split('_[')[0])
 
 var to_expand = {}
 
@@ -1140,7 +1147,7 @@ for(var pack in expandable){
         return
     }
 
-    var name = expandable[pack].split('_{')[0]
+    var name = expandable[pack].split('_[')[0]
 
     var base = expandable[pack].split('...')[0]
 
@@ -1159,7 +1166,7 @@ for(var pack in expandable){
                 
                 edge_base = edge_base.charAt(edge_base.length - 1)
 
-                const_edges_to_add[prev_pack].push({'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]})
+                const_edges_to_add[prev_pack].push({'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]})
             
             }else{
                 
@@ -1167,14 +1174,14 @@ for(var pack in expandable){
 
                 edge_base = edge_base.charAt(edge_base.length - 1)
 
-                const_edges_to_add[prev_pack] = [{'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
+                const_edges_to_add[prev_pack] = [{'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
             }
     
         }
 
         if(prev_pack != chain[0]){
 
-        if(expandable_names.includes(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("*").length == 2){
+        if(expandable_names.includes(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("*").length == 2){
             
             var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("*")[0]
 
@@ -1187,7 +1194,7 @@ for(var pack in expandable){
             if(this.state.selected_graphdata.graph[prev_pack][edge][0].split("...").length != 2){
                 
                 for(var match in expandable){
-                    if(expandable[match].split("_{")[0] == this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[0]){
+                    if(expandable[match].split("_[")[0] == this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[0]){
                         name_to = expandable[match]
 
                         break
@@ -1199,14 +1206,14 @@ for(var pack in expandable){
                 if (dyn_edges_to_add.hasOwnProperty(prev_pack)){
                     if(dyn_edges_to_add[prev_pack].hasOwnProperty(name_to)){
                         console.log("HUFFLEPUFF")
-                        console.log(re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0])
-                        dyn_edges_to_add[prev_pack][name_to].push({'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]})
+                        console.log(re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0])
+                        dyn_edges_to_add[prev_pack][name_to].push({'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]})
                     }else{
-                        dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
+                        dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
                     }
                 }else{
                     dyn_edges_to_add[prev_pack] = {}
-                    dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_{")[1])[0],'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_{")[0]}]
+                    dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0],'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
                 }
         
             }
@@ -1243,7 +1250,7 @@ for(var pack in to_expand){
 
             var name_base = to_expand[pack]['name']
 
-            var new_package = name_base+'_{' +(num+i).toString()+'}'
+            var new_package = name_base+'_[' +(num+i).toString()+']'
 
             newGraph.graph[new_package] = []
 
@@ -1266,9 +1273,9 @@ for(var pack in to_expand){
 
             for(var i = 0; i < target.value; i++){
 
-                var new_package = name_base+'_{' +(num+i).toString()+'}'
+                var new_package = name_base+'_[' +(num+i).toString()+']'
 
-                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+                var new_edge = edge_name_base+'_[' + (edge_num+i).toString()+']'
 
                 newGraph.graph[pack].push([new_package,new_edge])
                 
@@ -1301,11 +1308,11 @@ for(var pack in to_expand){
 
             for(var i = 0; i < target.value; i++){
 
-                var new_linking_package = name_base+'_{' +(num+i).toString()+'}'
+                var new_linking_package = name_base+'_[' +(num+i).toString()+']'
 
-                var new_edge = edge_name_base+'_{' + (edge_num+i).toString()+'}'
+                var new_edge = edge_name_base+'_[' + (edge_num+i).toString()+']'
 
-                var new_pack = pack_base+'_{' + (pack_num+i).toString()+'}'
+                var new_pack = pack_base+'_[' + (pack_num+i).toString()+']'
 
                 console.log(new_pack)
 
