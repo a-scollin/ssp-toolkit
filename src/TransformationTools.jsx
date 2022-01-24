@@ -28,6 +28,7 @@ import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 
+import CustomIconButton from "./uiComponents/CustomIconButton.jsx";
 
 
 import Select from 'react-select'
@@ -1401,7 +1402,7 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
   render() {
 
-    var save_tool =  this.state.selection != null ? <button onClick={() => this.updateGraph(true)}>Save</button> : <></>
+    var save_tool =  this.state.selection != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
   
       return (
         <ReflexContainer orientation="vertical"> 
