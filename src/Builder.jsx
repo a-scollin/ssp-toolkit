@@ -36,6 +36,7 @@ export default class Builder extends Component {
     super(props);
     
     this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation : {}, transformation_display : {}};    
+ 
   }
 
 
@@ -53,7 +54,14 @@ export default class Builder extends Component {
 
   expandGraph(cell) {
 
-
+  
+    if(Object.keys(this.state.transformation).length != 0 ){
+      if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){         
+        return
+       }
+     }
+         
+  
     if (cell != null){
 
       if (cell.value.split("_[").length == 2){   
@@ -76,20 +84,21 @@ export default class Builder extends Component {
 
     decomposeGraph(cell){
 
+      if(Object.keys(this.state.transformation).length != 0 ){
+        if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){          
+          return
+        }
+      }
+
       if (cell != null){
       
-
           if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_[")[0] == node.split("_[")[0]).length == 1){    
-
-
-             
+       
           this.setState({transformation : {"selected" : this.state.selected + " - decomposed on " + cell.value, 
           "type" : "decompose", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
 
-
            return 
-            
-            
+                        
           }
           
     
@@ -100,6 +109,14 @@ export default class Builder extends Component {
 }
 
 substituteGraph(cell){
+
+
+  if(Object.keys(this.state.transformation).length != 0 ){
+    if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){
+       return
+     }
+   }
+       
 
   if (cell != null){
 

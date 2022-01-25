@@ -37,6 +37,8 @@ import { V } from "mathjax-full/js/output/common/FontData";
 import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
 import { resolveInput } from "./helpers/import_helper.js";
 
+import { buildIncoming } from './helpers/transformation_helper.js'
+
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
@@ -52,12 +54,7 @@ export default class TransformationTools extends Component {
 //   This is dumb ! 
   componentDidUpdate(prevProps){
 
-console.log("tramsupdate")
-console.log(prevProps)
-console.log(this.props)
-console.log(this.state)
-
-    if(this.props.transformationselection != prevProps.transformationselection){
+    if(this.props.transformationselection !== prevProps.transformationselection){
       
         this.setState({selected_graphdata : this.props.transformationselection['base'], displayed : this.props.transformationselection['base'], selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell'], equivs : this.props.equivs},() => {
             if (Object.keys(this.props.transformationselection).length != 0){
@@ -68,12 +65,9 @@ console.log(this.state)
                 return
             }
         });
-    
-
     }
 
     if(this.state.equivs.length != this.props.equivs.length){
-        console.log("RIGHTHggggg")
 
         this.setState({equivs : this.props.equivs}, () => {
             if (this.props.transformationselection != {}){
@@ -88,13 +82,6 @@ console.log(this.state)
     }
      
   }
-
-  
-getImport(event){
-
-    resolveInput(event.target.files[0], (json_data) => {return json_data})
-
-}
 
 decompose(subGraph){
 
@@ -131,6 +118,7 @@ decompose(subGraph){
 
             if (!match){
                 alert("Please ensure in_edges match") 
+                return
             }else{
                 in_edges++;
             }
@@ -287,10 +275,6 @@ decompose(subGraph){
     });
 
 }
-    
-
-  
-
 
 findchain(graph, node){
 
@@ -321,7 +305,7 @@ findchain(graph, node){
 
   setup(){
 
-    console.log("JUBLI")
+    console.log(buildIncoming(this.state.selected_graphdata))
 
     var option_pairs = []
 
@@ -393,6 +377,7 @@ findchain(graph, node){
                                 <Stack direction="row" spacing={1}>
                                 <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => this.decompose(json_data))} name="decomp_input"/>
                                 <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
+                                
                                 <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
                                 </Stack>
             </ReflexElement>)
@@ -721,8 +706,6 @@ build_incoming(){
 
 
         }
-
-
     }
 
 
@@ -1058,7 +1041,7 @@ submit_equiv(){
     var newEquivs = [...this.state.equivs]
 
     newEquivs.push([this.state.equiv_lhs,this.state.equiv_rhs])
-
+    
     this.setState({options : []}, () =>{
         this.props.updateEquivsProp(newEquivs)
     })
