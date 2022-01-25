@@ -29,11 +29,13 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 
 import CustomIconButton from "./uiComponents/CustomIconButton.jsx";
+import Stack from '@mui/material/Stack';
 
 
 import Select from 'react-select'
 import { V } from "mathjax-full/js/output/common/FontData";
 import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
+import { resolveInput } from "./helpers/import_helper.js";
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -87,21 +89,18 @@ console.log(this.state)
      
   }
 
-decompose(event){
-    console.time('decomp')
-    var file = event.target.files[0];
-    var reader = new FileReader();
-    reader.onload = (event) => {
-      // The file's text will be printed here
-      
-    try {
-        var json_data = JSON.parse(event.target.result);
-    } catch (e) {
-        alert("Please enter a JSON file");
-        return;
-    }
-    
-        var subGraph = json_data;
+  
+getImport(event){
+
+    resolveInput(event.target.files[0], (json_data) => {return json_data})
+
+}
+
+decompose(subGraph){
+
+        alert("yippie");
+
+        console.log(subGraph)
 
         if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
             alert("Please ensure subgraph file is correct!")
@@ -289,12 +288,10 @@ decompose(event){
 
 }
     
-    reader.readAsText(file);
 
-    console.timeEnd('decomp')
-
-}
   
+
+
 findchain(graph, node){
 
    var longestchain = []
@@ -320,8 +317,6 @@ findchain(graph, node){
     
             
     }
-
-
 
 
   setup(){
@@ -395,15 +390,12 @@ findchain(graph, node){
         
     }else if (this.state.type == "decompose"){
         options.push(<ReflexElement flex={0.8} key={node}>{node}
-                  <form>
-  <label>
-    Subgraph input:
-    <input type="file" onChange={this.decompose.bind(this)} name="graph_file" />
-  </label>
-  <input type="submit" value="Reset" />
-</form>
+                                <Stack direction="row" spacing={1}>
+                                <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => this.decompose(json_data))} name="decomp_input"/>
+                                <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
+                                <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
+                                </Stack>
             </ReflexElement>)
-
             this.setState({options : options})
     }else if (this.state.type == "equiv"){
 
