@@ -262,15 +262,15 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
               menu.addItem('Expand', null, function()
 				    {
-              this.props.expand(cell);
+              this.props.triggerTransformationProp('expand', cell.value);
 				    }.bind(this), transform_submenu);
 					menu.addItem('Decompose', null, function()
 				    {
-              this.props.decompose(cell);
+              this.props.triggerTransformationProp('decompose', cell.value);
             }.bind(this), transform_submenu);
           menu.addItem('Equivalence', null, function()
 				    {
-              this.props.substitute(cell);
+              this.props.triggerTransformationProp('equiv', cell.value);
             }.bind(this), transform_submenu);
         }}}}.bind(this);
 

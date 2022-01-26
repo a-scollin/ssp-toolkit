@@ -13,7 +13,7 @@ import {
     ReflexElement
   } from 'react-reflex'
 import { ListGroup, ThemeProvider } from "react-bootstrap";
-import { getCheckboxUtilityClass } from "@mui/material";
+import { getCheckboxUtilityClass, getTableHeadUtilityClass, toggleButtonGroupClasses } from "@mui/material";
 import { useThemeWithoutDefault } from "@mui/system";
 import CodeEditor from "./uiComponents/CodeEditor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
@@ -37,15 +37,20 @@ import { V } from "mathjax-full/js/output/common/FontData";
 import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
 import { resolveInput } from "./helpers/import_helper.js";
 
-import { buildIncoming } from './helpers/transformation_helper.js'
+
+import { CustomDecomposePopup } from "./uiComponents/CustomPopup.jsx";
+
+import { buildIncoming, decompose } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
+    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
+    this.packSelection = null
     this.targetval = 0
+    this.input_data = null 
    console.log("INIT")
   
   }
@@ -54,10 +59,10 @@ export default class TransformationTools extends Component {
 //   This is dumb ! 
   componentDidUpdate(prevProps){
 
-    if(this.props.transformationselection !== prevProps.transformationselection){
+    if(this.props.type !== prevProps.type || this.props.node !== prevProps.node){
       
-        this.setState({selected_graphdata : this.props.transformationselection['base'], displayed : this.props.transformationselection['base'], selection : this.props.transformationselection['selected'], type : this.props.transformationselection['type'], cell : this.props.transformationselection['cell'], equivs : this.props.equivs},() => {
-            if (Object.keys(this.props.transformationselection).length != 0){
+        this.setState({selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
+            if (this.props.type != null){
                 this.setup()
                 return
             }else{
@@ -70,7 +75,7 @@ export default class TransformationTools extends Component {
     if(this.state.equivs.length != this.props.equivs.length){
 
         this.setState({equivs : this.props.equivs}, () => {
-            if (this.props.transformationselection != {}){
+            if (this.props.type != null){
                 this.setup()
             }else{
                 this.setState({options : []})
@@ -78,203 +83,10 @@ export default class TransformationTools extends Component {
             
         })
        
-
     }
      
   }
 
-decompose(subGraph){
-
-        alert("yippie");
-
-        console.log(subGraph)
-
-        if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
-            alert("Please ensure subgraph file is correct!")
-            return
-        }
-
-
-        var in_edges = 0;
-              
-        var out_edges = 0;
-        
-        var match = false
-
-        for(var edge in this.state.cell.edges){
-        
-          if(this.state.cell.edges[edge].target.value == this.state.cell.value){
-        
-             match = false
-
-            for(var in_edge in subGraph.oracles){
-
-                if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_[")[0] == this.state.cell.edges[edge].value.split("_[")[0]){
-                    match = true
-                    break
-                }
-
-            }
-
-            if (!match){
-                alert("Please ensure in_edges match") 
-                return
-            }else{
-                in_edges++;
-            }
-            
-            
-          }else{
-        
-            // match = false
-
-            // for(var pack_out in subGraph.graph){
-
-            //     for(var edge_out in subGraph.graph[pack_out]){
-
-            //         if(subGraph.oracles[in_edge][1] == this.state.cell.edges[edge].value || subGraph.oracles[in_edge][1].split("_[")[0] == this.state.cell.edges[edge].value.split("_[")[0]){
-            //             match = true
-            //             break
-            //         }
-
-            //     }
-
-              
-
-            // }
-
-            // if (!match){
-            //     alert("Please ensure in_edges match") 
-            // }else{
-                out_edges++;
-            // }
-            
-
-            
-        
-          }
-        
-        }
-    
-
-        var out = 0;
-        for(var node in subGraph.graph){
-            for(var edge in subGraph.graph[node]){
-                if (subGraph.graph[node][edge][0] == "" || subGraph.graph[node][edge][0] == "terminal_pkg"){
-                    out++;
-                }
-            }
-        }
-
-        if (out != out_edges){
-            console.log(out)
-            console.log(out_edges)
-            alert("Please ensure out_edges match") 
-            return
-        }
-        var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata));
-
-        var isOraclePack = false;
-
-        for( var oracle in newGraph.oracles){
-
-            if (newGraph.oracles[oracle][0] == this.state.cell.value){
-                isOraclePack = true
-            }
-        
-        }
-
-
-        var edges_for_removal = []
-
-        // Resolve ingoing edges, Realising now that this is actually wrong if theres a decomposition to be done on a package that has an oracle
-
-        for(var edge in newGraph.oracles){
-            if (newGraph.oracles[edge][0] == this.state.cell.value){
-                for (var subedge in subGraph.oracles) {
-                    
-                    if(subGraph.oracles[subedge][1].split("_[")[0] == newGraph.oracles[edge][1].split("_[")[0]){
-
-                        edges_for_removal.push(newGraph.oracles[edge])
-
-                        newGraph.oracles.push(subGraph.oracles[subedge])
-
-                    }
-                        
-                }
-            }
-        }
-            
-
-        for(var pack in newGraph.graph){
-            
-            if (pack != this.state.cell.value) { 
-
-                for (var edge in newGraph.graph[pack]){
-
-                    if(newGraph.graph[pack][edge][0] == this.state.cell.value){
-
-                        for (var oracle in subGraph.oracles){
-                            if(subGraph.oracles[oracle][1].split("_[")[0] == newGraph.graph[pack][edge][1].split("_[")[0]){
-                                if(subGraph.oracles[oracle][1] == newGraph.graph[pack][edge][1]){
-                                    newGraph.graph[pack][edge][0] = subGraph.oracles[oracle][0]        
-                                }else{
-                                    if (subGraph.oracles[oracle][1].split("_[")[0] == newGraph.graph[pack][edge][1].split("_[")[0]){
-                                        edges_for_removal.push(newGraph.graph[pack][edge])
-                                    }
-                                    newGraph.graph[pack].push([subGraph.oracles[oracle][0],subGraph.oracles[oracle][1]])
-                                }
-                                
-                            }
-                    }
-        
-            
-
-        }
-    }
-}
-        }
-
-
-
-            // Resolve outgoing edges
-            for (var pack in subGraph.graph){
-                for (var sub_edge in subGraph.graph[pack]){
-                    for(var edge in newGraph.graph[this.state.cell.value]){
-                    if (subGraph.graph[pack][sub_edge][1] == newGraph.graph[this.state.cell.value][edge][1] || subGraph.graph[pack][sub_edge][1].split("*")[0] == newGraph.graph[this.state.cell.value][edge][1].split("]")[0]){
-                        subGraph.graph[pack][sub_edge][0] = newGraph.graph[this.state.cell.value][edge][0]
-                    }
-                }
-                }
-
-            }
-
-        // for(var pack in newGraph.graph){
-        //     if newGraph.graph[]
-        // }
-
-        delete newGraph.graph[this.state.cell.value]; 
-
-        for(var subgraph in subGraph.graph){
-            newGraph.graph[subgraph] = subGraph.graph[subgraph]
-        }
-
-        console.log("edges_for_removal")
-        console.log(edges_for_removal)
-
-        
-        newGraph.oracles = newGraph.oracles.filter(item => !edges_for_removal.includes(item))
-        
-
-        for(var pack in newGraph.graph){
-            newGraph.graph[pack] = newGraph.graph[pack].filter(item => !edges_for_removal.includes(item))
-        }
-
-        this.setState({displayed : newGraph}, ()=>{
-        this.updateGraph(false)
-    });
-
-}
 
 findchain(graph, node){
 
@@ -305,7 +117,7 @@ findchain(graph, node){
 
   setup(){
 
-    console.log(buildIncoming(this.state.selected_graphdata))
+    this.incomingGraph = buildIncoming(this.state.selected_graphdata)
 
     var option_pairs = []
 
@@ -372,16 +184,6 @@ findchain(graph, node){
 
         this.setState({options : options});
         
-    }else if (this.state.type == "decompose"){
-        options.push(<ReflexElement flex={0.8} key={node}>{node}
-                                <Stack direction="row" spacing={1}>
-                                <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => this.decompose(json_data))} name="decomp_input"/>
-                                <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
-                                
-                                <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
-                                </Stack>
-            </ReflexElement>)
-            this.setState({options : options})
     }else if (this.state.type == "equiv"){
 
         const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
@@ -418,6 +220,8 @@ findchain(graph, node){
 this.setState({options : options})
 
     }
+
+    
 
 }
 
@@ -665,16 +469,15 @@ substitute(){
     console.log(newGraphData)
 
     
-    this.setState({displayed : newGraphData}, ()=>{
-        this.updateGraph(false)
-    });
+    this.updateGraph(false,newGraphData)
+
     
 
 }
 
 build_incoming(){
 
-    var graphData = JSON.parse(JSON.stringify(this.state.selected_graphdata))
+    var graphData = JSON.parse(JSON.stringify())
 
     for(var node in graphData.graph){
 
@@ -1041,7 +844,7 @@ submit_equiv(){
     var newEquivs = [...this.state.equivs]
 
     newEquivs.push([this.state.equiv_lhs,this.state.equiv_rhs])
-    
+
     this.setState({options : []}, () =>{
         this.props.updateEquivsProp(newEquivs)
     })
@@ -1320,9 +1123,8 @@ for(var pack in expandable){
 
 newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
 
-    this.setState({displayed : newGraph}, () => {
-    this.updateGraph(false)
-    })
+this.updateGraph(false,newGraph)
+
 
     
 
@@ -1364,26 +1166,86 @@ newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
     
 }
 
-  updateGraph(fin){
-      if(this.state.selection != null){
-        this.props.update(this.state.displayed, fin);
+  updateGraph(fin, displayed=null){
+
+    if(displayed != null){
+        this.displayed = displayed
+    }
+
+        this.props.update(this.displayed, fin);
         if (fin){
-        this.setState({selected_graphdata : null, displayed : null, selection : null, type : null, options : []});
+        this.setState({selected_graphdata : null, type : null, options : []});
+        this.displayed = null
         this.valdict = {};
     }
 }
       
-  }
+newDecompose(packSelection,subGraph){
+
+    if(!subGraph.hasOwnProperty('graph')){
+        alert('Please supply a valid sub graph')
+        return
+    }
+
+    try{
+
+        var newGraph = decompose(this.incomingGraph,this.state.selected_graphdata,packSelection,subGraph)
+
+    } catch(e) {
+
+        console.log(e)
+        alert("Couldn't decompose!")
+        return 
+
+    }
+
+
+    this.updateGraph(false,newGraph)
+
+}
+  
 
   render() {
 
-    var save_tool =  this.state.selection != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
+    var save_tool =  this.state.type != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
   
+    var options = []
+
+    switch(this.state.type){
+        case "decompose":
+                options.push(<ReflexElement flex={0.8} key={'save'}>
+                                        <Stack direction="row" spacing={1}>
+                                        <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => {
+                                            if(this.state.selected_node != null){
+                                                this.newDecompose(this.state.selected_node,json_data)
+                                            }else{
+                                            this.setState({input_data : json_data});
+                                            }})} name="decomp_input"/>
+                                        <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
+                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
+                                        <CustomDecomposePopup
+                                        open={this.state.input_data != null ? true : false}
+                                        onChoice={(choice) => {
+                                            this.newDecompose(choice, this.state.input_data)
+                                            this.decompUpload.value = null
+                                            this.setState({input_data : null, selected_node : choice })}}
+                                        packs={Object.keys(this.state.selected_graphdata.graph)}
+                                        />
+                                        </Stack>
+                    </ReflexElement>)
+                if(this.state.selected_node != null){
+                    options.push(<ReflexSplitter/>)
+                    options.push(<ReflexElement><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
+                    </ReflexElement>)
+                }
+        break;
+    }
+
       return (
         <ReflexContainer orientation="vertical"> 
         <ReflexElement flex={0.8}>
         <ReflexContainer orientation="vertical">
-            {this.state.options}
+            {options}
         </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter/>

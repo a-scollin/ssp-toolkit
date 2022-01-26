@@ -34,8 +34,10 @@ export default class Builder extends Component {
 
   constructor(props) {
     super(props);
-    
-    this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation : {}, transformation_display : {}};    
+    this.transform_type = null
+    this.transform_node = null
+    this.transform_basename = null
+    this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation_base : {}, transformation_display : {}};    
  
   }
 
@@ -52,83 +54,22 @@ export default class Builder extends Component {
 
   // Function to be passed to graph view for invoking an expansion 
 
-  expandGraph(cell) {
+  triggerTransformation(type, cell_value) {
 
   
-    if(Object.keys(this.state.transformation).length != 0 ){
+    if(this.transformation_type != null){
       if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){         
         return
        }
      }
-         
-  
-    if (cell != null){
 
-      if (cell.value.split("_[").length == 2){   
+        this.transform_type = type
+
+        this.transform_node = cell_value
         
-        
-        this.setState({transformation : {"selected" : this.state.selected + " - expanded on " + cell.value, 
-        "type" : "expand", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
-
-        return
-          
-      }
-  
-    }
-
-    alert("Not expandable");
+        this.setState({transformation_base : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected])), transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
     
   }
-
-    // Function to be passed to graph view for invoking an decomposition 
-
-    decomposeGraph(cell){
-
-      if(Object.keys(this.state.transformation).length != 0 ){
-        if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){          
-          return
-        }
-      }
-
-      if (cell != null){
-      
-          if (Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph).filter(node => cell.value.split("_[")[0] == node.split("_[")[0]).length == 1){    
-       
-          this.setState({transformation : {"selected" : this.state.selected + " - decomposed on " + cell.value, 
-          "type" : "decompose", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
-
-           return 
-                        
-          }
-          
-    
-  
-  }
-
-  alert("Not decomposable");
-}
-
-substituteGraph(cell){
-
-
-  if(Object.keys(this.state.transformation).length != 0 ){
-    if(!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to perform another transformation?")){
-       return
-     }
-   }
-       
-
-  if (cell != null){
-
-             
-    this.setState({transformation : {"selected" : this.state.selected + " - composed on " + cell.value, 
-    "type" : "equiv", "cell" : cell, "basename" : this.state.selected ,"base" : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}, transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
-    return 
-
-}
-
-alert("Not Equiv?");
-}
 
   // For parsing in the json or xml files 
 
@@ -151,6 +92,7 @@ alert("Not Equiv?");
       });
     })
 
+    this.projUpload.value = null
 
   }
 
@@ -228,31 +170,34 @@ alert("Not Equiv?");
 
 }  
 
-updateGraphData(newGraphData, fin){
+updateGraphData(newGraphData, fin, transform_name=null){
 
 if(fin){
 
   for(var element in this.state.tree_data) {
                 
-    if(this.matchSortableTreeElmSave(this.state.tree_data[element],newGraphData)){
+    if(this.matchSortableTreeElmSave(this.state.tree_data[element],newGraphData, transform_name)){
       return 
     }
 
   }
 
-  var graphname = this.state.transformation['selected']
+  var graphname = transform_name != null ? transform_name : this.state.selected + ' - ' + this.transform_type
 
   this.setState(prevState => {
 
     let tree_data = [...prevState.tree_data]
     let graphdata = { ...prevState.graphdata };  
-    let transformation = {};
+    let transformation_base = {};
     let transformation_display = {};
 
-    tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+    tree_data.push({'title' : graphname , 'graphname' : graphname, 'number' : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, 'children' : []})
     graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
 
-    return { graphdata, transformation, transformation_display, tree_data };                                 // return new object jasper object
+    this.transform_type = null
+    this.transform_node = null
+
+    return { graphdata, transformation_base, transformation_display, tree_data };                                 // return new object jasper object
     
   });
 
@@ -273,14 +218,13 @@ if(fin){
 
 }
 
-matchSortableTreeElmSave(element,newGraphData){
+matchSortableTreeElmSave(element,newGraphData, transform_name){
 
-  if (element.graphname == this.state.transformation["basename"]){
+  if (element.graphname == this.state.selected){
 
-
-    var graphname = this.state.transformation['selected']
-
-    var number = element.number[this.state.transformation['type']]
+    var graphname = transform_name != null ? transform_name : this.state.selected + ' - ' + this.transform_type
+    
+    var number = element.number[this.transform_type]
 
     console.log('number')
     console.log(number)
@@ -289,24 +233,28 @@ matchSortableTreeElmSave(element,newGraphData){
 
       number = number[graphname]
 
-      element.number[this.state.transformation['type']][graphname] += 1;
+      element.number[this.transform_type][graphname] += 1;
  
       graphname = graphname + '  (' + number.toString() + ') '
 
     }else{
-      element.number[this.state.transformation['type']][graphname] = 1
+      element.number[this.transform_type][graphname] = 1
     }
-
 
       element.children.push({title : graphname, graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
       
       this.setState(prevState => {
 
+          
         let graphdata = { ...prevState.graphdata };  
-        graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
-        let transformation = {};
+        let transformation_base = {};
         let transformation_display = {};
-        return { graphdata, transformation, transformation_display };                                 // return new object jasper object
+
+        graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
+
+        this.transform_type = null
+        
+        return { graphdata, transformation_base, transformation_display };                                 // return new object jasper object
         
       });
 
@@ -315,7 +263,7 @@ matchSortableTreeElmSave(element,newGraphData){
     }else{
 
       for(var child in element.children) {
-        if(this.matchSortableTreeElmSave(element.children[child], newGraphData)){
+        if(this.matchSortableTreeElmSave(element.children[child], newGraphData, transform_name)){
           return true;
         }
 
@@ -329,12 +277,16 @@ matchSortableTreeElmSave(element,newGraphData){
 
 selectGraph(graphname){
   
-  if(Object.keys(this.state.transformation).length == 0 ){
-    this.setState({selected : graphname, transformation : {}});
+  if(this.transform_type == null){
+
+    this.setState({selected : graphname});
   }else if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change seleceted graph?")){
       return
     } else {
-      this.setState({selected : graphname, transformation : {}});
+
+      this.transform_type = null
+
+      this.setState({selected : graphname, transformation_base : {}, transformation_display : {}});
     }
   }
 
@@ -361,14 +313,13 @@ selectGraph(graphname){
       
       graphdata.modular_pkgs[prevState.selected] = newGraphData
 
-      if(Object.keys(prevState.transformation).length !== 0){
+      if(prevState.transform_type !== null){
 
-        let transformation = {...prevState.transformation}
         let transformation_display = newGraphData
 
-        transformation['base'] = JSON.parse(JSON.stringify(newGraphData))
+        let transformation_base = JSON.parse(JSON.stringify(newGraphData))
 
-        return {graphdata, transformation, transformation_display}
+        return {graphdata, transformation_base, transformation_display}
 
       }
 
@@ -382,9 +333,9 @@ selectGraph(graphname){
 
 
     if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
-    var transform = Object.keys(this.state.transformation).length != 0 ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
-    <GraphView decompose={this.decomposeGraph.bind(this)} expand={this.expandGraph.bind(this)} substitute={this.substituteGraph.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+    var transform = this.transform_type != null ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
+    <GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
+    <GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
   </ReflexElement>]
 
     var editor = [<CodeEditor text={JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected], null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
@@ -393,12 +344,11 @@ selectGraph(graphname){
       var transform = <div></div>
       var editor = <div></div>
     }
-
     
     if(this.state.graphdata.hasOwnProperty('equivs')){
-      var equivs = this.state.graphdata['equivs']
+      var graphEquivs = this.state.graphdata['equivs']
     }else{
-      var equivs = []
+      var graphEquivs = []
     }    
     
     return (      
@@ -461,7 +411,7 @@ selectGraph(graphname){
         <ReflexSplitter/>
         
         <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={equivs} transformationselection={this.state.transformation}/>
+          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
         </ReflexElement>
       
       </ReflexContainer>
