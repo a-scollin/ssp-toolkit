@@ -118,73 +118,9 @@ findchain(graph, node){
   setup(){
 
     this.incomingGraph = buildIncoming(this.state.selected_graphdata)
-
-    var option_pairs = []
-
     var options = []
 
-    if (this.state.type == "expand"){
-
-        for (var node in this.state.selected_graphdata.graph){
-         for(var edge in this.state.selected_graphdata.graph[node]){  
-            if (this.state.selected_graphdata.graph[node][edge][0].split("...").length == 2 && this.state.selected_graphdata.graph[node][edge][1].split("#").length != 2){
-                
-                option_pairs.push(this.findchain(this.state.selected_graphdata.graph, node))
-
-            }
-        }
-        }
-
-        console.log(option_pairs)
-
-        var remove_pair = []
-
-        for (var pair in option_pairs){
-            for (var otherpair in option_pairs){
-                if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].length > option_pairs[pair].length && option_pairs[pair].every(element => option_pairs[otherpair].includes(element))){
-
-                    remove_pair.push(option_pairs[pair])
-
-                }
-            }
-
-        } 
-      
-        option_pairs = option_pairs.filter(item => !remove_pair.includes(item))
-
-        option_pairs = Array.from(new Set(option_pairs.map(JSON.stringify)), JSON.parse)
-
-        console.log("option_pairs")
-        console.log(option_pairs)
-
-
-        for(var pair in option_pairs){
-            options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
-                <div key={option_pairs[pair]} reference={option_pairs[pair]} className="boxpad">
-                <Slider style={{opacity : 1}}
-  aria-label="Temperature"
-  defaultValue={30}
-  valueLabelDisplay="auto"
-  step={1}
-  marks
-  min={1}
-  max={10}
-  name={option_pairs[pair]}
-  onChange={ (e, val) => this.expand(e.target)}  />
-</div>
-                </ReflexElement>)
-                options.push(<ReflexSplitter/>)
-        }
-
-        options.pop()
-
-        console.log("HERE")
-        console.log(options)
-
-
-        this.setState({options : options});
-        
-    }else if (this.state.type == "equiv"){
+  if (this.state.type == "equiv"){
 
         const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
             return({ 'value' : x, 'label' : x })})
@@ -1239,6 +1175,59 @@ newDecompose(packSelection,subGraph){
                     </ReflexElement>)
                 }
         break;
+        case "expand":
+            var option_pairs = []
+
+                for (var node in this.state.selected_graphdata.graph){
+                 for(var edge in this.state.selected_graphdata.graph[node]){  
+                    if (this.state.selected_graphdata.graph[node][edge][0].split("...").length == 2 && this.state.selected_graphdata.graph[node][edge][1].split("#").length != 2){
+                        
+                        option_pairs.push(this.findchain(this.state.selected_graphdata.graph, node))
+        
+                    }
+                }
+                }
+                
+                var remove_pair = []
+        
+                for (var pair in option_pairs){
+                    for (var otherpair in option_pairs){
+                        if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].length > option_pairs[pair].length && option_pairs[pair].every(element => option_pairs[otherpair].includes(element))){
+        
+                            remove_pair.push(option_pairs[pair])
+        
+                        }
+                    }
+        
+                } 
+              
+                option_pairs = option_pairs.filter(item => !remove_pair.includes(item))
+        
+                option_pairs = Array.from(new Set(option_pairs.map(JSON.stringify)), JSON.parse)
+        
+        
+        
+                for(var pair in option_pairs){
+                    options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
+                        <div key={option_pairs[pair]} reference={option_pairs[pair]} className="boxpad">
+                        <Slider style={{opacity : 1}}
+          aria-label="Temperature"
+          defaultValue={30}
+          valueLabelDisplay="auto"
+          step={1}
+          marks
+          min={1}
+          max={10}
+          name={option_pairs[pair]}
+          onChange={ (e, val) => this.expand(e.target)}  />
+        </div>
+                        </ReflexElement>)
+                        options.push(<ReflexSplitter/>)
+                }
+        
+                options.pop()
+                break;
+                    
     }
 
       return (

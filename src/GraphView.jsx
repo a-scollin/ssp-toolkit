@@ -85,6 +85,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   initToolbar(graph) {
     
+alert('toolbat')
+
     var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
 
     tbContainer.innerHTML = ""
