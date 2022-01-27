@@ -333,10 +333,19 @@ selectGraph(graphname){
 
 
     if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
-    var transform = this.transform_type != null ? [<ReflexElement className="workboard" minSize="50" flex={0.5}>
-    <GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>,<ReflexSplitter/>,<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>] :  [<ReflexElement  flex={1} className="workboard" minSize="50">
-    <GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
-  </ReflexElement>]
+    var transform = []
+
+    if(this.transform_type != null){
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView allow_editing={false} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
+      transform.push(<ReflexSplitter/>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} allow_editing={false} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
+    }else{
+      transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
+      <GraphView allow_editing={true} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+    </ReflexElement>)
+    }
+
+
 
     var editor = [<CodeEditor text={JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected], null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 

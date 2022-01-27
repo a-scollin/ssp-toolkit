@@ -6,7 +6,37 @@ import Moveable from "react-moveable";
 import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
-
+import { default as MxGraph } from "mxgraph";
+import { initToolbar, configureKeyBindings } from "./helpers/graph_helper.js"
+import addToolbarItem from "./helpers/addToolbarItem";
+import getStyleStringByObj from "./helpers/getStyleStringByObj";
+const {
+  mxGraph,
+  mxEvent,
+  mxVertexHandler,
+  mxConnectionHandler,
+  mxImage,
+  mxClient,
+  mxRubberband,
+  mxConstants,
+  mxUtils,
+  mxGeometry,
+  mxPoint,
+  mxHierarchicalLayout,
+  mxFastOrganicLayout,
+  mxEdgeHandler,
+  mxUndoManager,
+  mxKeyHandler,
+  mxGraphHandler,
+  mxConstraintHandler,
+  mxGuide,
+  mxCellState,
+  mxConnectionConstraint,
+  mxDragSource,
+  mxToolbar,
+  mxDivResizer,
+  mxCell
+} = MxGraph();
 
 var mx = require("mxgraph")({
   mxImageBasePath: "./mxgraph/javascript/src/images",
@@ -16,44 +46,141 @@ var mx = require("mxgraph")({
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, displayed : null};
+    this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, displayed : null, toolbar : null};
     this.GraphRef = React.createRef()
-  
+    this.toolbarRef = React.createRef()    
+
   }
   
 
   componentDidMount(prevProps){
 
+    this.init = true
 
 if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}){
-  this.LoadGraph()
+  this.setupNewGraph();
 }
   }
 
   componentDidUpdate(prevProps){
 
-
-
     if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.selected != prevProps.selected){
-      this.setState({selected_graphdata : this.props.selected_graphdata},() => {
-        this.LoadGraph();
+      this.setState({selected_graphdata : this.props.selected_graphdata,allow_editing : this.props.allow_editing},() => {
+        this.setupNewGraph();
       });
+      return
     }
-     
+
+    if(this.props.allow_editing != prevProps.allow_editing){
+      
+      this.setState({selected_graphdata : this.props.selected_graphdata, allow_editing : this.props.allow_editing},() => {
+        this.setupNewGraph();
+      });
+      this.setupNewGraph()
+
+    }
+
   }
 
-  LoadGraph() {
+  initToolbar(graph) {
+    
+    var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
+
+    tbContainer.innerHTML = ""
+
+    // Creates new toolbar without event processing
+    var toolbar = new mxToolbar(tbContainer);
+    toolbar.enabled = false;
+  
+    // Workaround for Internet Explorer ignoring certain styles
+    if (mxClient.IS_QUIRKS) {
+      document.body.style.overflow = "hidden";
+      new mxDivResizer(tbContainer);
+    }
+  
+    // Enables new connections in the graph
+    graph.setPanning(true);
+    graph.setTooltips(true);
+    graph.setConnectable(true);
+    graph.setEnabled(true);
+    graph.setEdgeLabelsMovable(false);
+    graph.setVertexLabelsMovable(false);
+    graph.setGridEnabled(true);
+    graph.setAllowDanglingEdges(false);
+  
+    mxEdgeHandler.prototype.addEnabled = true;
+    // Allow multiple edges between two vertices
+    graph.setMultigraph(true);
+  
+    // Stops editing on enter or escape keypress
+    var keyHandler = new mxKeyHandler(graph);
+    var rubberband = new mxRubberband(graph);
+  
+    var addVertex = function(icon, w, h, style, value = null) {
+      var vertex = new mxCell(null, new mxGeometry(0, 0, w, h), style);
+      if (value) {
+        vertex.value = value;
+      }
+      vertex.setVertex(true);
+  
+      var img = addToolbarItem(graph, toolbar, vertex, icon);
+      img.enabled = true;
+  
+      graph.getSelectionModel().addListener(mxEvent.CHANGE, function() {
+        var tmp = graph.isSelectionEmpty();
+        mxUtils.setOpacity(img, tmp ? 100 : 20);
+        img.enabled = tmp;
+      });
+  
+    };
+  
+    var baseStyle = { ...graph.getStylesheet().getDefaultVertexStyle() };
+  
+    addVertex(
+      "images/rectangle.gif", 
+      100,
+      40,
+      getStyleStringByObj({
+        ...baseStyle
+      })
+    );
+  
+    return toolbar
+  
+  }
+
+  setupNewGraph() {
 
     
-
-    // Clear last graph
-    if(this.state.displayed) {
+    if(this.state.displayed){
       this.state.displayed.destroy();
     }
+ 
+    var graph = this.LoadGraph()
+    
+    if(this.props.allow_editing){
 
+      configureKeyBindings(graph);
+    
+      this.initToolbar(graph);
+      
+      // Updates the display
+      graph.getModel().endUpdate();
+      graph.getModel().addListener(mxEvent.CHANGE, this.onChange);
+      graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected);
+      graph.getModel().addListener(mxEvent.ADD, this.onElementAdd);
+      graph.getModel().addListener(mxEvent.MOVE_END, this.onDragEnd);
+  
+    }
+      this.setState({displayed : graph})
+
+      }
+      
+
+
+  LoadGraph(){
+    
     if (this.state.selected_graphdata){
-
-
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
@@ -69,10 +196,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       mx.mxEvent.disableContextMenu(container);
 
       // Creates the graph inside the given container
-      var graph = new mx.mxGraph(container);
-
+      var graph = new mx.mxGraph(container);    
       
-
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
@@ -274,24 +399,37 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             }.bind(this), transform_submenu);
         }}}}.bind(this);
 
-        this.setState({displayed : graph})
+       
 
 
         // No windows seem to be working
         // var encoder = new mx.mxCodec();
         // var node = encoder.encode(graph.getModel());
         // mx.mxUtils.popup(mx.mxUtils.getPrettyXml(node), true);
-                
-       
         
-        
-      return;
+      return graph;
 
     }
 
 
     }
 
+  }
+
+  onChange(){
+    console.log("onChange")
+  }
+
+  onSelected(){
+    console.log("onSelected")
+  }
+
+  onElementAdd(){
+    console.log("onElementAdd")
+  }
+
+  onDragEnd(){
+    console.log("onDragEnd")
   }
 
 
@@ -301,6 +439,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       return (
         
         <div className="graphview-container">
+      <div ref={this.toolbarRef} className="graph-container" id="divGraph" />
       <div ref={this.GraphRef} className="graph-container" id="divGraph" />
       </div>
       );
