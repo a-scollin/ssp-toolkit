@@ -10,6 +10,7 @@ import { default as MxGraph } from "mxgraph";
 import { initToolbar, configureKeyBindings } from "./helpers/graph_helper.js"
 import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
+import { resolve_diagram_to_json } from "./helpers/import_helper.js";
 const {
   mxGraph,
   mxEvent,
@@ -113,17 +114,16 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     graph.setMultigraph(true);
   
     // Stops editing on enter or escape keypress
-    var keyHandler = new mxKeyHandler(graph);
+    configureKeyBindings(graph);
+
     var rubberband = new mxRubberband(graph);
   
     var addVertex = function(icon, w, h, style, value = null) {
-      var vertex = new mxCell(null, new mxGeometry(0, 0, w, h), style);
-      if (value) {
-        vertex.value = value;
-      }
+      var vertex = new mxCell("", new mxGeometry(0, 0, w, h), style);
+ 
       vertex.setVertex(true);
   
-      var img = addToolbarItem(graph, toolbar, vertex, icon);
+      var img = addToolbarItem(graph, toolbar, vertex, icon, value);
       img.enabled = true;
   
       graph.getSelectionModel().addListener(mxEvent.CHANGE, function() {
@@ -140,9 +140,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       "images/rectangle.gif", 
       100,
       40,
-      getStyleStringByObj({
-        ...baseStyle
-      })
+      '!toolbar!'
     );
   
     return toolbar
@@ -155,26 +153,24 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     if(this.state.displayed){
       this.state.displayed.destroy();
     }
- 
+    
     var graph = this.LoadGraph()
     
     if(this.props.allow_editing){
-
-      configureKeyBindings(graph);
-    
+      
       this.initToolbar(graph);
       
       // Updates the display
       graph.getModel().endUpdate();
-      graph.getModel().addListener(mxEvent.CHANGE, this.onChange);
-      graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected);
-      graph.getModel().addListener(mxEvent.ADD, this.onElementAdd);
-      graph.getModel().addListener(mxEvent.MOVE_END, this.onDragEnd);
-  
+      graph.getModel().addListener(mxEvent.CHANGE, this.onChange.bind(this));
+      graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected.bind(this));
+      
+      
     }
-      this.setState({displayed : graph})
-
-      }
+    
+    this.setState({displayed : graph})
+      
+  }
       
 
 
@@ -285,7 +281,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
           
               for(var oracle in this.state.selected_graphdata.oracles){
               
-                graph.insertEdge(parent, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
+                graph.insertEdge(lane1, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
               
               }
 
@@ -294,10 +290,10 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
                 for(var edge in this.state.selected_graphdata.graph[element]){
                   if(this.state.selected_graphdata.graph[element][edge][0] == ""){
-                    graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
+                    graph.insertEdge(lane1, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
                     
                   }else{
-                    graph.insertEdge(parent, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
+                    graph.insertEdge(lane1, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
 
                   }
                 }
@@ -416,15 +412,161 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   }
 
-  onChange(){
-    console.log("onChange")
+  onChange(model, e){
+
+    var outgoing_edges = {}
+    var thecell;
+
+    var new_graph = {"graph" : {}, "oracles" : []}
+
+    var cells
+
+    console.log(model.cells)
+
+    var newthing = false
+
+    for(var id in model.cells){
+
+      thecell = model.cells[id]
+
+      if(thecell.value === "!New_Package!" || (thecell.value !== "" && thecell.vertex === true)){
+
+        newthing = true
+
+      }
+
+    }
+
+    if(!newthing){
+      return
+    }
+
+    for(var id in model.cells){
+
+      thecell = model.cells[id]
+
+      if(thecell.value === "!New_Package!"){
+        model.beginUpdate();
+        try
+        {
+          var new_name = window.prompt("Please enter a new name for the package:","New package")
+
+          if(new_name === null){
+            throw "Cancelled"
+          }
+
+          thecell.value = new_name
+
+        }catch(e){
+          return 
+        }
+        finally
+        {
+          model.endUpdate();
+        } 
+                
+      }
+      // console.log(thecell)
+
+      if(thecell.style !== "swimlane"){
+
+        
+        if(thecell.value !== "" && thecell.vertex === true){
+
+
+          if(new_graph.hasOwnProperty(thecell.value)){
+            alert(thecell.value + " appears multiple times!")
+            return
+          }
+          
+          new_graph.graph[thecell.value] = []
+
+          cells = model.getOutgoingEdges(thecell)
+
+          for(var edge in cells){
+
+            if(cells[edge].value === null || cells[edge].value === ""){
+              model.beginUpdate();
+              try
+              {
+                var new_name = window.prompt("Please enter a new name for the edge:","New edge")
+      
+                if(new_name === null){
+                  throw "Cancelled"
+                }
+      
+                cells[edge].value = new_name
+      
+              }catch(e){
+                return 
+              }
+              finally
+              {
+                model.endUpdate();
+              }             
+            }
+
+            new_graph.graph[thecell.value].push([cells[edge].target.value,cells[edge].value])
+
+          }
+
+
+        }else if (thecell.vertex === true) {
+
+          if(new_graph.oracles.length !== 0){
+            // wont work for subgraphs with terminal edges
+            return
+          }
+
+          cells = model.getOutgoingEdges(thecell)
+
+          for(var edge in cells){
+
+            if(cells[edge].value === null || cells[edge].value === ""){
+              model.beginUpdate();
+              try
+              {
+                var new_name = window.prompt("Please enter a new name for the package:","New edge")
+      
+                if(new_name === null){
+                  throw "Cancelled"
+                }
+      
+                cells[edge].value = new_name
+      
+              }catch(e){
+                return 
+              }
+              finally
+              {
+                model.endUpdate();
+              }             
+            }
+
+            new_graph.oracles.push([cells[edge].target.value,cells[edge].value])
+
+          }
+        }
+
+      }
+    }
+
+    console.log(new_graph)
+
+    this.props.update(new_graph)
+
   }
 
   onSelected(){
     console.log("onSelected")
   }
 
-  onElementAdd(){
+  onElementAdd(a,b,c,d){
+    console.log(a)
+    console.log(b)
+    console.log(c)
+    console.log(d)
+
     console.log("onElementAdd")
   }
 

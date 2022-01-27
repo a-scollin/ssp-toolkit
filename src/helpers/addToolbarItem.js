@@ -3,7 +3,7 @@ import { getStyleStringByObj } from "./getStyleStringByObj";
 
 const { mxEvent, mxUtils } = MxGraph();
 
-export default function addToolbarItem(graph, toolbar, prototype, image) {
+export default function addToolbarItem(graph, toolbar, prototype, image, value) {
   // Function that is executed when the image is dropped on
   // the graph. The cell argument points to the cell under
   // the mousepointer if there is one.
@@ -14,14 +14,17 @@ export default function addToolbarItem(graph, toolbar, prototype, image) {
     vertex.geometry.x = x;
     vertex.geometry.y = y;
 
-    graph.addCell(vertex);
-    graph.setSelectionCell(vertex);
+
+      graph.addCell(vertex);
+      graph.setSelectionCell(vertex);
+      
+
   };
 
   // Creates the image which is used as the drag icon (preview)
   var img = toolbar.addMode(null, image, function(evt, cell) {
     var pt = this.graph.getPointForEvent(evt);
-    funct(graph, evt, cell, pt.x, pt.y);
+    funct(graph, evt, cell, pt.x, pt.y, value);
   });
 
   // Disables dragging if element is disabled. This is a workaround

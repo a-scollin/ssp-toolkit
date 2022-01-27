@@ -104,7 +104,7 @@ function resolve_xml_to_json(xml){
     
   }
 
-function resolve_diagram_to_json(cells){
+export function resolve_diagram_to_json(cells,parent_id="1"){
     
     var thegraph = {oracles : [], graph : {}}
 
@@ -121,6 +121,10 @@ function resolve_diagram_to_json(cells){
     for(var cell in cells){
 
       var thecell = cells[cell]
+
+      if(!thecell.attributes.hasOwnProperty("style")){
+        thecell.attributes.style = ""
+      }
 
       if(thecell.name !== "mxCell"){
         throw "Not correct format!";
@@ -259,7 +263,7 @@ function resolve_diagram_to_json(cells){
           }
     
     
-        }else if ((thecell.attributes.parent == '1' || thecell.attributes.parent.split('-').pop() == '1') && (thecell.attributes.hasOwnProperty("edge") || thecell.attributes.style.includes("Arrow")) && thecell.attributes.value != ""){
+        }else if ((thecell.attributes.parent == parent_id || thecell.attributes.parent.split('-').pop() == parent_id || (thecell.attributes.hasOwnProperty("source") && thecell.attributes.hasOwnProperty("target"))) && (thecell.attributes.hasOwnProperty("edge") || thecell.attributes.style.includes("Arrow")) && thecell.attributes.value != ""){
 
 
 
