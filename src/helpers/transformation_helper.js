@@ -218,7 +218,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
                 to_remove.push(subGraphIncoming[in_edge])
 
                 if(static_edges[edge][0] == "ORACLE"){
-                    newGraph.oracles.push([static_edges[edge][0],subGraphIncoming[in_edge][1]])
+                    newGraph.oracles.push(subGraphIncoming[in_edge])
                 }else{
                     newGraph.graph[static_edges[edge][0]].push([static_edges[edge][0],subGraphIncoming[in_edge][1]])
                 }
@@ -227,7 +227,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
         }
 
         if(match < 1){
-            throw static_edges[edge][1] + ' has no matching edge in subgraph!'
+            throw static_edges[edge][1] + ' has no matching incoming edge in subgraph!'
         }
 
         if(match > 1){
@@ -445,7 +445,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
         }
 
         if(match < 1){
-            throw static_edges[edge][1] + ' has no matching edge in subgraph!'
+            throw static_edges[edge][1] + ' has no matching outgoing edge in subgraph!'
         }
 
         if(match > 1){

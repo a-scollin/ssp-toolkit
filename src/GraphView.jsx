@@ -85,11 +85,11 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   initToolbar(graph) {
     
-alert('toolbat')
-
     var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
 
     tbContainer.innerHTML = ""
+
+    
 
     // Creates new toolbar without event processing
     var toolbar = new mxToolbar(tbContainer);
@@ -583,7 +583,7 @@ alert('toolbat')
       return (
         
         <div className="graphview-container">
-      <div ref={this.toolbarRef} className="graph-container" id="divGraph" />
+      <div ref={this.toolbarRef} style={{backgroundColor : "white"}}className="graph-container" id="divGraph" />
       <div ref={this.GraphRef} className="graph-container" id="divGraph" />
       </div>
       );
