@@ -58,6 +58,8 @@ function buildGraphData(graphData){
 
     }
 
+    console.log(new_graph)
+
     return new_graph
 
 }

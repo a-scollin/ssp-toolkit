@@ -11,6 +11,7 @@ import { initToolbar, configureKeyBindings } from "./helpers/graph_helper.js"
 import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
 import { resolve_diagram_to_json } from "./helpers/import_helper.js";
+
 const {
   mxGraph,
   mxEvent,
@@ -77,7 +78,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       this.setState({selected_graphdata : this.props.selected_graphdata, allow_editing : this.props.allow_editing},() => {
         this.setupNewGraph();
       });
-      this.setupNewGraph()
 
     }
 
@@ -88,8 +88,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
 
     tbContainer.innerHTML = ""
-
-    
 
     // Creates new toolbar without event processing
     var toolbar = new mxToolbar(tbContainer);

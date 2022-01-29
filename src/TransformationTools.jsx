@@ -118,46 +118,6 @@ findchain(graph, node){
   setup(){
 
     this.incomingGraph = buildIncoming(this.state.selected_graphdata)
-    var options = []
-
-  if (this.state.type == "equiv"){
-
-        const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
-            return({ 'value' : x, 'label' : x })})
-
- options.push()
- options.push(
-     <ReflexElement flex={0.3} key="ui">
- <button onClick={this.addEquiv.bind(this)}>+</button>
- <button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
- <button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
- <button onClick={this.substitute.bind(this)}>Swap</button>
- </ReflexElement>
- )
- options.push(<ReflexSplitter/>)
- options.push(<ReflexElement flex={0.7} key="equivs">
-     <ReflexContainer orientation="vertical">
- <ReflexElement flex={0.5}>
- {this.equiv_to_option()}
- </ReflexElement>
- <ReflexElement flex={0.5}>
- <Select 
-    isMulti
-    name="Ommited Packages"
-    options={packages}
-    className="basic-multi-select"
-    classNamePrefix="select"
- />
- </ReflexElement>
- </ReflexContainer>
- </ReflexElement>)
-
-
-this.setState({options : options})
-
-    }
-
-    
 
 }
 
@@ -166,11 +126,14 @@ substitute(){
 
     this.allvisited = []
 
-    var incoming_graph = this.build_incoming()
+    var incoming_graph = buildIncoming(this.state.selected_graphdata)
 
+    console.log(incoming_graph)
+    console.log("HERE")
+    alert("HEre")
     // const [ lhs, rhs ] = this.state.selected_equiv
 
-    const [ lhs, rhs, ext ] = [{
+    const [ lhs, rhs ] = [{
         "oracles": [
             [
                 "AKEYS",
@@ -222,13 +185,11 @@ substitute(){
         "graph": {
             "KEYS": []
         }
-    },{
-        "BITS" : "KEYS"
     }]
     
     const lhs_packs = Object.keys(lhs.graph)
 
-    const rhs_packs = Object.keys(lhs.graph)
+    const rhs_packs = Object.keys(rhs.graph)
 
     var lhs_edges = []
 
@@ -291,14 +252,12 @@ substitute(){
 
                 if(ret[0]){
                     
-                    var [result, packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = ret
+                    var [result, packs, lhs_matched_edges, visited] = ret
 
                     console.log("ISEQUIV")
                     console.log(packs)
                     console.log(visited)
                     console.log(lhs_matched_edges)
-                    console.log(incoming_non_matched_edges)
-                    console.log(outgoing_non_matched_edges)
                     
                     for(var edge in lhs_matched_edges){
 
@@ -310,7 +269,7 @@ substitute(){
 
                             var for_removal = []
 
-                            if(lhs_matched_edges[edge][0] == ""){
+                            if(lhs_matched_edges[edge][0] == "ORACLE"){
                             
                                 newGraphData.oracles = [[new_pkg_name,lhs_matched_edges[edge][2]],...newGraphData.oracles.filter(x => JSON.stringify(x) != JSON.stringify([lhs_matched_edges[edge][1],lhs_matched_edges[edge][2]]))]
                             
@@ -328,65 +287,6 @@ substitute(){
 
                         }
 
-                    }
-
-
-                    for(var edge in incoming_non_matched_edges){
-
-                        var from = incoming_non_matched_edges[edge][0]
-                        var to = incoming_non_matched_edges[edge][1]
-                        var ename = incoming_non_matched_edges[edge][2]
-
-                        if(!ext.hasOwnProperty(to.split("_[")[0])){
-                            alert("NO")
-                            return
-                        }else{
-                            var newname = ext[to.split("_[")[0]] + '_[' + to.split("_[")[1]
-
-                            if(from == ""){
-
-                                alert("oracle!")
-                                return
-
-                            }else{
-                                    
-                                newGraphData.graph[from] = [[newname,ename],...newGraphData.graph[from].filter(x => JSON.stringify(x) != JSON.stringify([to,ename]))] 
-                            
-                                if(!newGraphData.graph.hasOwnProperty(newname)){
-                                    newGraphData.graph[newname] = []
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    for(var edge in outgoing_non_matched_edges){
-                        alert("not done yet")
-                        return
-                        var from = outgoing_non_matched_edges[edge][0]
-                        var to = outgoing_non_matched_edges[edge][1]
-                        var ename = outgoing_non_matched_edges[edge][2]
-
-                        if(!ext.hasOwnProperty(from.split("_[")[0])){
-                            alert("NO")
-                            return
-                        }else{
-                            var newname = ext[from.split("_[")[0]] + '_[' + from.split("_[")[1]
-
-                            if(from == ""){
-
-                                alert("oracle!")
-                                return
-
-                            }else{
-                                    
-                                newGraphData.graph[newname] = [[to,ename],...newGraphData.graph[from].filter(x => JSON.stringify(x) != JSON.stringify([from,ename]))] 
-                            
-                            }
-
-                        }
                     }
 
                     for(var rmpack in visited){
@@ -464,59 +364,46 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
 
     var visited = visited_packs
 
-    var incoming_non_matched_edges = []
-    var outgoing_non_matched_edges = []
-
     // console.log(matchingpack)
-    console.log(incoming_graph.graph)
-
     // console.log(lhs_edges)
-    for(var edge in incoming_graph.graph[matchingpack].incoming){
+    for(var edge in incoming_graph[matchingpack].incoming){
 
-        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].incoming[edge][1].split('_[')[0]])
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph[matchingpack].incoming[edge][1].split('_[')[0]])
 
-        if(lhs_packs.includes(incoming_graph.graph[matchingpack].incoming[edge][0].split('_[')[0]) && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0])){
+        if(lhs_packs.includes(incoming_graph[matchingpack].incoming[edge][0].split('_[')[0]) && !visited.includes(incoming_graph[matchingpack].incoming[edge][0])){
 
-            packs.push(incoming_graph.graph[matchingpack].incoming[edge][0])
+            packs.push(incoming_graph[matchingpack].incoming[edge][0])
 
 
             // I think I need to add the edges in this case no ? 
 
         }else if (lhs_edges.some(eq)){
 
-            lhs_matched_edges.push([incoming_graph.graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph.graph[matchingpack].incoming[edge][1]])
+            lhs_matched_edges.push([incoming_graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph[matchingpack].incoming[edge][1]])
             
-        }else{
-
-            incoming_non_matched_edges.push([incoming_graph.graph[matchingpack].incoming[edge][0],matchingpack,incoming_graph.graph[matchingpack].incoming[edge][1]])
-
         }
      
     }
     
-    for(var edge in incoming_graph.graph[matchingpack].outgoing){
+    for(var edge in incoming_graph[matchingpack].outgoing){
 
-        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph.graph[matchingpack].outgoing[edge][1].split('_[')[0]])
+        var eq = (element) => JSON.stringify(element) == JSON.stringify(['',incoming_graph[matchingpack].outgoing[edge][1].split('_[')[0]])
        
        // console.log(incoming_graph.graph[matchingpack].outgoing[edge])
 
-        if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_[')[0] && !visited.includes(incoming_graph.graph[matchingpack].incoming[edge][0]))){
+        if(lhs_packs.includes(incoming_graph[matchingpack].outgoing[edge][0].split('_[')[0] && !visited.includes(incoming_graph[matchingpack].incoming[edge][0]))){
 
-            packs.push(incoming_graph.graph[matchingpack].outgoing[edge][0])
+            packs.push(incoming_graph[matchingpack].outgoing[edge][0])
 
-        }else if(lhs_packs.includes(incoming_graph.graph[matchingpack].outgoing[edge][0].split('_[')[0])){
+        }else if(lhs_packs.includes(incoming_graph[matchingpack].outgoing[edge][0].split('_[')[0])){
 
           //      console.log("EFHAIEHFIAEHFI")
-            lhs_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
+            lhs_matched_edges.push([matchingpack,...incoming_graph[matchingpack].outgoing[edge]])
 
         }else if (lhs_edges.some(eq)){
 
-            lhs_matched_edges.push(matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge])
+            lhs_matched_edges.push(matchingpack,...incoming_graph[matchingpack].outgoing[edge])
 
-
-        }else{
-
-            outgoing_non_matched_edges.push([matchingpack,...incoming_graph.graph[matchingpack].outgoing[edge]])
 
         }
 
@@ -524,8 +411,6 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
 
     var more_packs = []
     var more_lhs_matched_edges = []
-    var more_incoming_non_matched_edges = []
-    var more_outgoing_non_matched_edges = []
 
     visited.push(matchingpack)
 
@@ -536,7 +421,7 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
             
             if(packs[pack] != ""){
 
-            var [packs_returned, lhs_matched_edges_returned, visited_returned, incoming_non_matched_edges_returned, outgoing_non_matched_edges_returned] = this.recurs_get_all(incoming_graph,packs[pack],visited,lhs_edges,lhs_packs,false)
+            var [packs_returned, lhs_matched_edges_returned, visited_returned] = this.recurs_get_all(incoming_graph,packs[pack],visited,lhs_edges,lhs_packs,false)
                 
             // console.log("RETURNED")
             // console.log(packs_returned)
@@ -547,8 +432,6 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
             more_lhs_matched_edges.push(...lhs_matched_edges_returned)
             // console.log(more_lhs_matched_edges)
             visited = visited_returned
-            more_incoming_non_matched_edges.push(...incoming_non_matched_edges_returned)
-            more_outgoing_non_matched_edges.push(...outgoing_non_matched_edges_returned)
         
             }
 
@@ -558,8 +441,6 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
 
     packs.push(...more_packs)
     lhs_matched_edges.push(...more_lhs_matched_edges)
-    incoming_non_matched_edges.push(...more_incoming_non_matched_edges)
-    outgoing_non_matched_edges.push(...more_outgoing_non_matched_edges)
 
     // console.log("RETURN")
 
@@ -568,11 +449,8 @@ recurs_get_all(incoming_graph,matchingpack,visited_packs,lhs_edges,lhs_packs, is
     // console.log(visited)
 
     // console.log(lhs_matched_edges)
-
-
-
     
-    return [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges]
+    return [packs, lhs_matched_edges, visited]
 
 }
 
@@ -587,7 +465,7 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     // console.log(lhs_packs)
 
-    var [packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges] = this.recurs_get_all(incoming_graph,matchingpack,[],lhs_edges,lhs_packs,true)
+    var [packs, lhs_matched_edges, visited] = this.recurs_get_all(incoming_graph,matchingpack,[],lhs_edges,lhs_packs,true)
 
     // console.log("PASSSED")
 
@@ -638,7 +516,7 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
     this.allvisited.push(visited)
 
-    return [true,packs, lhs_matched_edges, visited, incoming_non_matched_edges,outgoing_non_matched_edges]
+    return [true,packs, lhs_matched_edges, visited]
 
 
 
@@ -1139,44 +1017,12 @@ newDecompose(packSelection,subGraph){
     this.updateGraph(false,newGraph)
 
 }
-  
 
-  render() {
+renderExpand(){
 
-    var save_tool =  this.state.type != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
-  
     var options = []
 
-    switch(this.state.type){
-        case "decompose":
-                options.push(<ReflexElement flex={0.8} key={'save'}>
-                                        <Stack direction="row" spacing={1}>
-                                        <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => {
-                                            if(this.state.selected_node != null){
-                                                this.newDecompose(this.state.selected_node,json_data)
-                                            }else{
-                                            this.setState({input_data : json_data});
-                                            }})} name="decomp_input"/>
-                                        <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
-                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
-                                        <CustomDecomposePopup
-                                        open={this.state.input_data != null ? true : false}
-                                        onChoice={(choice) => {
-                                            this.newDecompose(choice, this.state.input_data)
-                                            this.decompUpload.value = null
-                                            this.setState({input_data : null, selected_node : choice })}}
-                                        packs={Object.keys(this.state.selected_graphdata.graph)}
-                                        />
-                                        </Stack>
-                    </ReflexElement>)
-                if(this.state.selected_node != null){
-                    options.push(<ReflexSplitter/>)
-                    options.push(<ReflexElement><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
-                    </ReflexElement>)
-                }
-        break;
-        case "expand":
-            var option_pairs = []
+    var option_pairs = []
 
                 for (var node in this.state.selected_graphdata.graph){
                  for(var edge in this.state.selected_graphdata.graph[node]){  
@@ -1226,15 +1072,99 @@ newDecompose(packSelection,subGraph){
                 }
         
                 options.pop()
-                break;
-                    
+
+        return options
+}
+  
+renderDecompose(){
+    var options = []
+                options.push(<ReflexElement flex={0.8} key={'save'}>
+                                        <Stack direction="row" spacing={1}>
+                                        <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => {
+                                            if(this.state.selected_node != null){
+                                                this.newDecompose(this.state.selected_node,json_data)
+                                            }else{
+                                            this.setState({input_data : json_data});
+                                            }})} name="decomp_input"/>
+                                        <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
+                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
+                                        <CustomDecomposePopup
+                                        open={this.state.input_data != null ? true : false}
+                                        onChoice={(choice) => {
+                                            this.newDecompose(choice, this.state.input_data)
+                                            this.decompUpload.value = null
+                                            this.setState({input_data : null, selected_node : choice })}}
+                                        packs={Object.keys(this.state.selected_graphdata.graph)}
+                                        />
+                                        </Stack>
+                    </ReflexElement>)
+                if(this.state.selected_node != null){
+                    options.push(<ReflexSplitter/>)
+                    options.push(<ReflexElement><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
+                    </ReflexElement>)
+                }
+            return options
+}
+
+renderEquiv(){
+    var options = []
+    const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
+        return({ 'value' : x, 'label' : x })})
+
+options.push()
+options.push(
+ <ReflexElement flex={0.3} key="ui">
+<button onClick={this.addEquiv.bind(this)}>+</button>
+<button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
+<button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
+<button onClick={this.substitute.bind(this)}>Swap</button>
+</ReflexElement>
+)
+options.push(<ReflexSplitter/>)
+options.push(<ReflexElement flex={0.7} key="equivs">
+ <ReflexContainer orientation="vertical">
+<ReflexElement flex={0.5}>
+{this.equiv_to_option()}
+</ReflexElement>
+<ReflexElement flex={0.5}>
+<Select 
+isMulti
+name="Ommited Packages"
+options={packages}
+className="basic-multi-select"
+classNamePrefix="select"
+/>
+</ReflexElement>
+</ReflexContainer>
+</ReflexElement>)
+
+return options
+
+
+}
+
+  render() {
+
+    var save_tool =  this.state.type != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
+  
+    var transform_options = []
+
+    switch(this.state.type){
+        case "decompose":
+            transform_options = this.renderDecompose();
+        break;
+        case "expand" : 
+            transform_options = this.renderExpand();                    
+        break;
+        case "equiv":
+            transform_options = this.renderEquiv();
     }
 
       return (
         <ReflexContainer orientation="vertical"> 
         <ReflexElement flex={0.8}>
         <ReflexContainer orientation="vertical">
-            {options}
+            {transform_options}
         </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter/>
