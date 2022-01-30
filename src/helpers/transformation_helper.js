@@ -1,3 +1,5 @@
+import { InputGroup } from "react-bootstrap"
+
 export function buildIncoming(graphdata){
 
     var new_graph = {}
@@ -62,6 +64,137 @@ function buildGraphData(graphData){
 
     return new_graph
 
+}
+
+function findChain(graphData, node, visitedNodes = [], isBase = false){
+
+    var chain = []
+
+    var more_chain = []
+
+    var visited = [node, ...visitedNodes]
+
+    if(isBase){
+
+        for(var edge in graphData[node].outgoing){
+
+            if(!visited.includes(graphData[node].outgoing[edge][0])){
+    
+                if(graphData[node].outgoing[edge][0].split('...').length == 2){
+                    
+                    if(graphData[node].outgoing[edge][1].split('...').length != 2){
+                        throw node + " connects to " + graphData[node].outgoing[edge][0] + " with a non expandable edge! ("+ graphData[node].outgoing[edge][1] +")";                     
+                    }
+    
+                    [more_chain, visited] = findChain(graphData,graphData[node].outgoing[edge][0],visited)
+                    
+                    chain = [...more_chain, ...chain]
+                    
+    
+                }
+    
+        }
+
+        
+    }
+    return [[node, ...chain], visited]
+
+}
+
+    for(var edge in graphData[node].outgoing){
+
+        if(!visited.includes(graphData[node].outgoing[edge][0])){
+
+            if(graphData[node].outgoing[edge][0].split('...').length == 2){
+                
+                if(graphData[node].outgoing[edge][1].split('*').length != 2){
+                    throw node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
+                }
+
+                [more_chain, visited] = findChain(graphData,graphData[node].outgoing[edge][0],visited)
+                
+                chain = [...more_chain, ...chain]
+                
+
+            }else if(graphData[node].outgoing[edge][1].split('*').length != 2){
+
+                throw  node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
+
+            }
+
+    }
+
+    }
+
+    for(var edge in graphData[node].incoming){
+
+
+        if(!visited.includes(graphData[node].incoming[edge][0])){
+
+        if(graphData[node].incoming[edge][0].split('...').length == 2){
+
+            if(graphData[node].incoming[edge][1].split('*').length != 2){
+
+                throw graphData[node].incoming[edge][0] + " connects to " + node + " with a non encoding edge! ("+ graphData[node].incoming[edge][1] +")"; 
+
+            }
+                
+                
+                [more_chain, visited] = findChain(graphData,graphData[node].incoming[edge][0],visited)
+                
+                chain = [...more_chain, ...chain]
+
+            
+
+        }else if (graphData[node].incoming[edge][1].split('...').length == 2){
+                    
+            [more_chain, visited] = findChain(graphData,graphData[node].incoming[edge][0],visited,true)
+                
+            chain = [...more_chain, ...chain]            
+                         
+        }else{
+
+            throw graphData[node].incoming[edge].toString() + " - Is an illegal edge into " + node
+       
+        }
+        
+
+    }
+}
+
+
+    // This is wrong assumes that there is only one chain for one package. 
+    return [[...chain, node],visited] 
+    
+}
+
+export function findAllExpandableChains(graphData){
+
+    var chains = []
+
+
+    console.log(graphData)
+
+    for(var pack in graphData){
+        if(pack.split('...').length == 2){
+            
+            chains.push(findChain(graphData,pack)[0])
+        
+        }
+    }
+
+    var chains_to_remove = []
+
+     for (var chain in chains){
+        for (var otherchain in chains){
+            if (chains[chain] !== chains[otherchain] && chains[otherchain].length > chains[chain].length && chains[chain].every(element => chains[otherchain].includes(element))){
+                chains_to_remove.push(chains[chain])
+            }
+        }
+    }
+
+    return chains.filter(element => !chains_to_remove.includes(element))
+   
 }
 
 export function getExapandableEdgeRange(edge){

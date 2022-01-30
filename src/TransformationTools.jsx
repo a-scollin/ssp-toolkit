@@ -40,7 +40,7 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomDecomposePopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, findAllExpandableChains } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -56,17 +56,20 @@ export default class TransformationTools extends Component {
   }
 
 
-//   This is dumb ! 
   componentDidUpdate(prevProps){
 
     if(this.props.type !== prevProps.type || this.props.node !== prevProps.node){
-      
+        
+        this.incomingGraph = buildIncoming(this.props.base)
+
+        if(this.props.type == 'expand'){
+            this.expandableChains = findAllExpandableChains(this.incomingGraph)
+        }else{
+            this.expandableChains = null
+        }
+
         this.setState({selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
             if (this.props.type != null){
-                this.setup()
-                return
-            }else{
-                this.setState({options : []})
                 return
             }
         });
@@ -76,9 +79,7 @@ export default class TransformationTools extends Component {
 
         this.setState({equivs : this.props.equivs}, () => {
             if (this.props.type != null){
-                this.setup()
-            }else{
-                this.setState({options : []})
+                return
             }
             
         })
@@ -86,40 +87,6 @@ export default class TransformationTools extends Component {
     }
      
   }
-
-
-findchain(graph, node){
-
-   var longestchain = []
-
-    if (graph[node].length == 0){
-        return [node]
-    }
-
-    for(var edge in graph[node]){
-
-        if(graph[node][edge][0].split('...').length == 2){
-                
-                var newchain = this.findchain(graph,graph[node][edge][0])
-
-                if (newchain.length > longestchain.length) {
-                    longestchain = newchain
-                }
-        
-            }
-    }
-
-    return [node, ...longestchain]
-    
-            
-    }
-
-
-  setup(){
-
-    this.incomingGraph = buildIncoming(this.state.selected_graphdata)
-
-}
 
 substitute(){
     console.log("HFAEFIAEHF")
@@ -705,6 +672,12 @@ equiv_to_option(){
   
 }
 
+newExpand(){
+
+
+
+}
+
 expand(target){
   
 var newGraph = this.state.selected_graphdata;
@@ -1022,58 +995,27 @@ renderExpand(){
 
     var options = []
 
-    var option_pairs = []
+    for(var chain in this.expandableChains){
+        options.push(<ReflexElement flex={0.8} key={this.expandableChains[chain]}>{this.expandableChains[chain]}
+            <div key={this.expandableChains[chain]} reference={this.expandableChains[chain]} className="boxpad">
+            <Slider style={{opacity : 1}}
+aria-label="Temperature"
+defaultValue={30}
+valueLabelDisplay="auto"
+step={1}
+marks
+min={1}
+max={10}
+name={this.expandableChains[chain]}
+onChange={ (e, val) => this.expand(e.target)}  />
+</div>
+            </ReflexElement>)
+            options.push(<ReflexSplitter/>)
+    }
 
-                for (var node in this.state.selected_graphdata.graph){
-                 for(var edge in this.state.selected_graphdata.graph[node]){  
-                    if (this.state.selected_graphdata.graph[node][edge][0].split("...").length == 2 && this.state.selected_graphdata.graph[node][edge][1].split("#").length != 2){
-                        
-                        option_pairs.push(this.findchain(this.state.selected_graphdata.graph, node))
-        
-                    }
-                }
-                }
-                
-                var remove_pair = []
-        
-                for (var pair in option_pairs){
-                    for (var otherpair in option_pairs){
-                        if (option_pairs[otherpair] != option_pairs[pair] && option_pairs[otherpair].length > option_pairs[pair].length && option_pairs[pair].every(element => option_pairs[otherpair].includes(element))){
-        
-                            remove_pair.push(option_pairs[pair])
-        
-                        }
-                    }
-        
-                } 
-              
-                option_pairs = option_pairs.filter(item => !remove_pair.includes(item))
-        
-                option_pairs = Array.from(new Set(option_pairs.map(JSON.stringify)), JSON.parse)
-        
-        
-        
-                for(var pair in option_pairs){
-                    options.push(<ReflexElement flex={0.8} key={option_pairs[pair]}>{option_pairs[pair]}
-                        <div key={option_pairs[pair]} reference={option_pairs[pair]} className="boxpad">
-                        <Slider style={{opacity : 1}}
-          aria-label="Temperature"
-          defaultValue={30}
-          valueLabelDisplay="auto"
-          step={1}
-          marks
-          min={1}
-          max={10}
-          name={option_pairs[pair]}
-          onChange={ (e, val) => this.expand(e.target)}  />
-        </div>
-                        </ReflexElement>)
-                        options.push(<ReflexSplitter/>)
-                }
-        
-                options.pop()
+    options.pop()
 
-        return options
+    return options
 }
   
 renderDecompose(){
