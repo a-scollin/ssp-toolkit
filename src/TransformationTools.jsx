@@ -40,7 +40,7 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomDecomposePopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, findAllExpandableChains } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, findAllExpandableChains, expand } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -64,6 +64,7 @@ export default class TransformationTools extends Component {
 
         if(this.props.type == 'expand'){
             this.expandableChains = findAllExpandableChains(this.incomingGraph)
+            console.log(this.expandableChains)
         }else{
             this.expandableChains = null
         }
@@ -672,285 +673,32 @@ equiv_to_option(){
   
 }
 
-newExpand(){
+newExpand(chains, value){
 
-
-
-}
-
-expand(target){
-  
-var newGraph = this.state.selected_graphdata;
-
-if(this.targetval == target.value){
-    return 
-}
-
-this.targetval = target.value
-
-var chain = target.name
-
-var expandable = target.name.slice(1)
-
-var expandable_names = expandable.map(x => x.split('_[')[0])
-
-var to_expand = {}
-
-console.log("expandable_names")
-console.log(expandable_names)
-var prev_pack = chain[0]
-
-var const_edges_to_add = {}
-
-var dyn_edges_to_add = {}
-
-var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
-
-for(var pack in expandable){
-
-    if(expandable[pack].split('...').length != 2){
-        alert("WRONG!")
+    // This only works for one chain !!!! need to make chains stateful within this function.. 
+    // the expand function also needs to be able to take multiple values for multiple chains 
+     
+    if(this.targetval === value){
         return
     }
 
-    var name = expandable[pack].split('_[')[0]
+    this.targetval = value
 
-    var base = expandable[pack].split('...')[0]
 
-    base = base.charAt(base.length - 1)
 
-    to_expand[expandable[pack]] = {"name" : name, "base" : base}
+    try{
 
-    for(var edge in this.state.selected_graphdata.graph[prev_pack]){
+        var newGraph = expand(this.incomingGraph, this.state.selected_graphdata, chains, this.targetval)
 
-        
-        if(expandable.includes(this.state.selected_graphdata.graph[prev_pack][edge][0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("...").length == 2){
-        
-            if (const_edges_to_add.hasOwnProperty(prev_pack)){
-                
-                var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("...")[0]
-                
-                edge_base = edge_base.charAt(edge_base.length - 1)
+    } catch (e) { 
 
-                const_edges_to_add[prev_pack].push({'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]})
-            
-            }else{
-                
-                var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("...")[0]
-
-                edge_base = edge_base.charAt(edge_base.length - 1)
-
-                const_edges_to_add[prev_pack] = [{'name_to' : this.state.selected_graphdata.graph[prev_pack][edge][0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
-            }
-    
-        }
-
-        if(prev_pack != chain[0]){
-
-        if(expandable_names.includes(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[0]) && this.state.selected_graphdata.graph[prev_pack][edge][1].split("*").length == 2){
-            
-            var edge_base = this.state.selected_graphdata.graph[prev_pack][edge][1].split("*")[0]
-
-            edge_base = edge_base.charAt(edge_base.length - 1)
-
-            var name_to = this.state.selected_graphdata.graph[prev_pack][edge][0]
-
-            var re = new RegExp(/^\d+/);
-
-            if(this.state.selected_graphdata.graph[prev_pack][edge][0].split("...").length != 2){
-                
-                for(var match in expandable){
-                    if(expandable[match].split("_[")[0] == this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[0]){
-                        name_to = expandable[match]
-
-                        break
-                    }
-                }
-
-            }
-                
-                if (dyn_edges_to_add.hasOwnProperty(prev_pack)){
-                    if(dyn_edges_to_add[prev_pack].hasOwnProperty(name_to)){
-                        console.log("HUFFLEPUFF")
-                        console.log(re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0])
-                        dyn_edges_to_add[prev_pack][name_to].push({'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]})
-                    }else{
-                        dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0], 'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
-                    }
-                }else{
-                    dyn_edges_to_add[prev_pack] = {}
-                    dyn_edges_to_add[prev_pack][name_to] = [{'pack_base' : re.exec(this.state.selected_graphdata.graph[prev_pack][edge][0].split("_[")[1])[0],'base' : edge_base, 'edge_name_base' : this.state.selected_graphdata.graph[prev_pack][edge][1].split("_[")[0]}]
-                }
-        
-            }
-
-        }else{
-
-            // TODO RESOLVE CONSTATNT EDGES FOR ORACLES HERE 
-
-           
-        }
+        alert(e)
+        return
 
     }
 
-    prev_pack = expandable[pack]
+    this.updateGraph(false,newGraph)
 
-}
-
-// var for_loop_dict = {}
-
-
-console.log(to_expand)
-for(var pack in to_expand){
-        
-        // for_loop_dict[pack] = true
-
-        // if(pack.split([;.split(';').length == 2){
-
-        // }
-
-
-        for(var i = 0; i < target.value; i++){
-
-            var num = parseInt(to_expand[pack]['base'])
-
-            var name_base = to_expand[pack]['name']
-
-            var new_package = name_base+'_[' +(num+i).toString()+']'
-
-            newGraph.graph[new_package] = []
-
-        }
-        
-    }
-
-        
-    for(var pack in const_edges_to_add){
-
-        for(var edge in const_edges_to_add[pack]){
-
-            var num = parseInt(to_expand[const_edges_to_add[pack][edge]['name_to']]['base'])
-
-            var name_base = to_expand[const_edges_to_add[pack][edge]['name_to']]['name']
-
-            var edge_num = parseInt(const_edges_to_add[pack][edge]['base'])
-                
-            var edge_name_base = const_edges_to_add[pack][edge]['edge_name_base']
-
-            for(var i = 0; i < target.value; i++){
-
-                var new_package = name_base+'_[' +(num+i).toString()+']'
-
-                var new_edge = edge_name_base+'_[' + (edge_num+i).toString()+']'
-
-                newGraph.graph[pack].push([new_package,new_edge])
-                
-            }
-
-        }
-
-    }
-
-    console.log("JUBILIYJEAKF")
-    console.log(dyn_edges_to_add)
-
-    for(var pack in dyn_edges_to_add){
-
-        for(var linking in dyn_edges_to_add[pack]){
-
-            for(var edge in dyn_edges_to_add[pack][linking]){
-
-            var num = parseInt(dyn_edges_to_add[pack][linking][edge]['pack_base'])
-
-            var name_base = to_expand[linking]['name']
-
-            var edge_num = parseInt(dyn_edges_to_add[pack][linking][edge]['base'])
-                
-            var edge_name_base = dyn_edges_to_add[pack][linking][edge]['edge_name_base']
-
-            var pack_base = to_expand[pack]['name']
-            
-            var pack_num = parseInt(to_expand[pack]['base'])
-
-            for(var i = 0; i < target.value; i++){
-
-                var new_linking_package = name_base+'_[' +(num+i).toString()+']'
-
-                var new_edge = edge_name_base+'_[' + (edge_num+i).toString()+']'
-
-                var new_pack = pack_base+'_[' + (pack_num+i).toString()+']'
-
-                console.log(new_pack)
-
-                newGraph.graph[new_pack].push([new_linking_package,new_edge])
-                
-            }
-
-        }
-
-    }
-
-}
-
-var rm = []
-
-for(var pack in expandable){
-
-    for(var edge in newGraph.graph[chain[0]]){
-
-        if(newGraph.graph[chain[0]][edge][0] == expandable[pack]){
-            rm.push(newGraph.graph[chain[0]][edge])
-        }
-
-    }
-
-    delete newGraph.graph[expandable[pack]];
-
-}
-
-newGraph.graph[chain[0]] = newGraph.graph[chain[0]].filter(x => !rm.includes(x))
-
-this.updateGraph(false,newGraph)
-
-
-    
-
-// Expansion almost fully working YEEEHAWWWW! 
-
-// TODO :
-//  Add oracle suppourt for constant edges (scripted edges dont make sense for oracles)
-//  Think about edge cases with cycles and write explicit rules
-//  Add support for the # edges.. should be easy just add any edges at end to the package name, also add the ... 
-//  ... dth package at end when deleting.. 
-
-
-
-
-
-
-
-//     if(!this.valdict.hasOwnProperty(target.name)){
-//         this.valdict[target.name] = target.value
-//     }
-    
-//     if(this.valdict[target.name] != target.value){
-//         this.valdict[target.name] = target.value
-
-//         var newGraph = this.state.selected_graphdata;
-
-//         for(var node in newGraph.graph){
-//             if(node == target.name){
-//                 console.log(node)
-//                 break 
-//             }
-//         }
-
-//     this.setState({selected_graphdata : newGraph}, ()=>{
-//         this.udpateGraph(false)
-//     })
-    
-// }
-    
 }
 
   updateGraph(fin, displayed=null){
@@ -981,7 +729,7 @@ newDecompose(packSelection,subGraph){
     } catch(e) {
 
         console.log(e)
-        alert("Couldn't decompose!")
+        alert(e)
         return 
 
     }
@@ -1007,7 +755,7 @@ marks
 min={1}
 max={10}
 name={this.expandableChains[chain]}
-onChange={ (e, val) => this.expand(e.target)}  />
+onChange={ (e, val) => this.newExpand([e.target.name],val)}  />
 </div>
             </ReflexElement>)
             options.push(<ReflexSplitter/>)
@@ -1033,8 +781,8 @@ renderDecompose(){
                                         <CustomDecomposePopup
                                         open={this.state.input_data != null ? true : false}
                                         onChoice={(choice) => {
-                                            this.newDecompose(choice, this.state.input_data)
                                             this.decompUpload.value = null
+                                            this.newDecompose(choice, this.state.input_data)
                                             this.setState({input_data : null, selected_node : choice })}}
                                         packs={Object.keys(this.state.selected_graphdata.graph)}
                                         />

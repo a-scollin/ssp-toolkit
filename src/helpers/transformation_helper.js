@@ -193,7 +193,7 @@ export function findAllExpandableChains(graphData){
 
             chain.sort()
 
-            chains.push([base_packs,...chain])
+            chains.push([...base_packs,...chain])
 
         }
     }
@@ -248,9 +248,9 @@ export function getExapandableRange(edge){
     var expand_range_end = 0; 
     
 
-    expand_range = edge[1].split('_[')[1]
+    expand_range = edge.split('_[')[1]
     
-    if(edge[1].split('...').length != 2){
+    if(edge.split('...').length != 2){
         
         expand_range = expand_range.substring(0, expand_range.length - 1);
         
@@ -289,7 +289,7 @@ export function getExapandableRange(edge){
     
     if(expand_range_start >= expand_range_end){
 
-        throw edge[1] + " has a range that is not strictly increasing!"
+        throw edge + " has a range that is not strictly increasing!"
 
     }
 
@@ -426,7 +426,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
     for(var edge in expandable_edges){
 
-        [expand_range_start, expand_range_end] = getExapandableRange(expandable_edges[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(expandable_edges[edge][1])
 
         if(expand_range_start == Infinity){
             throw expandable_edges[edge][1] + ' has a variable base, please ensure edges have static bases.'
@@ -469,14 +469,14 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
     for(var edge in subGraphIncoming){
 
 
-        [expand_range_start, expand_range_end] = getExapandableRange(subGraphIncoming[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(subGraphIncoming[edge][1])
 
         console.log(expand_range_start)
         console.log(expand_range_end)
 
         match = 0
 
-        // The edge in question is just a number _[x] so we check what range that number sits in 
+        // The edge in question is just a  number_[x] so we check what range that number sits in 
 
         if(expand_range_end == -1){
 
@@ -799,8 +799,9 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
     
     var base_packs;
 
-    [base_packs, expandable] = _.partition(chain, element => element.split('...').length != 2)
     
+    [base_packs, expandable] = _.partition(chain, element => element.split("...").length != 2)
+        
     var to_expand = {}
     
     var base_name;
@@ -817,9 +818,11 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
     
     for(var pack in expandable){
         
-        base_name = expandable[pack].split('_[')[0]
+        console.log(expandable[pack]);
+
+        base_name = expandable[pack].split('_[')[0];
         
-        [range_start, range_end] = getExapandableRange(expandable[pack])
+        [range_start, range_end] = getExapandableRange(expandable[pack]);
         
         if(range_start === Infinity){
             
@@ -965,7 +968,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
     
     for(var pack in to_expand){
         
-        range_start = to_expand[pack]['range_start']
+        range_start = to_expand[pack]['range'][0]
         base_name = to_expand[pack]['base_name']
 
         // Delete old instances of the expandable packages and any edges they are mentioned in
@@ -998,7 +1001,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
                     
                     for(var edge in in_edges_to_add[base_pack][pack]){
 
-                        ({target_base_name,edge_base_name,edge_range} = in_edges_to_add[base_pack][pack][edge])
+                        var {target_base_name,edge_base_name,edge_range} = in_edges_to_add[base_pack][pack][edge]
 
                         if(base_pack === "ORACLE"){
     
@@ -1026,7 +1029,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
                     // west sidee
                     for(var edge in dyn_edges_to_add[pack][to_pack]){
                         
-                        ({target_base_name,target_range,edge_base_name,edge_base_number}) = dyn_edges_to_add[pack][to_pack][edge]
+                        ({target_base_name,target_range,edge_base_name,edge_base_number} = dyn_edges_to_add[pack][to_pack][edge])
 
                         newGraph.graph[new_package_name].push([target_base_name + '_[' + (target_range[0] + i).toString() + ']',edge_base_name + '_[' + (edge_base_number + i).toString() + ']'])
 
@@ -1035,7 +1038,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
                 }
 
             }
-            
+
             // Add the outgoing edges
             if(out_edges_to_add.hasOwnProperty(pack)){
                 for(var out_pack in out_edges_to_add[pack]){
@@ -1052,18 +1055,27 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
                 
     }
 
+    // The ranges for each edge and package is in each edge index so adding ghost edges should be easy 
+    // @ i = value - 1 add package and edge for remaining range if needed ! can mark with something to make ghost edge invisible 
+
+    console.log(newGraph)
+
     return newGraph
 
 }
 
-export function expand(graphData, graphData_with_oracles, chains, value = 5){
+export function expand(graphData, graphData_with_oracles, chains, value = 3){
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
+
+    console.log(chains)
 
     for(var chain in chains){
 
         newGraph = expandChain(graphData, newGraph, chains[chain], value)
         
     }
+
+    return newGraph
 
 }
