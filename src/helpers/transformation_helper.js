@@ -1,5 +1,5 @@
 import { InputGroup } from "react-bootstrap"
-
+import _ from 'lodash'
 export function buildIncoming(graphdata){
 
     var new_graph = {}
@@ -174,12 +174,27 @@ export function findAllExpandableChains(graphData){
 
 
     console.log(graphData)
+    var visited;
+    var chain;
+    var base_packs; 
 
     for(var pack in graphData){
         if(pack.split('...').length == 2){
             
-            chains.push(findChain(graphData,pack)[0])
-        
+            [chain, visited] = findChain(graphData,pack)
+
+            if(chain.some(element => !visited.includes(element))){
+                throw "Error 500"
+            }
+            
+            [base_packs, chain] = _.partition(chain, element => element.split("...").length != 2)
+
+            base_packs.sort()
+
+            chain.sort()
+
+            chains.push([base_packs,...chain])
+
         }
     }
 
@@ -193,7 +208,9 @@ export function findAllExpandableChains(graphData){
         }
     }
 
-    return chains.filter(element => !chains_to_remove.includes(element))
+    var return_chains = chains.filter(element => !chains_to_remove.includes(element))
+
+    return Array.from(new Set(return_chains.map(JSON.stringify)), JSON.parse)
    
 }
 
@@ -718,5 +735,13 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
     newGraph.graph = {...subGraph.graph , ...newGraph.graph}
 
     return newGraph
+
+}
+
+export function expand(graphData, graphData_with_oracles, value, expandable_chains, nodes_to_expand){
+
+    var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
+
+    
 
 }
