@@ -213,8 +213,33 @@ export function findAllExpandableChains(graphData){
     return Array.from(new Set(return_chains.map(JSON.stringify)), JSON.parse)
    
 }
+function getEncodableEdgeNumber(edge){
 
-export function getExapandableEdgeRange(edge){
+    var number = edge.split("_[")[1].split("*")[0]
+
+    if(/^-?\d+$/.test(number)){
+        return parseInt(number)
+    }else{
+
+        throw "Encodable edge " + edge + " is not correctly formatted! Must be a numeric."
+    
+    }
+}
+
+function getNumber(edge){
+
+    var number = edge.split("_[")[1].split("]")[0]
+
+    if(/^-?\d+$/.test(number)){
+        return parseInt(number)
+    }else{
+
+        throw edge + " is not correctly formatted! Must be a numeric."
+
+    }
+}
+
+export function getExapandableRange(edge){
 
     console.log(edge)
 
@@ -401,7 +426,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
     for(var edge in expandable_edges){
 
-        [expand_range_start, expand_range_end] = getExapandableEdgeRange(expandable_edges[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(expandable_edges[edge])
 
         if(expand_range_start == Infinity){
             throw expandable_edges[edge][1] + ' has a variable base, please ensure edges have static bases.'
@@ -444,7 +469,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
     for(var edge in subGraphIncoming){
 
 
-        [expand_range_start, expand_range_end] = getExapandableEdgeRange(subGraphIncoming[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(subGraphIncoming[edge])
 
         console.log(expand_range_start)
         console.log(expand_range_end)
@@ -616,7 +641,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
     for(var edge in expandable_edges){
 
-        [expand_range_start, expand_range_end] = getExapandableEdgeRange(expandable_edges[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(expandable_edges[edge])
 
         if(expand_range_start == Infinity){
             throw expandable_edges[edge][1] + ' has a variable base, please ensure edges have static bases.'
@@ -656,7 +681,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
     for(var edge in subGraphOutgoing){
 
 
-        [expand_range_start, expand_range_end] = getExapandableEdgeRange(subGraphOutgoing[edge])
+        [expand_range_start, expand_range_end] = getExapandableRange(subGraphOutgoing[edge])
 
         match = 0
 
@@ -738,10 +763,307 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
 }
 
-export function expand(graphData, graphData_with_oracles, value, expandable_chains, nodes_to_expand){
+export function getChainsThatMention(expandable_chains, nodes_to_expand){
+
+    for(var node in nodes_to_expand){
+
+        if(nodes_to_expand[node].split("...").length != 2){
+
+            throw nodes_to_expand[node] + " is not expandable!"
+
+        } 
+        
+    }
+
+    var chains = []
+
+    for(var chain in expandable_chains){
+
+        if(expandable_chains[chain].some(element => nodes_to_expand.includes(element))){
+
+            chains.push(expandable_chains[chain])
+
+        }
+
+    }
+
+    return chains 
+
+}
+
+function expandChain(graphData, graphData_with_oracles, chain, value){ 
+
+    var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
+    
+    var expandable;
+    
+    var base_packs;
+
+    [base_packs, expandable] = _.partition(chain, element => element.split('...').length != 2)
+    
+    var to_expand = {}
+    
+    var base_name;
+    
+    var range_start;
+    
+    var range_end;
+    
+    var limiting = Infinity;
+    
+    var limiting_pack;
+    
+    // Index the expandable packages against their full name with their expand range and base name
+    
+    for(var pack in expandable){
+        
+        base_name = expandable[pack].split('_[')[0]
+        
+        [range_start, range_end] = getExapandableRange(expandable[pack])
+        
+        if(range_start === Infinity){
+            
+            throw expandable[pack] + " has a variable base, please ensure edges have static bases."
+            
+        }
+        
+        if(range_end < value){
+            limiting = range_end
+            limiting_pack = expandable[pack]
+        }
+        
+        to_expand[expandable[pack]] = {"base_name" : base_name, "range" : [range_start, range_end]}
+        
+    }
+
+        
+    if(limiting < value){
+        
+        alert("Warning! The chain you wish to expand is limited to expanding less than " + value.toString() + " by " + limiting_pack)
+        value = limiting
+        
+    }
+    
+    // Build the "constant" and "dynamic" edges to add
+    // "Constant" edges are i:i 
+    // "Dynamic" edges are base:base+i
+    
+    var in_edges_to_add = {}
+    var dyn_edges_to_add = {}
+    var out_edges_to_add = {}
+
+    var to;
+    var from;
+    var edge_name; 
+    var target_range;
+
+    var expandable_base_names = expandable.map(x => x.split('_[')[0])
+
+    // Build all edges to add
+    
+    for(var pack in to_expand){
+        
+        // Build an index of edges coming into the chain
+        for(var edge in graphData[pack].incoming){
+
+            [from, edge_name] = graphData[pack].incoming[edge]
+            
+            if(base_packs.includes(from)){
+
+                if(edge_name.split("...").length != 2){
+                    throw "Base package " + from + " has a non-expandable edge to " + pack
+                }
+
+                [range_start, range_end] = getExapandableRange(edge_name)
+
+                if(to_expand[pack].range[1] - to_expand[pack].range[0] !== range_end - range_start){
+                    throw edge_name + " is not in range of " + pack 
+                }
+
+                if(!in_edges_to_add.hasOwnProperty(from)){
+
+                    in_edges_to_add[from] = {}
+
+                }
+                    
+                if(!in_edges_to_add[from].hasOwnProperty(pack)){
+                    in_edges_to_add[from][pack] = []
+                }
+
+                in_edges_to_add[from][pack].push({"target_base_name" : pack.split("_[")[0], "edge_base_name" : edge_name.split("_[")[0], "edge_range" : [range_start,range_end]})                 
+                
+            }
+
+        }
+
+        // Build an index of the edges within the chain and leaving the chain
+        for(var edge in graphData[pack].outgoing){
+
+            [to, edge_name] = graphData[pack].outgoing[edge]
+
+            if(expandable_base_names.includes(to.split("_[")[0])){
+
+                if(to.split('...').length != 2){
+
+                    target_range = [getNumber(to),-1]
+
+                    for(var expandable_pack in to_expand){
+                        if(to.split("_[")[0] === to_expand[expandable_pack]['base_name'] && to_expand[expandable_pack]['range'][1] > target_range[1]){
+                            
+                            target_range = [target_range[0],to_expand[expandable_pack]['range'][1]]
+
+                        }
+                    }
+
+                    if(target_range[1] === -1){
+                    
+                        throw "Error 500! No matching expandable package for " + to  
+
+                    }
+
+                }else{
+                    target_range = getExapandableRange(to)
+                }
+            
+                if(!dyn_edges_to_add.hasOwnProperty(pack)){
+
+                    dyn_edges_to_add[pack] = {}
+
+                }
+                    
+                if(!dyn_edges_to_add[pack].hasOwnProperty(to)){
+                    dyn_edges_to_add[pack][to] = []
+                }
+
+                dyn_edges_to_add[pack][to].push({"target_base_name" : to.split("_[")[0], "target_range" : target_range, "edge_base_name" : edge_name.split("_[")[0], "edge_base_number" : getEncodableEdgeNumber(edge_name)})                 
+                
+            }else{
+
+                if(!out_edges_to_add.hasOwnProperty(pack)){
+
+                    out_edges_to_add[pack] = {}
+
+                }
+                    
+                if(!out_edges_to_add[pack].hasOwnProperty(to)){
+                    out_edges_to_add[pack][to] = []
+                }
+
+                out_edges_to_add[pack][to].push({"edge_base_name" : edge_name.split("_[")[0], "edge_base_number" : getEncodableEdgeNumber(edge_name)})
+
+            }
+
+        }
+
+    }
+
+    var new_package_name;        
+    var target_base_name;
+    var edge_base_name;
+    var edge_base_number;
+
+    
+    for(var pack in to_expand){
+        
+        range_start = to_expand[pack]['range_start']
+        base_name = to_expand[pack]['base_name']
+
+        // Delete old instances of the expandable packages and any edges they are mentioned in
+
+        delete newGraph.graph[pack]
+
+        for(var edge in graphData[pack].incoming){
+
+            if(!expandable.includes(graphData[pack].incoming[edge][0])){
+
+                if(graphData[pack].incoming[edge][0] === 'ORACLE'){
+                    
+                    newGraph.oracles = newGraph.oracles.filter(element => element[0] != pack)
+
+                }else{
+
+                    newGraph.graph[graphData[pack].incoming[edge][0]] = newGraph.graph[graphData[pack].incoming[edge][0]].filter(element => element[0] != pack)
+
+                }
+            }
+
+        }
+
+        // Build the new packages and all edges going into and out of chain
+        for(var i = 0; i < value; i++){
+
+            for(var base_pack in in_edges_to_add){
+
+                if(in_edges_to_add[base_pack].hasOwnProperty(pack)){
+                    
+                    for(var edge in in_edges_to_add[base_pack][pack]){
+
+                        ({target_base_name,edge_base_name,edge_range} = in_edges_to_add[base_pack][pack][edge])
+
+                        if(base_pack === "ORACLE"){
+    
+                            newGraph.oracles.push([target_base_name + '_[' + (range_start + i).toString() + ']',edge_base_name + '_[' + (edge_range[0] + i).toString() + ']'])
+    
+                        }else{
+
+                            newGraph.graph[base_pack].push([target_base_name + '_[' + (range_start + i).toString() + ']',edge_base_name + '_[' + (edge_range[0] + i).toString() + ']'])
+
+                        }
+                    }
+                }
+            }
+
+            // Create the new package
+
+            new_package_name = base_name + '_[' + (range_start + i).toString() + ']'
+            
+            newGraph.graph[new_package_name] = []
+
+
+            // Add the dynamic edges
+            if(dyn_edges_to_add.hasOwnProperty(pack)){
+                for(var to_pack in dyn_edges_to_add[pack]){
+                    // west sidee
+                    for(var edge in dyn_edges_to_add[pack][to_pack]){
+                        
+                        ({target_base_name,target_range,edge_base_name,edge_base_number}) = dyn_edges_to_add[pack][to_pack][edge]
+
+                        newGraph.graph[new_package_name].push([target_base_name + '_[' + (target_range[0] + i).toString() + ']',edge_base_name + '_[' + (edge_base_number + i).toString() + ']'])
+
+                    }
+
+                }
+
+            }
+            
+            // Add the outgoing edges
+            if(out_edges_to_add.hasOwnProperty(pack)){
+                for(var out_pack in out_edges_to_add[pack]){
+                    for(var edge in out_edges_to_add[pack][out_pack]){
+
+                        ({edge_base_name,edge_base_number} = out_edges_to_add[pack][out_pack][edge])
+
+                        newGraph.graph[new_package_name].push([out_pack,edge_base_name + '_[' + (edge_base_number + i).toString() + ']'])
+
+                    }
+                }
+            }
+        }
+                
+    }
+
+    return newGraph
+
+}
+
+export function expand(graphData, graphData_with_oracles, chains, value = 5){
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
 
-    
+    for(var chain in chains){
+
+        newGraph = expandChain(graphData, newGraph, chains[chain], value)
+        
+    }
 
 }
