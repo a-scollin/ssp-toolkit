@@ -506,6 +506,10 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
               }             
             }
 
+            console.log(cells[edge])
+
+            var check1 = cells[edge].target
+
             new_graph.graph[thecell.value].push([cells[edge].target.value,cells[edge].value])
 
           }
