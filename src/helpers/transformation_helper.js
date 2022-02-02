@@ -1,5 +1,5 @@
-import { InputGroup } from "react-bootstrap"
 import _ from 'lodash'
+
 export function buildIncoming(graphdata){
 
     var new_graph = {}
@@ -31,7 +31,6 @@ export function buildIncoming(graphdata){
             var edgename = graphdata.graph[pack][edge][1]
 
             new_graph[dest].incoming.push([pack,edgename])
-
 
         }
     }
@@ -304,6 +303,230 @@ function indexOf2d(array,item) {
 
     // now use indexOf to find item converted to a string in format "x|y"
     return arrCoords.indexOf(item[0] + "|" + item[1]);
+}
+
+function getAllIncomingSubgraphEdges(graphData){
+
+    var dict_in = {}
+
+    var edges_in = []
+
+    for(var pack in graphData){
+        
+        if(!dict_in.hasOwnProperty(pack)){
+            dict_in[pack] = []
+        }
+        for(var edge in graphData[pack].incoming){
+
+            if(graphData[pack].incoming[edge][0] === "ORACLE"){
+       
+                dict_in[pack].push(graphData[pack].incoming[edge][1])
+                edges_in.push(graphData[pack].incoming[edge][1])
+
+            }
+
+        }
+
+    }
+
+    return [dict_in, edges_in]
+
+}
+
+function getAllOutgoingSubgraphEdges(graphData){
+
+    var dict_out = {}
+
+    var edges_out = []
+
+    for(var pack in graphData){
+
+        if(!dict_out.hasOwnProperty(pack)){
+            dict_out[pack] = []
+        }
+
+        for(var edge in graphData[pack].outgoing){
+
+            if(graphData[pack].outgoing[edge][0] === ""){      
+                
+                dict_out[pack].push(graphData[pack].outgoing[edge][1])
+                edges_out.push(graphData[pack].outgoing[edge][1])
+
+            }
+
+        }
+
+    }
+
+    return [dict_out, edges_out]
+
+}
+
+
+function getAndCheckExternalEdges(lhs,rhs){
+    
+    var [lhs_in, lhs_edges_in] = getAllIncomingSubgraphEdges(lhs)
+    var [rhs_in, rhs_edges_in] = getAllIncomingSubgraphEdges(rhs) 
+    
+    lhs_edges_in.sort()
+    rhs_edges_in.sort()
+
+    if(!_.isEqual(lhs_edges_in, rhs_edges_in)){
+        throw "The left hand side oracles:\n" + lhs_in.toString() + "\ndo not match the right hand side oracles:\n" + rhs_in.toString()
+    }
+    
+    var [lhs_out, lhs_edges_out] = getAllOutgoingSubgraphEdges(lhs)
+    var [rhs_out, rhs_edges_out] = getAllOutgoingSubgraphEdges(rhs) 
+
+    lhs_edges_out.sort()
+    rhs_edges_out.sort()
+    
+    if(!_.isEqual(lhs_edges_out, rhs_edges_out)){
+        throw "The left hand side outgoing edges:\n" + lhs_out.toString() + "\ndo not match the right hand side outgoing edges:\n" + rhs_out.toString()
+    }
+    
+    return [lhs_in,lhs_out,rhs_in,rhs_out]
+    
+}
+
+function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, passedVisited = [], passedToAdd = [], passedToRemove = []){
+
+    var visited = [node, ...passedVisited]
+
+    var toRemove = [[node], ...passedToRemove]
+    
+    var toAdd = [...passedToAdd]
+
+    var complete = false;
+
+    var nodeSplit = node.split("_[")
+
+    var packname, edgename;
+
+    for(var edge in graphData[node].incoming){
+
+        [packname, edgename] = graphData[node].incoming[edge]
+
+        if(lhs_in[nodeSplit[0]].includes(edgename.split("_[")[0])){
+
+            toRemove.push([packname, node, edgename])
+
+            if(nodeSplit.length != 2){
+                throw "Please ensure that packages are named using _[x]!"
+            }
+
+
+            if(rhs_in[edgename.split("_[")[0]].length != 1){
+                alert("Multiple similarly named incoming edges!")
+            }
+
+            toAdd.push([packname, rhs_in[edgename.split("_[")[0]][0] + nodeSplit[1], edgename])
+
+        }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
+
+            if(!lhs[packname.split("_[")[0]].outgoing.includes([nodeSplit[0],edgename.split("_[")[0]])){
+                return [false, visited, [], []]
+            }
+
+            [complete, visited, toAdd, toRemove] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, visited, toAdd, toRemove)
+
+            if(!complete){
+                return [false, visited, [], []]
+            }
+
+        }else{
+            if(!visited.includes(packname)){
+                return [false, visited, [], []]
+
+            }
+        }
+
+    }
+
+
+    for(var edge in graphData[node].outgoing){
+
+        [packname, edgename] = graphData[node].outgoing[edge]
+
+        if(lhs_out[nodeSplit[0]].includes(edgename.split("_[")[0])){
+
+            // Redundant as we delete the node anyway.
+            // toRemove.push([node, packname, edgename])
+
+            if(nodeSplit.length != 2){
+                throw "Please ensure that packages are named using _[x]!"
+            }
+
+            if(rhs_out[edgename.split("_[")[0]].length != 1){
+                alert("Multiple similarly named outgoing edges!")
+            }
+
+            toAdd.push([rhs_out[edgename.split("_[")[0]][0] + nodeSplit[1], packname , edgename])
+
+        }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
+
+            if(!lhs[packname.split("_[")[0]].outgoing.includes([nodeSplit[0],edgename.split("_[")[0]])){
+                return [false, visited, [], []]
+            }
+
+            [complete, visited, toAdd, toRemove] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, visited, toAdd, toRemove)
+
+            if(!complete){
+                return [false, visited, [], []]
+            }
+
+        }else{ 
+            if(!visited.includes(packname)){
+                return [false, visited, [], []]
+            }
+        }
+
+    }
+
+    return [true, visited, toAdd, toRemove]
+    
+}
+
+export function substitute(graphData, graphData_with_oracles, lhs, rhs, include = []) {
+    
+    var visited = new Set()
+
+    var newGraphData = JSON.parse(JSON.stringify(graphData_with_oracles))
+
+    var [lhs_in,lhs_out,rhs_in,rhs_out] = getAndCheckExternalEdges(lhs, rhs)
+
+    rhs_in = _.invert(rhs_in, true);
+
+    rhs_out = _.invert(rhs_out, true);
+
+    const lhs_packs = Object.keys(lhs)
+
+    var complete, moreVisited, toRemove, toAdd
+
+    for(var node in graphData){
+
+        if(include.length == 0 || include.includes(node)){
+            
+            if(lhs_packs.includes(node.split("_[")[0]) && !visited.includes(node)){
+
+                [complete, moreVisited, toRemove, toAdd] = checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out)
+            
+                visited = new Set([...visited, ...moreVisited])
+
+                if(complete){
+
+                    console.log(toRemove)
+                    console.log(toAdd)
+                    alert("Found one!")
+
+                }
+
+            }
+
+        }
+
+    }
+
 }
 
 export function decompose(graphData,graphData_with_oracles,nodeSelection,subGraph){
@@ -790,7 +1013,7 @@ export function getChainsThatMention(expandable_chains, nodes_to_expand){
 
 }
 
-function expandChain(graphData, graphData_with_oracles, chain, value){ 
+function expandChain(graphData, graphData_with_oracles, chain, value, ghost){ 
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
     
@@ -1037,7 +1260,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
                         }
 
                         // Add ghost edges, this assumes ofc that in_edges of this type are one to one which is a valid assumption.
-                        if(i === value - 1 && range_start + i + 1 < range_end){
+                        if(i === value - 1 && range_start + i + 1 < range_end && ghost){
                             if(base_pack === "ORACLE"){
     
                                 newGraph.oracles.push([target_base_name + '_[' + (range_start + i + 1).toString() + '...' + range_end_string + ']',edge_base_name + '_[...]'])
@@ -1055,7 +1278,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
 
             new_package_name = base_name + '_[' + (range_start + i).toString() + ']'
 
-            if(i === value - 1 && range_start + i + 1 < range_end){
+            if(i === value - 1 && range_start + i + 1 < range_end && ghost){
                 new_ghost_package_name = base_name + '_[' + (range_start + i + 1).toString() + '...' + range_end_string + ']'
             
                 newGraph.graph[new_ghost_package_name] = []
@@ -1071,7 +1294,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
 
                         newGraph.graph[new_package_name].push([target_base_name + '_[' + (target_range[0] + i).toString() + ']',edge_base_name + '_[' + (edge_base_number + i).toString() + ']'])
 
-                        if(i === value - 1 && target_range[0] + i + 1 < target_range[1]){
+                        if(i === value - 1 && target_range[0] + i + 1 < target_range[1] && ghost){
 
                             if(newGraph.graph.hasOwnProperty(target_base_name + '_[' + (target_range[0] + i + 1).toString() + ']')){
                                 newGraph.graph[new_ghost_package_name].push([target_base_name + '_[' + (target_range[0] + i + 1).toString() + ']', edge_base_name + '_[...]'])    
@@ -1096,7 +1319,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
 
                         newGraph.graph[new_package_name].push([out_pack,edge_base_name + '_[' + (edge_base_number + i).toString() + ']'])
 
-                        if(i === value - 1 && range_start + i + 1 < range_end){
+                        if(i === value - 1 && range_start + i + 1 < range_end && ghost){
                             newGraph.graph[new_ghost_package_name].push([out_pack, edge_base_name + '_[...]'])
                         }
                     }
@@ -1109,13 +1332,11 @@ function expandChain(graphData, graphData_with_oracles, chain, value){
     // The ranges for each edge and package is in each edge index so adding ghost edges should be easy 
     // @ i = value - 1 add package and edge for remaining range if needed ! can mark with something to make ghost edge invisible 
 
-    console.log(newGraph)
-
     return newGraph
 
 }
 
-export function expand(graphData, graphData_with_oracles, chains, value = 3){
+export function expand(graphData, graphData_with_oracles, chains, value = 3, ghost = false){
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
 
@@ -1123,7 +1344,7 @@ export function expand(graphData, graphData_with_oracles, chains, value = 3){
 
     for(var chain in chains){
 
-        newGraph = expandChain(graphData, newGraph, chains[chain], value)
+        newGraph = expandChain(graphData, newGraph, chains[chain], value, ghost)
         
     }
 
