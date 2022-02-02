@@ -40,7 +40,7 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomDecomposePopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, findAllExpandableChains, expand } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -89,7 +89,7 @@ export default class TransformationTools extends Component {
      
   }
 
-substitute(){
+newSubstitute(){
     console.log("HFAEFIAEHF")
 
     this.allvisited = []
@@ -97,8 +97,7 @@ substitute(){
     var incoming_graph = buildIncoming(this.state.selected_graphdata)
 
     console.log(incoming_graph)
-    console.log("HERE")
-    alert("HEre")
+
     // const [ lhs, rhs ] = this.state.selected_equiv
 
     const [ lhs, rhs ] = [{
@@ -127,8 +126,9 @@ substitute(){
                     "CHECK"
                 ]
             ],
-            "BITS": [],
-            "Adv_pkg": []
+            "BITS": [
+                ["","beanedge"]
+            ],
         }, 
         
     },{
@@ -151,10 +151,14 @@ substitute(){
             ]
         ],
         "graph": {
-            "KEYS": []
+            "KEYS": [
+                ["","beanedge"]
+            ]
         }
     }]
-    
+
+    substitute(this.incomingGraph,this.state.selected_graphdata,buildIncoming(lhs),buildIncoming(rhs))
+
     const lhs_packs = Object.keys(lhs.graph)
 
     const rhs_packs = Object.keys(rhs.graph)
@@ -677,7 +681,7 @@ newExpand(chains, value){
 
     // This only works for one chain !!!! need to make chains stateful within this function.. 
     // the expand function also needs to be able to take multiple values for multiple chains 
-     
+
     if(this.targetval === value){
         return
     }
@@ -807,7 +811,7 @@ options.push(
 <button onClick={this.addEquiv.bind(this)}>+</button>
 <button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
 <button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
-<button onClick={this.substitute.bind(this)}>Swap</button>
+<button onClick={this.newSubstitute.bind(this)}>Swap</button>
 </ReflexElement>
 )
 options.push(<ReflexSplitter/>)

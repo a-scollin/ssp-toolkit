@@ -19,6 +19,10 @@ export function buildIncoming(graphdata){
     
     for(var oracle in graphdata.oracles){
 
+        if(graphdata.oracles[oracle][0] === ""){
+            throw "Can't have oracle with no destination! : " + graphdata.oracles[oracle]
+        }
+
         new_graph[graphdata.oracles[oracle][0]].incoming.push(["ORACLE",graphdata.oracles[oracle][1]])
 
     }
@@ -30,7 +34,9 @@ export function buildIncoming(graphdata){
             var dest = graphdata.graph[pack][edge][0]
             var edgename = graphdata.graph[pack][edge][1]
 
-            new_graph[dest].incoming.push([pack,edgename])
+            if(dest !== ""){
+                new_graph[dest].incoming.push([pack,edgename])
+            }
 
         }
     }
@@ -389,7 +395,10 @@ function getAndCheckExternalEdges(lhs,rhs){
     
 }
 
+
 function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, passedVisited = [], passedToAdd = [], passedToRemove = []){
+    console.log("INSIDE")
+    console.log(node)
 
     var visited = [node, ...passedVisited]
 
@@ -409,24 +418,31 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
         if(lhs_in[nodeSplit[0]].includes(edgename.split("_[")[0])){
 
+            console.log('case1')
+            console.log(packname)
+            console.log(edgename)
+
             toRemove.push([packname, node, edgename])
 
             if(nodeSplit.length != 2){
-                throw "Please ensure that packages are named using _[x]!"
+                throw "Please ensure that packages are named using _[x]"
             }
-
-
-            if(rhs_in[edgename.split("_[")[0]].length != 1){
-                alert("Multiple similarly named incoming edges!")
-            }
-
-            toAdd.push([packname, rhs_in[edgename.split("_[")[0]][0] + nodeSplit[1], edgename])
+    
+            toAdd.push([packname, rhs_in[edgename.split("_[")[0]] + '_[' + nodeSplit[1], edgename])
 
         }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
 
-            if(!lhs[packname.split("_[")[0]].outgoing.includes([nodeSplit[0],edgename.split("_[")[0]])){
+            console.log('case2')
+            console.log(packname)
+            console.log(edgename)
+            console.log(nodeSplit)
+            console.log(lhs[packname.split("_[")[0]])
+
+            if(!lhs[packname.split("_[")[0]].outgoing.some(element => element[0] === nodeSplit[0] && element[1] === edgename.split("_[")[0])){
                 return [false, visited, [], []]
             }
+
+            console.log("ENTERING " + packname)
 
             [complete, visited, toAdd, toRemove] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, visited, toAdd, toRemove)
 
@@ -449,23 +465,27 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
         [packname, edgename] = graphData[node].outgoing[edge]
 
         if(lhs_out[nodeSplit[0]].includes(edgename.split("_[")[0])){
+            console.log('case3')
+            console.log(packname)
+            console.log(edgename)
 
             // Redundant as we delete the node anyway.
             // toRemove.push([node, packname, edgename])
 
             if(nodeSplit.length != 2){
-                throw "Please ensure that packages are named using _[x]!"
+                throw "Please ensure that packages are named using _[x]"
             }
 
-            if(rhs_out[edgename.split("_[")[0]].length != 1){
-                alert("Multiple similarly named outgoing edges!")
-            }
-
-            toAdd.push([rhs_out[edgename.split("_[")[0]][0] + nodeSplit[1], packname , edgename])
+            toAdd.push([rhs_out[edgename.split("_[")[0]] + '_[' + nodeSplit[1], packname , edgename])
 
         }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
 
-            if(!lhs[packname.split("_[")[0]].outgoing.includes([nodeSplit[0],edgename.split("_[")[0]])){
+            console.log('case4')
+            console.log(packname)
+            console.log(edgename)
+            console.log(lhs[nodeSplit[0]].outgoing)
+
+            if(!lhs[nodeSplit[0]].outgoing.some(element => element[0] === packname.split("_[")[0] && element[1] === edgename.split("_[")[0])){
                 return [false, visited, [], []]
             }
 
@@ -487,38 +507,61 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
     
 }
 
+function invertGraphData(obj){
+
+    var ret = {};
+    var alerted = {}
+  for(var key in obj){
+    for(var elm in obj[key]){
+        if(ret.hasOwnProperty(obj[key][elm])){
+            if(!alerted.hasOwnProperty(obj[key][elm])){
+                alerted[obj[key][elm]] = true
+                alert(obj[key][elm] + " appears multiple times and will be mapped automatically!")
+            }
+        }
+
+        ret[obj[key][elm]] = key;
+    }
+  }
+  return ret;
+
+}
+
 export function substitute(graphData, graphData_with_oracles, lhs, rhs, include = []) {
     
-    var visited = new Set()
+    var visited = []
 
     var newGraphData = JSON.parse(JSON.stringify(graphData_with_oracles))
 
     var [lhs_in,lhs_out,rhs_in,rhs_out] = getAndCheckExternalEdges(lhs, rhs)
 
-    rhs_in = _.invert(rhs_in, true);
+    rhs_in = invertGraphData(rhs_in);
 
-    rhs_out = _.invert(rhs_out, true);
+    rhs_out = invertGraphData(rhs_out);
 
     const lhs_packs = Object.keys(lhs)
 
     var complete, moreVisited, toRemove, toAdd
 
+    console.log(graphData)
     for(var node in graphData){
-
+        
         if(include.length == 0 || include.includes(node)){
             
             if(lhs_packs.includes(node.split("_[")[0]) && !visited.includes(node)){
 
                 [complete, moreVisited, toRemove, toAdd] = checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out)
             
-                visited = new Set([...visited, ...moreVisited])
+                visited = [...visited, ...moreVisited]
 
                 if(complete){
 
                     console.log(toRemove)
                     console.log(toAdd)
-                    alert("Found one!")
+                    console.log("Found one!")
 
+                }else{
+                    console.log("FAIL")
                 }
 
             }

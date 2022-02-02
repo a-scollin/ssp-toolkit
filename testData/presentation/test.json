@@ -1,0 +1,158 @@
+{
+    "oracles": [
+        [
+            "BITS_[1]",
+            "SETBIT_[1]"
+        ],
+        [
+            "KEYS_[d+1]",
+            "GETKEYS"
+        ],
+        [
+            "AKEYS_[1]",
+            "GETA^{out}"
+        ],
+        [
+            "GByao^1_[1]",
+            "GBL_[1]"
+        ],
+        [
+            "GByao^1_[d]",
+            "GBL_[d]"
+        ],
+        [
+            "GByao^1_[2]",
+            "GBL_[2]"
+        ],
+        [
+            "GByao^1_[3]",
+            "GBL_[3]"
+        ]
+    ],
+    "graph": {
+        "GByao^1_[1]": [
+            [
+                "AKEYS_[1]",
+                "GETA^{in},GETINA^{in}_[1]"
+            ],
+            [
+                "AKEYS_[2]",
+                "GETA^{out}_[2]"
+            ],
+            [
+                "EV_[1]",
+                "EVAL_[1]"
+            ]
+        ],
+        "GByao^1_[d]": [
+            [
+                "AKEYS_[d]",
+                "GETA^{in},GETINA^{in}_[d]"
+            ],
+            [
+                "KEYS_[d+1]",
+                "GETA^{out}"
+            ],
+            [
+                "EV_[d]",
+                "EVAL_[d]"
+            ]
+        ],
+        "GByao^1_[2]": [
+            [
+                "AKEYS_[2]",
+                "GETA^{in},GETINA^{in}_[2]"
+            ],
+            [
+                "AKEYS_[3]",
+                "GETA^{out}_[3]"
+            ],
+            [
+                "EV_[2]",
+                "EVAL_[2]"
+            ]
+        ],
+        "GByao^1_[3]": [
+            [
+                "AKEYS_[3]",
+                "GETA^{in},GETINA^{in}_[3]"
+            ],
+            [
+                "EV_[3]",
+                "EVAL_[3]"
+            ]
+        ],
+        "AKEYS_[1]": [
+            [
+                "BITS_[1]",
+                "CHECK_[1]"
+            ]
+        ],
+        "AKEYS_[2]": [
+            [
+                "BITS_[2]",
+                "CHECK_[2]"
+            ]
+        ],
+        "AKEYS_[3]": [
+            [
+                "BITS_[3]",
+                "CHECK_[3]"
+            ]
+        ],
+        "AKEYS_[d]": [
+            [
+                "BITS_[d]",
+                "CHECK_[d]"
+            ]
+        ],
+        "terminal_pkg": [],
+        "EV_[d]": [
+            [
+                "BITS_[d]",
+                "GETBIT_[d]"
+            ],
+            [
+                "KEYS_[d+1]",
+                "SETBIT_[d+1]"
+            ]
+        ],
+        "BITS_[d]": [],
+        "BITS_[1]": [],
+        "KEYS_[d+1]": [],
+        "Adv_pkg": [],
+        "BITS_[2]": [],
+        "BITS_[3]": [],
+        "BITS_[4]": [],
+        "EV_[1]": [
+            [
+                "BITS_[2]",
+                "SETBIT_[2]"
+            ],
+            [
+                "BITS_[1]",
+                "GETBIT_[1]"
+            ]
+        ],
+        "EV_[2]": [
+            [
+                "BITS_[3]",
+                "SETBIT_[3]"
+            ],
+            [
+                "BITS_[2]",
+                "GETBIT_[2]"
+            ]
+        ],
+        "EV_[3]": [
+            [
+                "BITS_[4]",
+                "SETBIT_[4]"
+            ],
+            [
+                "BITS_[3]",
+                "GETBIT_[3]"
+            ]
+        ]
+    }
+}
