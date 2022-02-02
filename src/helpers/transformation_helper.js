@@ -555,7 +555,8 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, include 
                 visited = [...visited, ...moreVisited]
 
                 if(complete){
-
+                    // Add another piece of input data, if all LHS packages are captured in to remove, then is full match
+                    //  else can be a partial match! will need to omit some packages for rhs with > 2 pakcages tho
                     console.log(toRemove)
                     console.log(toAdd)
                     console.log("Found one!")
