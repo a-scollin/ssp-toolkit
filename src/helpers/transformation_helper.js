@@ -368,7 +368,6 @@ function getAllOutgoingSubgraphEdges(graphData){
 
 }
 
-
 function getAndCheckExternalEdges(lhs,rhs){
     
     var [lhs_in, lhs_edges_in] = getAllIncomingSubgraphEdges(lhs)
@@ -395,8 +394,7 @@ function getAndCheckExternalEdges(lhs,rhs){
     
 }
 
-
-function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, passedVisited = [], passedToAdd = [], passedToRemove = []){
+function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from, passedVisited = [], passedToAdd = [], passedToRemove = []){
     console.log("INSIDE")
     console.log(node)
 
@@ -418,33 +416,22 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
         if(lhs_in[nodeSplit[0]].includes(edgename.split("_[")[0])){
 
-            console.log('case1')
-            console.log(packname)
-            console.log(edgename)
-
             toRemove.push([packname, node, edgename])
 
             if(nodeSplit.length != 2){
                 throw "Please ensure that packages are named using _[x]"
             }
     
-            toAdd.push([packname, rhs_in[edgename.split("_[")[0]] + '_[' + nodeSplit[1], edgename])
+            toAdd.push([node, packname, rhs_in_maps_to[edgename.split("_[")[0]] + '_[' + nodeSplit[1], edgename])
 
         }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
 
-            console.log('case2')
-            console.log(packname)
-            console.log(edgename)
-            console.log(nodeSplit)
-            console.log(lhs[packname.split("_[")[0]])
 
             if(!lhs[packname.split("_[")[0]].outgoing.some(element => element[0] === nodeSplit[0] && element[1] === edgename.split("_[")[0])){
                 return [false, visited, [], []]
             }
 
-            console.log("ENTERING " + packname)
-
-            [complete, visited, toAdd, toRemove] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, visited, toAdd, toRemove)
+            [complete, visited, toRemove, toAdd] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from, visited, toAdd, toRemove)
 
             if(!complete){
                 return [false, visited, [], []]
@@ -465,9 +452,7 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
         [packname, edgename] = graphData[node].outgoing[edge]
 
         if(lhs_out[nodeSplit[0]].includes(edgename.split("_[")[0])){
-            console.log('case3')
-            console.log(packname)
-            console.log(edgename)
+      
 
             // Redundant as we delete the node anyway.
             // toRemove.push([node, packname, edgename])
@@ -476,20 +461,16 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
                 throw "Please ensure that packages are named using _[x]"
             }
 
-            toAdd.push([rhs_out[edgename.split("_[")[0]] + '_[' + nodeSplit[1], packname , edgename])
+            toAdd.push([node, rhs_out_maps_from[edgename.split("_[")[0]] + '_[' + nodeSplit[1], packname , edgename])
 
         }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
 
-            console.log('case4')
-            console.log(packname)
-            console.log(edgename)
-            console.log(lhs[nodeSplit[0]].outgoing)
 
             if(!lhs[nodeSplit[0]].outgoing.some(element => element[0] === packname.split("_[")[0] && element[1] === edgename.split("_[")[0])){
                 return [false, visited, [], []]
             }
 
-            [complete, visited, toAdd, toRemove] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out, visited, toAdd, toRemove)
+            [complete, visited, toRemove, toAdd] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from, visited, toAdd, toRemove)
 
             if(!complete){
                 return [false, visited, [], []]
@@ -503,7 +484,7 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
     }
 
-    return [true, visited, toAdd, toRemove]
+    return [true, visited, toRemove, toAdd]
     
 }
 
@@ -527,7 +508,7 @@ function invertGraphData(obj){
 
 }
 
-export function substitute(graphData, graphData_with_oracles, lhs, rhs, include = []) {
+export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialMatches = false, include = []) {
     
     var visited = []
 
@@ -535,13 +516,19 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, include 
 
     var [lhs_in,lhs_out,rhs_in,rhs_out] = getAndCheckExternalEdges(lhs, rhs)
 
-    rhs_in = invertGraphData(rhs_in);
+    var rhs_in_maps_to = invertGraphData(rhs_in);
 
-    rhs_out = invertGraphData(rhs_out);
+    var rhs_out_maps_from = invertGraphData(rhs_out);
 
     const lhs_packs = Object.keys(lhs)
 
     var complete, moreVisited, toRemove, toAdd
+
+    var packagesToRemove, edgesToRemove;
+
+    var matchThis;
+
+    var lhs_in_maps_to, lhs_out_maps_from;
 
     console.log(graphData)
     for(var node in graphData){
@@ -550,16 +537,54 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, include 
             
             if(lhs_packs.includes(node.split("_[")[0]) && !visited.includes(node)){
 
-                [complete, moreVisited, toRemove, toAdd] = checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in, rhs_out)
+                [complete, moreVisited, toRemove, toAdd] = checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from)
             
                 visited = [...visited, ...moreVisited]
 
                 if(complete){
+
+                    [packagesToRemove, edgesToRemove] = _.partition(toRemove, element => element.length === 1)
+                    
+
+                    console.log("passed the vibe check")
+
                     // Add another piece of input data, if all LHS packages are captured in to remove, then is full match
                     //  else can be a partial match! will need to omit some packages for rhs with > 2 pakcages tho
-                    console.log(toRemove)
-                    console.log(toAdd)
-                    console.log("Found one!")
+                    
+                    
+                    if(!partialMatches){
+                        
+                        lhs_in_maps_to = invertGraphData(lhs_in)
+                        lhs_out_maps_from = invertGraphData(lhs_out)
+
+                        console.log(lhs_in_maps_to)
+                        console.log(lhs_out_maps_from)
+
+                        if(!lhs_packs.every(element => packagesToRemove.map((x) => {return x[0].split("_[")[0]}).includes(element))){
+
+                            continue
+                        }
+
+                        if(!Object.keys(lhs_in_maps_to).every(edgeNameToMatch => toAdd.some(element => element[0].split("_[")[0] === lhs_in_maps_to[edgeNameToMatch] && element[3].split("_[")[0] === edgeNameToMatch))){
+         
+                            continue
+                        }
+
+                        if(!Object.keys(lhs_out_maps_from).every(edgeNameToMatch => toAdd.some(element => element[0].split("_[")[0] === lhs_out_maps_from[edgeNameToMatch] && element[3].split("_[")[0] === edgeNameToMatch))){
+    
+                            continue
+                        }
+                        
+                        console.log("Found full match here!")
+                        console.log(toRemove)
+                        console.log(toAdd)
+
+                        }
+
+                        
+
+
+                    
 
                 }else{
                     console.log("FAIL")
