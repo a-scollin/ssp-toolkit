@@ -313,7 +313,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
         layout.moveParent = true;
 
-        layout.parallelEdgeSpacing = 0
+        layout.parallelEdgeSpacing = 10
 
         layout.maintainParentLocation = true;
 
@@ -395,8 +395,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             }.bind(this), transform_submenu);
         }}}}.bind(this);
 
-       
-
+        new mx.mxParallelEdgeLayout(graph).execute();
 
         // No windows seem to be working
         // var encoder = new mx.mxCodec();
