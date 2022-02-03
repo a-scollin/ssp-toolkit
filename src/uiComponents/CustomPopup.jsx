@@ -5,8 +5,8 @@ import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 
-export function CustomDecomposePopup(props) {
-  const { onChoice, open, packs} = props;
+export function CustomPopup(props) {
+  const { onChoice, open, items, title} = props;
 
   const handleListItemClick = (value) => {
     onChoice(value);
@@ -14,11 +14,11 @@ export function CustomDecomposePopup(props) {
 
   return (
     <Dialog open={open}>
-      <DialogTitle>Choose package to decompose:</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <List sx={{ pt: 0 }}>
-        {packs.map((pack) => (
-          <ListItem button onClick={() => handleListItemClick(pack)} key={pack}>
-            <ListItemText primary={pack} />
+        {items.map((item) => (
+          <ListItem button onClick={() => handleListItemClick(item)} key={item}>
+            <ListItemText primary={item} />
           </ListItem>
         ))}
       </List>

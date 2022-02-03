@@ -1,0 +1,234 @@
+{
+  "modular_pkgs": {
+    "base": {
+      "oracles": [
+        [
+          "PKECCA^{0}",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "PKECCA^{0}": [],
+        "Adv_pkg": []
+      }
+    },
+    "decompose1": {
+      "oracles": [
+        [
+          "MOD_CCA",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "MOD_CCA": [
+          [
+            "KEM^{0}_CCA",
+            "KEMGEN,\nKEMENC,\nKEMDEC"
+          ],
+          [
+            "DEM^{0}_CCA",
+            "DEMDEC,\nDEMENC"
+          ]
+        ],
+        "KEM^{0}_CCA": [
+          [
+            "KEY",
+            "SET"
+          ]
+        ],
+        "DEM^{0}_CCA": [
+          [
+            "KEY",
+            "GET"
+          ]
+        ],
+        "KEY": [],
+        "Adv_pkg": []
+      }
+    },
+    "compose1LHS - SUBGRAPH": {
+      "oracles": [
+        [
+          "MOD_CCA",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "MOD_CCA": [
+          [
+            "",
+            "KEMGEN,\nKEMENC,\nKEMDEC"
+          ],
+          [
+            "DEM^{0}_CCA",
+            "DEMDEC,\nDEMENC"
+          ]
+        ],
+        "DEM^{0}_CCA": [
+          [
+            "",
+            "GET"
+          ]
+        ],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    },
+    "compose1RHS - SUBGRAPH": {
+      "oracles": [
+        [
+          "R_{1}",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "R_{1}": [
+          [
+            "",
+            "GET"
+          ],
+          [
+            "",
+            "KEMGEN,\nKEMENC,\nKEMDEC"
+          ]
+        ],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    },
+    "Assumption1LHS": {
+      "oracles": [
+        [
+          "KEY",
+          "GET"
+        ],
+        [
+          "KEM^{0}_CCA",
+          "KEMGEN,\nKEMENC,\nKEMDEC"
+        ]
+      ],
+      "graph": {
+        "KEM^{0}_CCA": [
+          [
+            "KEY",
+            "SET"
+          ]
+        ],
+        "KEY": [],
+        "Adv_pkg": []
+      }
+    },
+    "Assumption1RHS": {
+      "oracles": [
+        [
+          "KEY",
+          "GET"
+        ],
+        [
+          "KEM^{1}_CCA",
+          "KEMGEN,\nKEMENC,\nKEMDEC"
+        ]
+      ],
+      "graph": {
+        "KEM^{1}_CCA": [
+          [
+            "KEY",
+            "GEN"
+          ]
+        ],
+        "KEY": [],
+        "Adv_pkg": []
+      }
+    },
+    "compose2LHS - SUBGRAPH": {
+      "oracles": [
+        [
+          "MOD_CCA",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "MOD_CCA": [
+          [
+            "KEM^{1}_CCA",
+            "KEMGEN,\nKEMENC,\nKEMDEC"
+          ],
+          [
+            "",
+            "DEMDEC,\nDEMENC"
+          ]
+        ],
+        "KEM^{1}_CCA": [
+          [
+            "",
+            "GEN"
+          ]
+        ],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    },
+    "compose2RHS - SUBGRAPH": {
+      "oracles": [
+        [
+          "R_{2}",
+          "PKEGEN,\nPKEENC,\nPKEDEC"
+        ]
+      ],
+      "graph": {
+        "R_{2}": [
+          [
+            "",
+            "GEN"
+          ],
+          [
+            "",
+            "DEMDEC,\nDEMENC"
+          ]
+        ],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    },
+    "Assumption2LHS": {
+      "oracles": [
+        [
+          "KEY",
+          "GEN"
+        ],
+        [
+          "DEM^{0}_CCA",
+          "DEMDEC,\nDEMENC"
+        ]
+      ],
+      "graph": {
+        "KEY": [],
+        "DEM^{0}_CCA": [
+          [
+            "KEY",
+            "GET"
+          ]
+        ],
+        "Adv_pkg": []
+      }
+    },
+    "Assumption2RHS - SUBGRAPH": {
+      "oracles": [
+        [
+          "DEM^{1}_CCA",
+          "DEMDEC,\nDEMENC"
+        ]
+      ],
+      "graph": {
+        "DEM^{1}_CCA": [
+          [
+            "",
+            "GET"
+          ]
+        ],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    }
+  }
+}

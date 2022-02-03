@@ -28,6 +28,17 @@ import { resolveInput } from "./helpers/import_helper"
 
 const pako = require('pako');
 
+const saveFile = async (blob) => {
+  const a = document.createElement('a');
+  a.download = 'exported_project.json';
+  a.href = URL.createObjectURL(blob);
+  a.addEventListener('click', (e) => {
+    setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
+  });
+  a.click();
+};
+
+
 export default class Builder extends Component {
 
   // Initalise the main component 
@@ -396,7 +407,8 @@ selectGraph(graphname){
                   <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
                   <CustomIconButton tip="Import project file" type={["import"]} func={() => this.projUpload.click()}/>
                   <CustomIconButton tip="Create new project file" type={["write"]} func={this.createProj.bind(this)}/>
-                  
+                  <CustomIconButton tip="Export current project file" type={["export"]} func={() => saveFile(new Blob([JSON.stringify(this.state.graphdata, null, 2)], {type : 'application/json'}))}/>
+
                    </Stack>
                 </ReflexElement>
 
@@ -406,7 +418,7 @@ selectGraph(graphname){
                 <Stack direction="row" spacing={1}>
                 <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
                 <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
-                <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("Beans")}/> 
+                <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("not implemented yet!")}/> 
                 </Stack>
                 <Divider />
                 <CustomTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
@@ -420,7 +432,7 @@ selectGraph(graphname){
         <ReflexSplitter/>
         
         <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
+          <TransformationTools update={this.updateGraphData.bind(this)} allGraphData={this.state.graphdata} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
         </ReflexElement>
       
       </ReflexContainer>

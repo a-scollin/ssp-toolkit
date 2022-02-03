@@ -13,7 +13,7 @@ import {
     ReflexElement
   } from 'react-reflex'
 import { ListGroup, ThemeProvider } from "react-bootstrap";
-import { getCheckboxUtilityClass, getTableHeadUtilityClass, toggleButtonGroupClasses } from "@mui/material";
+import { getCheckboxUtilityClass, getTableHeadUtilityClass, toggleButtonGroupClasses, touchRippleClasses } from "@mui/material";
 import { useThemeWithoutDefault } from "@mui/system";
 import CodeEditor from "./uiComponents/CodeEditor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
@@ -38,7 +38,7 @@ import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
 import { resolveInput } from "./helpers/import_helper.js";
 
 
-import { CustomDecomposePopup } from "./uiComponents/CustomPopup.jsx";
+import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
 
 import { buildIncoming, decompose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
 
@@ -69,7 +69,7 @@ export default class TransformationTools extends Component {
             this.expandableChains = null
         }
 
-        this.setState({selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
+        this.setState({allGraphData : this.props.allGraphData, selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
             if (this.props.type != null){
                 return
             }
@@ -653,15 +653,30 @@ renderDecompose(){
                                             }else{
                                             this.setState({input_data : json_data});
                                             }})} name="decomp_input"/>
-                                        <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import graph'/>
-                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write graph'/>
-                                        <CustomDecomposePopup
+                                        <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import new graph'/>
+                                        <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose graph from imported'/>
+                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write new graph'/>
+                                        <CustomPopup
                                         open={this.state.input_data != null ? true : false}
                                         onChoice={(choice) => {
                                             this.decompUpload.value = null
                                             this.newDecompose(choice, this.state.input_data)
                                             this.setState({input_data : null, selected_node : choice })}}
-                                        packs={Object.keys(this.state.selected_graphdata.graph)}
+                                        items={Object.keys(this.state.selected_graphdata.graph)}
+                                        title="Choose package to decompose:"
+                                        />
+                                        <CustomPopup
+                                        open={this.state.select_from_list}
+                                        onChoice={(packchoice) => {
+                                            if(this.state.selected_node != null){
+                                                this.newDecompose(this.state.selected_node,this.state.allGraphData.modular_pkgs[packchoice])
+                                                this.setState({select_from_list : false})
+                                            }else{
+                                                this.setState({input_data : this.state.allGraphData.modular_pkgs[packchoice], select_from_list : false});
+                                            }
+                                           }}
+                                        items={Object.keys(this.state.allGraphData.modular_pkgs)}
+                                        title={"Choose subgraph to fit:"}
                                         />
                                         </Stack>
                     </ReflexElement>)

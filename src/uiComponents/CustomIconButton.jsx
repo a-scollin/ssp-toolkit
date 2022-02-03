@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
 import Tooltip from '@mui/material/Tooltip';
 import SaveIcon from '@mui/icons-material/Save';
+import ListIcon from '@mui/icons-material/List';
 
 export default function CustomIconButton(props) {
     
@@ -17,6 +18,9 @@ export default function CustomIconButton(props) {
             switch(props.type[elm]) {
                 case 'add':
                     items.push(<AddIcon/>)
+                    break;
+                case 'list':
+                    items.push(<ListIcon/>)
                     break;
                 case 'sub':
                     items.push(<RemoveIcon/>)
