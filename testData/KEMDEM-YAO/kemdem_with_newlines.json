@@ -1,0 +1,242 @@
+{
+    "modular_pkgs": {
+        "start": {
+            "oracles": [
+                [
+                    "PKECCA^{0}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "PKECCA^{0}_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "target": {
+            "oracles": [
+                [
+                    "PKECCA^{1}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "PKECCA^{1}_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "decompose1": {
+            "oracles": [
+                [
+                    "MOD_CCA_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "MOD_CCA_[1]": [
+                    [
+                        "KEM^{0}_CCA_[1]",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ],
+                    [
+                        "DEM^{0}_CCA_[1]",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "KEM^{0}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "SET"
+                    ]
+                ],
+                "DEM^{0}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "GET"
+                    ]
+                ],
+                "KEY_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "compose1LHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "MOD_CCA_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "MOD_CCA_[1]": [
+                    [
+                        "",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ],
+                    [
+                        "DEM^{0}_CCA_[1]",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "DEM^{0}_CCA_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "compose1RHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "R_{1}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "R_{1}_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ],
+                    [
+                        "",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "Assumption1LHS": {
+            "oracles": [
+                [
+                    "KEY_[1]",
+                    "GET"
+                ],
+                [
+                    "KEM^{0}_CCA_[1]",
+                    "KEMGEN,\nKEMENC,\nKEMDEC"
+                ]
+            ],
+            "graph": {
+                "KEM^{0}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "SET"
+                    ]
+                ],
+                "KEY_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "Assumption1RHS": {
+            "oracles": [
+                [
+                    "KEY_[1]",
+                    "GET"
+                ],
+                [
+                    "KEM^{1}_CCA_[1]",
+                    "KEMGEN,\nKEMENC,\nKEMDEC"
+                ]
+            ],
+            "graph": {
+                "KEM^{1}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "GEN"
+                    ]
+                ],
+                "KEY_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "compose2LHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "MOD_CCA_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "MOD_CCA_[1]": [
+                    [
+                        "KEM^{1}_CCA_[1]",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ],
+                    [
+                        "",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "KEM^{1}_CCA_[1]": [
+                    [
+                        "",
+                        "GEN"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "compose2RHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "R_{2}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "R_{2}_[1]": [
+                    [
+                        "",
+                        "GEN"
+                    ],
+                    [
+                        "",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "Assumption2LHS": {
+            "oracles": [
+                [
+                    "DEM^{0}_CCA_[1]",
+                    "DEMDEC,\nDEMENC"
+                ]
+            ],
+            "graph": {
+                "DEM^{0}_CCA_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "Assumption2RHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "DEM^{1}_CCA_[1]",
+                    "DEMDEC,\nDEMENC"
+                ]
+            ],
+            "graph": {
+                "DEM^{1}_CCA_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        }
+    }
+}

@@ -40,7 +40,7 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, findAllExpandableChains, expand, substitute, buildNonIndexedIncoming } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -89,67 +89,69 @@ export default class TransformationTools extends Component {
      
   }
 
-newSubstitute(){
+newSubstitute(lhs,rhs){
     
     // const [ lhs, rhs ] = this.state.selected_equiv
-
-    const [ lhs, rhs ] = [{
-        "oracles": [
-            [
-                "AKEYS",
-                "GETA^{in},GETINA^{in}"
-            ],
-            [
-                "AKEYS",
-                "GETA^{out}"
-            ],
-            [
-                "BITS",
-                "SETBIT"
-            ],
-            [
-                "BITS",
-                "GETBIT"
-            ]
-        ],
-        "graph": {
-            "AKEYS": [
-                [
-                    "BITS",
-                    "CHECK"
-                ]
-            ],
-            "BITS": [],
-        }, 
+    
+    // const [ lhs, rhs ] = [{
+    //     "oracles": [
+    //         [
+    //             "AKEYS",
+    //             "GETA^{in},GETINA^{in}"
+    //         ],
+    //         [
+    //             "AKEYS",
+    //             "GETA^{out}"
+    //         ],
+    //         [
+    //             "BITS",
+    //             "SETBIT"
+    //         ],
+    //         [
+    //             "BITS",
+    //             "GETBIT"
+    //         ]
+    //     ],
+    //     "graph": {
+    //         "AKEYS": [
+    //             [
+    //                 "BITS",
+    //                 "CHECK"
+    //             ]
+    //         ],
+    //         "BITS": [],
+    //     }, 
         
-    },{
-        "oracles": [
-            [
-                "KEYS",
-                "GETA^{in},GETINA^{in}"
-            ],
-            [
-                "KEYS",
-                "GETA^{out}"
-            ],
-            [
-                "KEYS",
-                "SETBIT"
-            ],
-            [
-                "KEYS",
-                "GETBIT"
-            ]
-        ],
-        "graph": {
-            "KEYS": []
-        }
-    }]
-
-    var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildIncoming(lhs),buildIncoming(rhs))
+    // },{
+    //     "oracles": [
+    //         [
+    //             "KEYS",
+    //             "GETA^{in},GETINA^{in}"
+    //         ],
+    //         [
+    //             "KEYS",
+    //             "GETA^{out}"
+    //         ],
+    //         [
+    //             "KEYS",
+    //             "SETBIT"
+    //         ],
+    //         [
+    //             "KEYS",
+    //             "GETBIT"
+    //         ]
+    //     ],
+    //     "graph": {
+    //         "KEYS": []
+    //     }
+    // }]
 
     
+    var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildNonIndexedIncoming(lhs),buildNonIndexedIncoming(rhs))
+    console.log("RAN")
+    
     this.updateGraph(false,newGraphData)
+
     
     return 
     
@@ -437,46 +439,6 @@ check_complete(incoming_graph,matchingpack,lhs_packs_in,lhs_edges_in){
 
 
 
-addEquiv(){
-
-    console.log("BEANS")
-    var equiv_options = []
-
-    equiv_options.push(
-    <ReflexElement flex={0.4} key="lhs">
-    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
-    </ReflexElement>)
-
-    equiv_options.push(
-        <ReflexElement flex={0.1} key="middle">
-            <p style={{'text-align': 'center'}}>{'=>'}</p>
-        </ReflexElement>
-    )
-
-    equiv_options.push(
-    <ReflexElement flex={0.4} key="rhs">
-    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
-    </ReflexElement>)
-
-    equiv_options.push(
-    <ReflexElement flex={0.1} key="rhs">
-     <button onClick={this.submit_equiv.bind(this)}>Save Equiv</button>
-    </ReflexElement>
-)
-
-    var options = [...this.state.options]
-
-    options.pop()
-
-    options.push(<ReflexElement flex={0.7} key="equivs">
-             <ReflexContainer orientation="vertical">
-    {equiv_options}
-    </ReflexContainer>
-    </ReflexElement>)
-
-    this.setState({options : options})
-}
-
 
 submit_equiv(){
 
@@ -518,7 +480,6 @@ equiv_to_option(){
 
     for(var equiv in  this.state.equivs){
         
-        
         options.push(<FormControlLabel key={equiv+"equiv"} value={JSON.stringify(this.state.equivs[equiv])} control={<Radio />} label={Object.keys(this.state.equivs[equiv][0].graph).toString() + " === " +  Object.keys(this.state.equivs[equiv][1].graph).toString()} />)
             
     }
@@ -526,7 +487,7 @@ equiv_to_option(){
 
     if(options.length == 0){
 
-        return(<p>Create an equiv</p>)
+        return(<p>Define an equivalence!</p>)
 
     }
 
@@ -688,6 +649,48 @@ renderDecompose(){
             return options
 }
 
+
+addEquiv(){
+
+    console.log("BEANS")
+    var equiv_options = []
+
+    equiv_options.push(
+    <ReflexElement flex={0.4} key="lhs">
+    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_lhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    </ReflexElement>)
+
+    equiv_options.push(
+        <ReflexElement flex={0.1} key="middle">
+            <p style={{'text-align': 'center'}}>{'=>'}</p>
+        </ReflexElement>
+    )
+
+    equiv_options.push(
+    <ReflexElement flex={0.4} key="rhs">
+    <CodeEditor text={"{}"} onSubmit={(newGraphData) => {this.setState({equiv_rhs : newGraphData})}}  getLineNumber ={() => {return 0}}/>
+    </ReflexElement>)
+
+    equiv_options.push(
+    <ReflexElement flex={0.1} key="rhs">
+     <button onClick={this.submit_equiv.bind(this)}>Save Equiv</button>
+    </ReflexElement>
+)
+
+    var options = [...this.state.options]
+
+    options.pop()
+
+    options.push(<ReflexElement flex={0.7} key="equivs">
+             <ReflexContainer orientation="vertical">
+    {equiv_options}
+    </ReflexContainer>
+    </ReflexElement>)
+
+    this.setState({options : options})
+}
+
+
 renderEquiv(){
     var options = []
     const packages = Object.keys(this.state.selected_graphdata.graph).map((x) => {
@@ -696,29 +699,43 @@ renderEquiv(){
 options.push()
 options.push(
  <ReflexElement flex={0.3} key="ui">
-<button onClick={this.addEquiv.bind(this)}>+</button>
-<button onClick={() => {alert("Remove Selected Equiv")}}>-</button>
-<button onClick={() => {alert("Edit Selected Equiv")}}>Edit</button>
-<button onClick={this.newSubstitute.bind(this)}>Swap</button>
+<CustomIconButton type={['add']} func={() => this.setState({select_from_list : true, equiv_lhs : null, equiv_rhs : null})} tip='Define a new equivalence'/>
+<CustomPopup
+                                        open={this.state.select_from_list && this.state.equiv_lhs === null}
+                                        onChoice={(choice) => {
+                                        this.setState({equiv_lhs : this.state.allGraphData.modular_pkgs[choice]})}}
+                                        items={Object.keys(this.state.allGraphData.modular_pkgs)}
+                                        title="Choose graph for LHS of equivalence :"
+                                        />
+<CustomPopup
+                                        open={this.state.select_from_list && this.state.equiv_lhs !== null}
+                                        onChoice={(choice) => {
+                                            this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice])
+                                            this.setState({equiv_lhs : null, select_from_list : false })}}
+                                        items={Object.keys(this.state.allGraphData.modular_pkgs)}
+                                        title="Choose graph for RHS of equivalence:"
+                                        />
+
+
 </ReflexElement>
 )
-options.push(<ReflexSplitter/>)
-options.push(<ReflexElement flex={0.7} key="equivs">
- <ReflexContainer orientation="vertical">
-<ReflexElement flex={0.5}>
-{this.equiv_to_option()}
-</ReflexElement>
-<ReflexElement flex={0.5}>
-<Select 
-isMulti
-name="Ommited Packages"
-options={packages}
-className="basic-multi-select"
-classNamePrefix="select"
-/>
-</ReflexElement>
-</ReflexContainer>
-</ReflexElement>)
+// options.push(<ReflexSplitter/>)
+// options.push(<ReflexElement flex={0.7} key="equivs">
+//  <ReflexContainer orientation="vertical">
+// <ReflexElement flex={0.5}>
+// {this.equiv_to_option()}
+// </ReflexElement>
+// <ReflexElement flex={0.5}>
+// <Select 
+// isMulti
+// name="Ommited Packages"
+// options={packages}
+// className="basic-multi-select"
+// classNamePrefix="select"
+// />
+// </ReflexElement>
+// </ReflexContainer>
+// </ReflexElement>)
 
 return options
 

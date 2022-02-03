@@ -5,7 +5,9 @@ export function buildIncoming(graphdata){
     var new_graph = {}
 
     for(var node in graphdata.graph){
-
+        if(node === "Adv_pkg" || node === "terminal_pkg") {
+            continue
+        }
         if(Array.isArray(graphdata.graph[node])){
 
             new_graph[node] = {
@@ -532,6 +534,9 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
 
     const lhs_packs = Object.keys(lhs)
 
+    console.log(lhs)
+    console.log(rhs)
+
     var complete, moreVisited, toRemove, toAdd
 
     var packagesToRemove, edgesToRemove;
@@ -573,7 +578,7 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
     }
 
     for(var node in graphData){
-        
+
         if(include.length == 0 || include.includes(node)){
             
             if(lhs_packs.includes(node.split("_[")[0]) && !visited.includes(node)){
@@ -594,15 +599,21 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
                     
                     if(!partialMatches){
 
+                        console.log(packagesToRemove)
+                        console.log(lhs_packs)
+
                         if(!lhs_packs.every(element => packagesToRemove.map((x) => {return x[0].split("_[")[0]}).includes(element))){
+                            console.log("fail1")
                             continue
                         }
 
                         if(!Object.keys(lhs_in_maps_to).every(edgeNameToMatch => toAdd.some(element => element[0].split("_[")[0] === lhs_in_maps_to[edgeNameToMatch] && element[3].split("_[")[0] === edgeNameToMatch))){
+                            console.log("fail2")
                             continue
                         }
 
                         if(!Object.keys(lhs_out_maps_from).every(edgeNameToMatch => toAdd.some(element => element[0].split("_[")[0] === lhs_out_maps_from[edgeNameToMatch] && element[3].split("_[")[0] === edgeNameToMatch))){
+                            console.log("fail3")
                             continue
                         }
                         
@@ -684,6 +695,48 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
 
 }
 
+export function buildNonIndexedIncoming(graphData){
+
+    var newpacks = []
+
+    var newGraph = {"oracles" : [], "graph" : {}}
+
+    var packbase;
+
+    var neworacles = []
+
+    for(var oracle in graphData.oracles){
+        
+        neworacles.push([graphData.oracles[oracle][0].split("_[")[0],graphData.oracles[oracle][1]])
+
+    }
+
+    newGraph.oracles = neworacles
+
+    for(var pack in graphData.graph){
+        
+        packbase = pack.split("_[")[0]
+        
+        if(newGraph.graph.hasOwnProperty(packbase)){
+            throw "Multiple similarly named packages with different index! : " + pack
+        }
+        
+        newGraph.graph[packbase] = []
+
+        for(var edge in graphData.graph[pack]){
+
+            newGraph.graph[packbase].push([graphData.graph[pack][edge][0].split("_[")[0],graphData.graph[pack][edge][1]])
+
+        }
+    
+    }
+
+    console.log(newGraph)
+
+    return buildIncoming(newGraph)
+
+}
+
 function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, counter_dict){
 
     var increment = []
@@ -697,8 +750,8 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
         if(newPackages.some(element => element.split("_[")[0] === packbase)){
             // Is an edge package
             for(var pack in newPackages){
-                if(pack.split("_[")[0] === packbase){
-                    packageName = pack
+                if(newPackages[pack].split("_[")[0] === packbase){
+                    packageName = newPackages[pack]
                 }
             }
             
@@ -711,17 +764,24 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
                     }
 
                     console.log(rhs[packbase].outgoing[edge])
-                
+                    
+                    console.log(rhs_out)
+                    console.log(rhs_in)
+
                     if(newPackages.some(element => element.split("_[")[0] === rhs[packbase].outgoing[edge][0])){
                         //Is linking to an edge package
+                        
+                        
                         for(var pack in newPackages){
-                            if(pack.split("_[")[0] === rhs[packbase].outgoing[edge][0]){
-                                newGraph.graph[packageName].push([pack,rhs[packbase].outgoing[edge][1]])
+                            if(newPackages[pack].split("_[")[0] === rhs[packbase].outgoing[edge][0]){
+                                console.log("ADDIT ?????")
+                                newGraph.graph[packageName].push([newPackages[pack],rhs[packbase].outgoing[edge][1]])
                             }
                         }
     
                     }else if(rhs_in[rhs[packbase].outgoing[edge][0]].length  != 0 || rhs_out[rhs[packbase].outgoing[edge][0]].length != 0){
                         // this should be an outgoing or incoming edge but isn't in new packages so is skipped
+                        console.log("skipped")
                         continue
                         
                     } else {
@@ -761,8 +821,8 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
                 if(newPackages.some(element => element.split("_[")[0] === rhs[packbase].outgoing[edge][0])){
                     //Is linking to an edge package
                     for(var pack in newPackages){
-                        if(pack.split("_[")[0] === rhs[packbase].outgoing[edge][0]){
-                            newGraph.graph[packageName].push([pack,rhs[packbase].outgoing[edge][1]])
+                        if(newPackages[pack].split("_[")[0] === rhs[packbase].outgoing[edge][0]){
+                            newGraph.graph[packageName].push([newPackages[pack],rhs[packbase].outgoing[edge][1]])
                         }
                     }
 
