@@ -90,14 +90,7 @@ export default class TransformationTools extends Component {
   }
 
 newSubstitute(){
-    console.log("HFAEFIAEHF")
-
-    this.allvisited = []
-
-    var incoming_graph = buildIncoming(this.state.selected_graphdata)
-
-    console.log(incoming_graph)
-
+    
     // const [ lhs, rhs ] = this.state.selected_equiv
 
     const [ lhs, rhs ] = [{
@@ -126,9 +119,7 @@ newSubstitute(){
                     "CHECK"
                 ]
             ],
-            "BITS": [
-                ["","beanedge"]
-            ],
+            "BITS": [],
         }, 
         
     },{
@@ -151,134 +142,16 @@ newSubstitute(){
             ]
         ],
         "graph": {
-            "KEYS": [
-                ["","beanedge"]
-            ]
+            "KEYS": []
         }
     }]
 
-    substitute(this.incomingGraph,this.state.selected_graphdata,buildIncoming(lhs),buildIncoming(rhs))
-
-    const lhs_packs = Object.keys(lhs.graph)
-
-    const rhs_packs = Object.keys(rhs.graph)
-
-    var lhs_edges = []
-
-    for(var pack in lhs.graph){
-
-        for(var edge in lhs.graph[pack]){
-
-            lhs_edges.push(lhs.graph[pack][edge])
-
-        }
-
-    }
-
-    for(var oracle in lhs.oracles){
-
-            lhs_edges.push(["",lhs.oracles[oracle][1]])
-
-    }
-
-
-    var rhsdict = {}
-
-    for(var oracle in rhs.oracles){
-
-        rhsdict[rhs.oracles[oracle][1]] = rhs.oracles[oracle][0]
-
-    }
-
-    alert(JSON.stringify(rhs))
-
-    for(var pack in rhs.graph){
-
-        for(var edge in rhs.graph[pack])
-
-        rhsdict[rhs.graph[pack][edge][1]] = rhs.graph[pack][edge][0]
-
-    }
-
-    // Resovle ingoing edges
-
-    console.log(this.state.selected_graphdata)
-
-    var newGraphData = JSON.parse(JSON.stringify(this.state.selected_graphdata))
-
-    for(var pack in this.state.selected_graphdata.graph){
-        for(var outeredge in this.state.selected_graphdata.graph[pack]){
-
-            var edgedest = this.state.selected_graphdata.graph[pack][outeredge][0].split('_[')[0]
-            var edgename = this.state.selected_graphdata.graph[pack][outeredge][0].split('_[')[1]
-
-            // Check that all edges from the destination package go to the correct edges as in the equiv, then for the destinaztions of those edges if they have ingoing edges (checked by looping over the lhs graph)
-            // check in the main graph if that specific package has ingoing edges from the necesarry packages
-            if(lhs_packs.includes(edgedest)){
-
-
-                // console.log("PACL")
-                // console.log(pack)
-
-                var ret = this.check_complete(incoming_graph, this.state.selected_graphdata.graph[pack][outeredge][0],[...lhs_packs],[...lhs_edges])
-
-                if(ret[0]){
-                    
-                    var [result, packs, lhs_matched_edges, visited] = ret
-
-                    console.log("ISEQUIV")
-                    console.log(packs)
-                    console.log(visited)
-                    console.log(lhs_matched_edges)
-                    
-                    for(var edge in lhs_matched_edges){
-
-                        console.log(rhsdict)
-
-                        if(rhsdict.hasOwnProperty(lhs_matched_edges[edge][2].split("_[")[0])){
-
-                            var new_pkg_name = rhsdict[lhs_matched_edges[edge][2].split("_[")[0]]+ '_[' + lhs_matched_edges[edge][1].split("_[")[1]  
-
-                            var for_removal = []
-
-                            if(lhs_matched_edges[edge][0] == "ORACLE"){
-                            
-                                newGraphData.oracles = [[new_pkg_name,lhs_matched_edges[edge][2]],...newGraphData.oracles.filter(x => JSON.stringify(x) != JSON.stringify([lhs_matched_edges[edge][1],lhs_matched_edges[edge][2]]))]
-                            
-
-                            }else{
-
-
-                            newGraphData.graph[lhs_matched_edges[edge][0]] = [[new_pkg_name,lhs_matched_edges[edge][2]] ,...newGraphData.graph[lhs_matched_edges[edge][0]].filter(x => JSON.stringify(x) != JSON.stringify([lhs_matched_edges[edge][1],lhs_matched_edges[edge][2]]))]
-
-                        }
-
-                        if(!newGraphData.graph.hasOwnProperty(new_pkg_name)){
-                            newGraphData.graph[new_pkg_name] = []
-                        }
-
-                        }
-
-                    }
-
-                    for(var rmpack in visited){
-                        delete newGraphData.graph[visited[rmpack]]
-                    }
-
-
-            }else{
-                console.log("NO")
-            }
-        }
-        }
-    }
-
-    console.log("PLEASE")    
-    console.log(newGraphData)
+    var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildIncoming(lhs),buildIncoming(rhs))
 
     
     this.updateGraph(false,newGraphData)
-
+    
+    return 
     
 
 }
