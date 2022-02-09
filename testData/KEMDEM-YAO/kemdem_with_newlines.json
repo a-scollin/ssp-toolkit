@@ -237,6 +237,56 @@
                 "terminal_pkg": [],
                 "Adv_pkg": []
             }
+        },
+        "compose3LHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "MOD_CCA_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "MOD_CCA_[1]": [
+                    [
+                        "",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ],
+                    [
+                        "DEM^{1}_CCA_[1]",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "DEM^{1}_CCA_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
+        },
+        "compose3RHS - SUBGRAPH": {
+            "oracles": [
+                [
+                    "R_{3}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "R_{3}_[1]": [
+                    [
+                        "",
+                        "GET"
+                    ],
+                    [
+                        "",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ]
+                ],
+                "terminal_pkg": [],
+                "Adv_pkg": []
+            }
         }
     }
 }

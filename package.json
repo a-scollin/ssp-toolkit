@@ -24,6 +24,7 @@
         "mathjax": "^3.2.0",
         "mathjax-full": "^3.2.0",
         "mxgraph": "^4.2.2",
+        "mxgraph-editor": "^1.0.3",
         "mxgraph-js": "^1.0.1",
         "pako": "^2.0.4",
         "rc-slider": "^9.7.4",

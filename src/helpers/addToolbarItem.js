@@ -31,12 +31,15 @@ export default function addToolbarItem(graph, toolbar, prototype, image, value) 
   // for wrong event order in IE. Following is a dummy listener that
   // is invoked as the last listener in IE.
   mxEvent.addListener(img, "mousedown", function(evt) {
-    // do nothing
+
   });
 
   // This listener is always called first before any other listener
   // in all browsers.
   mxEvent.addListener(img, "mousedown", function(evt) {
+    
+
+    
     if (!img.enabled) {
       mxEvent.consume(evt);
     }

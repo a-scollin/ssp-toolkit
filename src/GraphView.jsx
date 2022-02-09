@@ -11,6 +11,7 @@ import { initToolbar, configureKeyBindings } from "./helpers/graph_helper.js"
 import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
 import { resolve_diagram_to_json } from "./helpers/import_helper.js";
+import { touchRippleClasses } from "@mui/material";
 
 const {
   mxGraph,
@@ -48,7 +49,7 @@ var mx = require("mxgraph")({
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, displayed : null, toolbar : null};
+    this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, graph : null, lane : null, parent : null, toolbar : null};
     this.GraphRef = React.createRef()
     this.toolbarRef = React.createRef()    
 
@@ -57,30 +58,19 @@ export default class GraphView extends Component {
 
   componentDidMount(prevProps){
 
-    this.init = true
-
 if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}){
-  this.setupNewGraph();
+  this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
 }
-  }
+}
 
   componentDidUpdate(prevProps){
 
-    if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.selected != prevProps.selected){
-      this.setState({selected_graphdata : this.props.selected_graphdata,allow_editing : this.props.allow_editing},() => {
-        this.setupNewGraph();
-      });
-      return
-    }
-
-    if(this.props.allow_editing != prevProps.allow_editing){
+    if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.allow_editing != prevProps.allow_editing){
       
-      this.setState({selected_graphdata : this.props.selected_graphdata, allow_editing : this.props.allow_editing},() => {
-        this.setupNewGraph();
-      });
-
-    }
-
+      this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
+      return
+    
+    }    
   }
 
   initToolbar(graph) {
@@ -98,16 +88,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       document.body.style.overflow = "hidden";
       new mxDivResizer(tbContainer);
     }
-  
-    // Enables new connections in the graph
-    graph.setPanning(true);
-    graph.setTooltips(true);
-    graph.setConnectable(true);
-    graph.setEnabled(true);
-    graph.setEdgeLabelsMovable(false);
-    graph.setVertexLabelsMovable(false);
-    graph.setGridEnabled(true);
-    graph.setAllowDanglingEdges(false);
   
     mxEdgeHandler.prototype.addEnabled = true;
     // Allow multiple edges between two vertices
@@ -147,16 +127,17 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
   
   }
 
-  setupNewGraph() {
+  setupNewGraph(selected_graphdata, selected, allow_editing) {
 
-    
-    if(this.state.displayed){
-      this.state.displayed.destroy();
+    if(this.state.graph){
+      this.state.graph.destroy();
     }
     
-    var graph = this.LoadGraph()
+    var [graph, lane, parent] = this.LoadGraph(selected_graphdata, selected, allow_editing)
     
-    if(this.props.allow_editing){
+    this.executeLayout(graph, lane, parent)
+    
+    if(allow_editing){
       
       this.initToolbar(graph);
       
@@ -165,18 +146,16 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       graph.getModel().addListener(mxEvent.CHANGE, this.onChange.bind(this));
       graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected.bind(this));
       
-      
     }
     
-    this.setState({displayed : graph})
+
+    this.setState({graph : graph, lane : lane, parent : parent})
       
   }
       
-
-
-  LoadGraph(){
+  LoadGraph(selected_graphdata, selected, allow_editing){
     
-    if (this.state.selected_graphdata){
+    if (selected_graphdata){
 
     var container = ReactDOM.findDOMNode(this.GraphRef.current);
 
@@ -198,11 +177,11 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();
 
-    
       // Enables tooltips, new connections and panning
-      graph.setPanning(false);
-      graph.setTooltips(false);
-      graph.setConnectable(false);
+      // Enables new connections in the graph
+      graph.setPanning(true);
+      graph.setTooltips(true);
+      graph.setConnectable(true);
       graph.setEnabled(true);
       graph.setEdgeLabelsMovable(false);
       graph.setVertexLabelsMovable(false);
@@ -254,23 +233,23 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
         
             graph.getModel().beginUpdate();
             
-            var lane1 = graph.insertVertex(parent, null, this.state.selected, 0, 0, 1000, 500, 'swimlane');
+            var lane = graph.insertVertex(parent, null, selected, 0, 0, 1000, 500, 'swimlane');
 
-            lane1.setConnectable(false);
+            lane.setConnectable(false);
 
           var dict = {};
 
-          if(!this.state.selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
-            this.state.selected_graphdata.graph.Adv_pkg = [];
+          if(!selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
+            selected_graphdata.graph.Adv_pkg = [];
           }
 
-          for (var element in this.state.selected_graphdata.graph){
+          for (var element in selected_graphdata.graph){
          
             if(element == 'Adv_pkg' || element == 'terminal_pkg'){
-              var graphElement = graph.insertVertex(lane1, null, "", 20, 20, 10, 200);    
+              var graphElement = graph.insertVertex(lane, null, "", 20, 20, 10, 200);    
               graphElement.style = 'fillColor=none;strokeColor=none;';        
             }else{
-              var graphElement = graph.insertVertex(lane1, null, element, 20, 20, 80, 50);            
+              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 80, 50);            
             }
 
             
@@ -279,21 +258,21 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
             }
           
-              for(var oracle in this.state.selected_graphdata.oracles){
+              for(var oracle in selected_graphdata.oracles){
               
-                graph.insertEdge(lane1, null,this.state.selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[this.state.selected_graphdata.oracles[oracle][0]]);
+                graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
               
               }
 
-              for(var element in this.state.selected_graphdata.graph){
-              if (this.state.selected_graphdata.graph[element].length > 0){
+              for(var element in selected_graphdata.graph){
+              if (selected_graphdata.graph[element].length > 0){
 
-                for(var edge in this.state.selected_graphdata.graph[element]){
-                  if(this.state.selected_graphdata.graph[element][edge][0] == ""){
-                    graph.insertEdge(lane1, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
+                for(var edge in selected_graphdata.graph[element]){
+                  if(selected_graphdata.graph[element][edge][0] == ""){
+                    graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
                     
                   }else{
-                    graph.insertEdge(lane1, null,this.state.selected_graphdata.graph[element][edge][1], dict[element] ,dict[this.state.selected_graphdata.graph[element][edge][0]]);
+                    graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict[selected_graphdata.graph[element][edge][0]]);
 
                   }
                 }
@@ -303,76 +282,16 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
         //data
       } finally {
-
-        var layout = new mx.mxSwimlaneLayout(graph);
-    
-        // Executes the layout
-        layout.orientation = mx.mxConstants.DIRECTION_WEST;
-
-        layout.resizeParent = true;
-
-        layout.moveParent = true;
-
-        layout.parallelEdgeSpacing = 10
-
-        layout.maintainParentLocation = true;
-
-        
-
-        layout.parentBorder = 100
-
-      // layout.execute(parent, dict['Adv']);
-
-      // // Translates graph down y axis 10 so it's not cut off! 
-      // graph.getView().setTranslate(0,10);
-
-
-        dict['Adv_pkg'].getGeometry().height = 700
-
-
-        layout.execute(lane1, lane1.children)   
-                   
-        layout.execute(parent, parent.children);    
         // Updates the display
         graph.getModel().endUpdate();
 
       }
       
-
-
-      // const oldConvertValueToString = graph.convertValueToString;
-      // graph.convertValueToString = function(cell) {
-      //   if (typeof cell.value === "object" && cell.value.style) {
-      //     const div = document.createElement("div");
-      //     div.innerHTML = div.title = cell.value.name;
-      //     div.style = cell.value.style;
-      //     return div;
-      //   }
-    
-      //   return oldConvertValueToString.call(this, cell);
-      // };
-
-        // // Creates a layout algorithm to be used with the graph
-        // var layout = new mx.mxHierarchicalLayout(graph, mx.mxConstants.DIRECTION_WEST);
-
-        // layout.intraCellSpacing=80;
-        // layout.interRankCellSpacing=170;
-        // layout.parallelEdgeSpacing=50;
-        // // Moves stuff wider apart than usual
-        // layout.forceConstant = 500;
-
-        // layout.execute(parent, dict['Adv']);
-       
-   
-
-        // Translates graph down y axis 10 so it's not cut off! 
-        // graph.getView().setTranslate(0,10);
-
-				// Configures automatic expand on mouseover
 				graph.popupMenuHandler.autoExpand = true;
 
         graph.fit()
         
+        if(allow_editing){
 			    // Installs context menu
 				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)
 				{
@@ -395,14 +314,9 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             }.bind(this), transform_submenu);
         }}}}.bind(this);
 
-        new mx.mxParallelEdgeLayout(graph).execute();
+        }
 
-        // No windows seem to be working
-        // var encoder = new mx.mxCodec();
-        // var node = encoder.encode(graph.getModel());
-        // mx.mxUtils.popup(mx.mxUtils.getPrettyXml(node), true);
-        
-      return graph;
+      return [graph, lane, parent];
 
     }
 
@@ -411,157 +325,192 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   }
 
+  executeLayout(graph, lane, parent){
+
+    if(graph !== null){
+
+      var layout = new mx.mxSwimlaneLayout(graph);
+    
+      // Executes the layout
+      layout.orientation = mx.mxConstants.DIRECTION_WEST;
+
+      layout.resizeParent = true;
+
+      layout.moveParent = true;
+
+      layout.parallelEdgeSpacing = 10
+
+      layout.maintainParentLocation = true;
+
+      layout.parentBorder = 100
+
+    // layout.execute(parent, dict['Adv']);
+
+    // // Translates graph down y axis 10 so it's not cut off! 
+    // graph.getView().setTranslate(0,10);
+
+      layout.execute(lane, lane.children)   
+                 
+      layout.execute(parent, parent.children);    
+    
+    }
+  }
+
   onChange(model, e){
 
-    var outgoing_edges = {}
-    var thecell;
+    console.log(model)
+    console.log(e)
 
-    var new_graph = {"graph" : {}, "oracles" : []}
+    // var outgoing_edges = {}
+    // var thecell;
 
-    var cells
+    // var new_graph = {"graph" : {}, "oracles" : []}
 
-    console.log(model.cells)
+    // var cells
 
-    var newthing = false
+    // console.log(model.cells)
 
-    for(var id in model.cells){
+    // var newthing = false
 
-      thecell = model.cells[id]
+    // for(var id in model.cells){
 
-      if(thecell.value === "!New_Package!" || (thecell.value !== "" && thecell.vertex === true)){
+    //   thecell = model.cells[id]
 
-        newthing = true
+    //   if(thecell.value === "!New_Package!" || (thecell.value !== "" && thecell.vertex === true)){
 
-      }
+    //     newthing = true
 
-    }
+    //   }
 
-    if(!newthing){
-      return
-    }
+    // }
 
-    for(var id in model.cells){
+    // if(!newthing){
+    //   return
+    // }
 
-      thecell = model.cells[id]
+    // for(var id in model.cells){
 
-      if(thecell.value === "!New_Package!"){
-        model.beginUpdate();
-        try
-        {
-          var new_name = window.prompt("Please enter a new name for the package:","New package")
+    //   thecell = model.cells[id]
 
-          if(new_name === null){
-            throw "Cancelled"
-          }
+    //   if(thecell.value === "!New_Package!"){
+    //     model.beginUpdate();
+    //     try
+    //     {
+    //       var new_name = window.prompt("Please enter a new name for the package:","New package")
 
-          thecell.value = new_name
+    //       if(new_name === null){
+    //         throw "Cancelled"
+    //       }
 
-        }catch(e){
-          return 
-        }
-        finally
-        {
-          model.endUpdate();
-        } 
+    //       thecell.value = new_name
+
+    //     }catch(e){
+    //       return 
+    //     }
+    //     finally
+    //     {
+    //       model.endUpdate();
+    //     } 
                 
-      }
-      // console.log(thecell)
+    //   }
+    //   // console.log(thecell)
 
-      if(thecell.style !== "swimlane"){
+    //   if(thecell.style !== "swimlane"){
 
         
-        if(thecell.value !== "" && thecell.vertex === true){
+    //     if(thecell.value !== "" && thecell.vertex === true){
 
 
-          if(new_graph.hasOwnProperty(thecell.value)){
-            alert(thecell.value + " appears multiple times!")
-            return
-          }
+    //       if(new_graph.hasOwnProperty(thecell.value)){
+    //         alert(thecell.value + " appears multiple times!")
+    //         return
+    //       }
           
-          new_graph.graph[thecell.value] = []
+    //       new_graph.graph[thecell.value] = []
 
-          cells = model.getOutgoingEdges(thecell)
+    //       cells = model.getOutgoingEdges(thecell)
 
-          for(var edge in cells){
+    //       for(var edge in cells){
 
-            if(cells[edge].value === null || cells[edge].value === ""){
-              model.beginUpdate();
-              try
-              {
-                var new_name = window.prompt("Please enter a new name for the edge:","New edge")
+    //         if(cells[edge].value === null || cells[edge].value === ""){
+    //           model.beginUpdate();
+    //           try
+    //           {
+    //             var new_name = window.prompt("Please enter a new name for the edge:","New edge")
       
-                if(new_name === null){
-                  throw "Cancelled"
-                }
+    //             if(new_name === null){
+    //               throw "Cancelled"
+    //             }
       
-                cells[edge].value = new_name
+    //             cells[edge].value = new_name
       
-              }catch(e){
-                return 
-              }
-              finally
-              {
-                model.endUpdate();
-              }             
-            }
+    //           }catch(e){
+    //             return 
+    //           }
+    //           finally
+    //           {
+    //             model.endUpdate();
+    //           }             
+    //         }
 
-            console.log(cells[edge])
+    //         console.log(cells[edge])
 
-            var check1 = cells[edge].target
+    //         var check1 = cells[edge].target
 
-            new_graph.graph[thecell.value].push([cells[edge].target.value,cells[edge].value])
+    //         new_graph.graph[thecell.value].push([cells[edge].target.value,cells[edge].value])
 
-          }
+    //       }
 
 
-        }else if (thecell.vertex === true) {
+    //     }else if (thecell.vertex === true) {
 
-          if(new_graph.oracles.length !== 0){
-            // wont work for subgraphs with terminal edges
-            return
-          }
+    //       if(new_graph.oracles.length !== 0){
+    //         // wont work for subgraphs with terminal edges
+    //         return
+    //       }
 
-          cells = model.getOutgoingEdges(thecell)
+    //       cells = model.getOutgoingEdges(thecell)
 
-          for(var edge in cells){
+    //       for(var edge in cells){
 
-            if(cells[edge].value === null || cells[edge].value === ""){
-              model.beginUpdate();
-              try
-              {
-                var new_name = window.prompt("Please enter a new name for the package:","New edge")
+    //         if(cells[edge].value === null || cells[edge].value === ""){
+    //           model.beginUpdate();
+    //           try
+    //           {
+    //             var new_name = window.prompt("Please enter a new name for the package:","New edge")
       
-                if(new_name === null){
-                  throw "Cancelled"
-                }
+    //             if(new_name === null){
+    //               throw "Cancelled"
+    //             }
       
-                cells[edge].value = new_name
+    //             cells[edge].value = new_name
       
-              }catch(e){
-                return 
-              }
-              finally
-              {
-                model.endUpdate();
-              }             
-            }
+    //           }catch(e){
+    //             return 
+    //           }
+    //           finally
+    //           {
+    //             model.endUpdate();
+    //           }             
+    //         }
 
-            new_graph.oracles.push([cells[edge].target.value,cells[edge].value])
+    //         new_graph.oracles.push([cells[edge].target.value,cells[edge].value])
 
-          }
-        }
+    //       }
+    //     }
 
-      }
-    }
+    //   }
+    // }
 
-    console.log(new_graph)
+    // console.log(new_graph)
 
-    this.props.update(new_graph)
+    // this.props.update(new_graph)
 
   }
 
   onSelected(){
     console.log("onSelected")
+    this.state.graph.container.focus()
   }
 
   onElementAdd(a,b,c,d){

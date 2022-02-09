@@ -1652,7 +1652,7 @@ function expandChain(graphData, graphData_with_oracles, chain, value, ghost){
 
 }
 
-export function expand(graphData, graphData_with_oracles, chains, value = 3, ghost = false){
+export function expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true){
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
 

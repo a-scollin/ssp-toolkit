@@ -382,7 +382,7 @@ selectGraph(graphname){
                 <Packages graphdata={this.state.graphdata}/>
                 </ReflexElement> */}
                 <ReflexElement flex={1} className="video-panels" >
-                  {editor}
+                  <>{editor}</>
                 </ReflexElement>
               </ReflexContainer>
               
@@ -392,7 +392,7 @@ selectGraph(graphname){
             
             <ReflexElement>
               <ReflexContainer>
-                {transform}
+                <>{transform}</>
               </ReflexContainer>
             </ReflexElement>
             
