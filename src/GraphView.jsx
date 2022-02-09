@@ -58,6 +58,8 @@ export default class GraphView extends Component {
 
   componentDidMount(prevProps){
 
+    console.log(this.props)
+
 if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}){
   this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
 }
@@ -65,9 +67,13 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   componentDidUpdate(prevProps){
 
+    console.log(this.props)
+
     if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.allow_editing != prevProps.allow_editing){
       
-      this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
+      if(this.props.selected_graphdata != null){
+        this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
+      }
       return
     
     }    
@@ -133,9 +139,16 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       this.state.graph.destroy();
     }
     
-    var [graph, lane, parent] = this.LoadGraph(selected_graphdata, selected, allow_editing)
+    var graph, lane, parent;
+
+
+    console.log(selected_graphdata);
+    console.log(selected);
+    console.log(allow_editing);
+
+    [graph, lane, parent] = this.LoadGraph(selected_graphdata, selected, allow_editing);
     
-    this.executeLayout(graph, lane, parent)
+    this.executeLayout(graph, lane, parent);
     
     if(allow_editing){
       

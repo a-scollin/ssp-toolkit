@@ -347,12 +347,12 @@ selectGraph(graphname){
     var transform = []
 
     if(this.transform_type != null){
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView allow_editing={false} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
       transform.push(<ReflexSplitter/>)
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView triggerTransformationProp = {this.triggerTransformation.bind(this)} allow_editing={false} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
     }else{
       transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
-      <GraphView allow_editing={true} update={this.updateSelected.bind(this)} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+      <GraphView allow_editing={true} selected={this.state.selected} update={this.updateSelected.bind(this)} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
     </ReflexElement>)
     }
 
