@@ -7,11 +7,12 @@ import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
 import { default as MxGraph } from "mxgraph";
-import { initToolbar, configureKeyBindings } from "./helpers/graph_helper.js"
+import { initToolbar, configureKeyBindings, selectedCellsToGraphData } from "./helpers/graph_helper.js"
 import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
 import { resolve_diagram_to_json } from "./helpers/import_helper.js";
 import { touchRippleClasses } from "@mui/material";
+
 
 const {
   mxGraph,
@@ -242,6 +243,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       
         // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30);         
         
+
+
           try {
         
             graph.getModel().beginUpdate();
@@ -259,8 +262,9 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
           for (var element in selected_graphdata.graph){
          
             if(element == 'Adv_pkg' || element == 'terminal_pkg'){
-              var graphElement = graph.insertVertex(lane, null, "", 20, 20, 10, 200);    
-              graphElement.style = 'fillColor=none;strokeColor=none;';        
+              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 10, 200);    
+              graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
+              
             }else{
               var graphElement = graph.insertVertex(lane, null, element, 20, 20, 80, 50);            
             }
@@ -312,6 +316,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 					if(cell.hasOwnProperty("vertex")) {
             if(cell.vertex){
               var transform_submenu = menu.addItem('Apply Transformation', null, null);
+              var copy_graph = menu.addItem('Copy Graph', null, this.copyGraph.bind(this));
+              var extract_graph_to_project = menu.addItem('Extract graph', null, this.extractGraph.bind(this));
 
               menu.addItem('Expand', null, function()
 				    {
@@ -335,6 +341,22 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
 
     }
+
+  }
+
+  copyGraph(arg1){
+
+    console.log(arg1)
+    var graphdata = selectedCellsToGraphData(this.state.graph.getSelectionModel())
+
+    navigator.clipboard.writeText(JSON.stringify(graphdata, null, '\t'))
+
+  }
+
+
+  extractGraph(arg1){
+
+    console.log(arg1)     
 
   }
 

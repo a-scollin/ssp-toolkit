@@ -75,3 +75,67 @@ export function configureKeyBindings(graph) {
   });
 
 }
+
+export function selectedCellsToGraphData(selectmodel){
+  
+  var selectedvalues = []
+
+  for(var id in selectmodel.cells){
+
+    if(selectmodel.cells[id].value === ""){
+      throw 'Unamed ' + selectmodel.cells[id].vertex ? "vertex!" : "edge!";
+    }
+    
+    selectedvalues.push(selectmodel.cells[id].value)
+    
+  }
+
+  var model = selectmodel.graph.model
+  
+     var outgoing_edges = {}
+
+    var new_graph = {"graph" : {}, "oracles" : []}
+
+    var thecell
+
+    var cells
+
+    for(var id in model.cells){
+
+      thecell = model.cells[id]
+
+      if(thecell.style !== "swimlane" && selectedvalues.includes(thecell.value)){
+
+        console.log("here")
+        if (thecell.vertex === true) {
+
+          cells = model.getOutgoingEdges(thecell)
+
+          for(var edge in cells){
+
+            if(!new_graph.graph.hasOwnProperty(cells[edge].target.value) && (cells[edge].target.value !== "terminal_pkg" || cells[edge].target.value !== "")){
+              new_graph.graph[cells[edge].target.value] = []
+            }
+
+              if(selectedvalues.includes(cells[edge].value)){
+
+                if(thecell.value == 'Adv_pkg'){
+                  new_graph.oracles.push([cells[edge].target.value,cells[edge].value])
+                }else{
+                  if(!new_graph.graph.hasOwnProperty(cells[edge].source.value)){
+                    new_graph.graph[cells[edge].source.value] = []
+                  }
+                  new_graph.graph[cells[edge].source.value].push([cells[edge].target.value,cells[edge].value])
+                }
+
+              }
+
+
+          }
+        }
+
+      }
+    }
+
+    return new_graph
+}

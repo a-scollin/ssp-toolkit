@@ -73,7 +73,7 @@ export default function CustomTreeView(outerprops) {
               {label}
             </Typography>
 
-            <CustomIconButton tip="Test" type={["add"]} func={props.deleteGraph}/>
+            <CustomIconButton tip="Test" type={["add"]} func={() => props.deleteGraph(label)}/>
           </div>
         );
       });
