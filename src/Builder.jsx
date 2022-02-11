@@ -286,6 +286,13 @@ matchSortableTreeElmSave(element,newGraphData, transform_name){
   
   }
 
+deleteGraph(graphname){
+
+  alert("delete this graph!")
+  alert(graphname)
+
+}
+
 selectGraph(graphname){
   
   if(this.transform_type == null){
@@ -421,7 +428,7 @@ selectGraph(graphname){
                 <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("not implemented yet!")}/> 
                 </Stack>
                 <Divider />
-                <CustomTreeView tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+                <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
               </ReflexContainer>
             </ReflexElement>

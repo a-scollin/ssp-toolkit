@@ -7,9 +7,13 @@ import TreeItem, { useTreeItem } from '@mui/lab/TreeItem';
 import clsx from 'clsx';
 import Typography from '@mui/material/Typography';
 
+import CustomIconButton from './CustomIconButton'
+
+
 export default function CustomTreeView(outerprops) {
 
     const CustomContent = React.forwardRef(function CustomContent(props, ref) {
+      console.log(props)
         const {
           classes,
           className,
@@ -68,6 +72,8 @@ export default function CustomTreeView(outerprops) {
             >
               {label}
             </Typography>
+
+            <CustomIconButton tip="Test" type={["add"]} func={props.deleteGraph}/>
           </div>
         );
       });
@@ -107,7 +113,7 @@ export default function CustomTreeView(outerprops) {
         <TreeItem ContentComponent={CustomContent} {...props} />
       );
 
-      function renderChildren(children){
+      function renderChildren(children, deleteGraph){
 
         var items = []
     
@@ -116,7 +122,7 @@ export default function CustomTreeView(outerprops) {
             console.log(children)
             console.log(child)
     
-            items.push(<CustomTreeItem nodeId={children[child].graphname} label={children[child].title}>{renderChildren(children[child].children)}</CustomTreeItem>)
+            items.push(<CustomTreeItem nodeId={children[child].graphname} ContentProps={{'deleteGraph' : deleteGraph}} label={children[child].title}>{renderChildren(children[child].children, deleteGraph)}</CustomTreeItem>)
     
         }
     
@@ -124,7 +130,7 @@ export default function CustomTreeView(outerprops) {
     
     }
     
-
+    console.log(outerprops)
   return (
     <TreeView
       aria-label="icon expansion"
@@ -133,7 +139,7 @@ export default function CustomTreeView(outerprops) {
       sx={{ height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
     >
      {
-         renderChildren(outerprops.tree_data)
+         renderChildren(outerprops.tree_data, outerprops.deleteGraph)
      }
     </TreeView>
   );
