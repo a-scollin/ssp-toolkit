@@ -161,7 +161,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected.bind(this));
       
     }
-    
 
     this.setState({graph : graph, lane : lane, parent : parent})
       

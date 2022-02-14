@@ -12,6 +12,7 @@ const {
   mxGeometry,
   mxCell,
   mxUndoManager,
+  mxClipboard,
   mxEllipse,
   mxConstants,
   mxPerimeter,
@@ -34,6 +35,7 @@ export function configureKeyBindings(graph) {
   }
 
   var undoManager = new mxUndoManager();
+
   var listener = function(sender, evt) {
     console.log("event added")
     undoManager.undoableEditHappened(evt.getProperty("edit"));
@@ -59,12 +61,22 @@ export function configureKeyBindings(graph) {
     undoManager.undo();
   });
 
-  // Redo handler: CTRL + SHIFT + Z
-  keyHandler.bindControlShiftKey(90, function(evt) {
+  // Redo handler: CTRL + X
+  keyHandler.bindControlKey(88, function(evt) {
     console.log("redo")
     undoManager.redo();
   });
 
+  // copy handler: CTRL + C
+  keyHandler.bindControlKey(67, function(evt) {
+    mxClipboard.copy(graph)
+    });
+
+      // paste handler: CTRL + V
+  keyHandler.bindControlKey(86, function(evt) {
+    mxClipboard.paste(graph)
+    });
+  
   // Delete handler.
   keyHandler.bindKey(8, function(evt) {
     console.log("delete")

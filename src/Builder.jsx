@@ -407,7 +407,7 @@ selectGraph(graphname){
         
             <ReflexElement flex={0.2} className="video-panels" >
               <ReflexContainer orientation="horizontal">
-                <ReflexElement flex={0.1} minSize="70">
+                <ReflexElement flex={0.07} minSize="50">
 
                 <Stack direction="row" spacing={1}>
 
@@ -421,14 +421,17 @@ selectGraph(graphname){
 
                 <ReflexSplitter/>
                 
+                <ReflexElement flex={0.05} minSize="50"> 
+                  <Stack direction="row" spacing={1}>
+                  <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
+                  <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
+                  <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("not implemented yet!")}/> 
+                  </Stack>
+                  </ReflexElement>
+                  <ReflexSplitter/>
                 <ReflexElement flex={0.9} minSize="100"> 
-                <Stack direction="row" spacing={1}>
-                <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
-                <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
-                <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("not implemented yet!")}/> 
-                </Stack>
-                <Divider />
-                <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+
+                  <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
