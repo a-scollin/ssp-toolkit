@@ -1,3 +1,4 @@
+import { V } from "mathjax-full/js/output/common/FontData";
 import { default as MxGraph } from "mxgraph";
 
 
@@ -9,6 +10,7 @@ const {
   mxClient,
   mxDivResizer,
   mxKeyHandler,
+  mxCodec,
   mxGeometry,
   mxCell,
   mxUndoManager,
@@ -21,6 +23,18 @@ const {
   mxGraph,
   mxEdgeHandler
 } = MxGraph(); 
+
+
+const saveFile = async (blob) => {
+  const a = document.createElement('a');
+  a.download = 'exportsvg.svg';
+  a.href = URL.createObjectURL(blob);
+  a.addEventListener('click', (e) => {
+    setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
+  });
+  a.click();
+};
+
 
 export function configureKeyBindings(graph) {
 
@@ -76,7 +90,17 @@ export function configureKeyBindings(graph) {
   keyHandler.bindControlKey(86, function(evt) {
     mxClipboard.paste(graph)
     });
-  
+
+          // export handler: CTRL + E
+  keyHandler.bindControlKey(69, function(evt) {
+
+    var encoder = new mxCodec();
+    var node = encoder.encode(graph.getModel());
+    console.log(mxUtils.getPrettyXml(node), true);
+
+
+    });
+
   // Delete handler.
   keyHandler.bindKey(8, function(evt) {
     console.log("delete")
