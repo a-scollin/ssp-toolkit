@@ -36,7 +36,7 @@ const saveFile = async (blob) => {
 };
 
 
-export function configureKeyBindings(graph) {
+export function configureKeyBindings(graph, selected) {
 
   console.log("configure new key bindings")
   console.log(graph)
@@ -96,8 +96,8 @@ export function configureKeyBindings(graph) {
 
     var encoder = new mxCodec();
     var node = encoder.encode(graph.getModel());
-    console.log(mxUtils.getPrettyXml(node), true);
 
+    console.log(buildMxFile([[selected, node]]))
 
     });
 
@@ -109,6 +109,29 @@ export function configureKeyBindings(graph) {
       graph.removeCells([currentNode]);
     }
   });
+
+}
+
+function buildMxFile(encodedGraphModels){
+
+    var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'
+
+    for(var model in encodedGraphModels){
+
+      console.log(encodedGraphModels[model])
+
+      ret += '<diagram id="diagram-' + model.toString() + '" name="' + encodedGraphModels[model][0] + '">'
+
+      for(var cell in encodedGraphModels[model][1].children[0].children){
+        
+        console.log(encodedGraphModels[model][1].children[0].children[cell])
+
+
+      }
+
+      ret += '</diagram>'
+
+    }
 
 }
 

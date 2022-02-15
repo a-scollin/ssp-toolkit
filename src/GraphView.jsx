@@ -80,7 +80,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     }    
   }
 
-  initToolbar(graph) {
+  initToolbar(graph, selected) {
     
     var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
 
@@ -101,7 +101,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     graph.setMultigraph(true);
   
     // Stops editing on enter or escape keypress
-    configureKeyBindings(graph);
+    configureKeyBindings(graph, selected);
 
     var rubberband = new mxRubberband(graph);
   
@@ -153,7 +153,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     
     if(allow_editing){
       
-      this.initToolbar(graph);
+      this.initToolbar(graph, selected);
       
       // Updates the display
       graph.getModel().endUpdate();
