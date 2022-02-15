@@ -63,6 +63,7 @@ export default class Builder extends Component {
 
   }
 
+
   // Function to be passed to graph view for invoking an expansion 
 
   triggerTransformation(type, cell_value) {

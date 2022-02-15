@@ -591,7 +591,6 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
 
                     [packagesToRemove, edgesToRemove] = _.partition(toRemove, element => element.length === 1)
                     
-                    console.log("passed the vibe check")
 
                     // Add another piece of input data, if all LHS packages are captured in to remove, then is full match
                     //  else can be a partial match! will need to omit some packages for rhs with > 2 pakcages tho

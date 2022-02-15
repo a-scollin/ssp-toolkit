@@ -1,6 +1,6 @@
 import { V } from "mathjax-full/js/output/common/FontData";
 import { default as MxGraph } from "mxgraph";
-
+import { buildMxFile } from "./export_helper.js";
 
 const {
   mxEvent,
@@ -86,20 +86,13 @@ export function configureKeyBindings(graph, selected) {
     mxClipboard.copy(graph)
     });
 
-      // paste handler: CTRL + V
+  // paste handler: CTRL + V
   keyHandler.bindControlKey(86, function(evt) {
     mxClipboard.paste(graph)
     });
 
-          // export handler: CTRL + E
-  keyHandler.bindControlKey(69, function(evt) {
-
-    var encoder = new mxCodec();
-    var node = encoder.encode(graph.getModel());
-
-    console.log(buildMxFile([[selected, node]]))
-
-    });
+  // export handler: CTRL + E
+  keyHandler.bindControlKey(69, () => buildMxFile([[selected, graph.getModel()]]))
 
   // Delete handler.
   keyHandler.bindKey(8, function(evt) {
@@ -109,29 +102,6 @@ export function configureKeyBindings(graph, selected) {
       graph.removeCells([currentNode]);
     }
   });
-
-}
-
-function buildMxFile(encodedGraphModels){
-
-    var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'
-
-    for(var model in encodedGraphModels){
-
-      console.log(encodedGraphModels[model])
-
-      ret += '<diagram id="diagram-' + model.toString() + '" name="' + encodedGraphModels[model][0] + '">'
-
-      for(var cell in encodedGraphModels[model][1].children[0].children){
-        
-        console.log(encodedGraphModels[model][1].children[0].children[cell])
-
-
-      }
-
-      ret += '</diagram>'
-
-    }
 
 }
 

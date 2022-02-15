@@ -101,7 +101,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     graph.setMultigraph(true);
   
     // Stops editing on enter or escape keypress
-    configureKeyBindings(graph, selected);
+    configureKeyBindings(graph, selected, this.props.exportGraph);
 
     var rubberband = new mxRubberband(graph);
   
