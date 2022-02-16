@@ -454,7 +454,6 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
     }
 
-
     for(var edge in graphData[node].outgoing){
 
         [packname, edgename] = graphData[node].outgoing[edge]

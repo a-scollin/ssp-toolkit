@@ -2,31 +2,6 @@
 import { getPopoverUtilityClass } from "@mui/material";
 import { default as MxGraph } from "mxgraph";
 
-const {
-    mxEvent,
-    mxRubberband,
-    mxUtils,
-    mxToolbar,
-    mxClient,
-    mxDivResizer,
-    mxKeyHandler,
-    mxCodec,
-    mxGeometry,
-    mxCell,
-    mxUndoManager,
-    mxClipboard,
-    mxEllipse,
-    mxConstants,
-    mxPerimeter,
-    mxCellRenderer,
-    mxText, 
-    mxGraph,
-    mxEdgeHandler
-  } = MxGraph();
-
-var encoder = new mxCodec();
-
-
 export function buildMxFile(graphModels){
 
     var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'

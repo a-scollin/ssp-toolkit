@@ -12,6 +12,7 @@ import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
 import { resolve_diagram_to_json } from "./helpers/import_helper.js";
 import { touchRippleClasses } from "@mui/material";
+import { V } from "mathjax-full/js/output/common/FontData";
 
 
 const {
@@ -386,8 +387,90 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       layout.execute(lane, lane.children)   
                  
       layout.execute(parent, parent.children);    
+
+      var cellContent
+
+      var cells = graph.getModel().cells
+
+      var sources = {}
+
+      for(var cell in cells){
+        
+        cellContent = cells[cell]
+
+        if(cellContent.edge){
+
+          if(!sources.hasOwnProperty(cellContent.source.id)){
+
+            sources[cellContent.source.id] = {}
+
+          }
+
+          if(!sources[cellContent.source.id].hasOwnProperty(cellContent.target.id)){
+
+            sources[cellContent.source.id][cellContent.target.id] = []
+
+          }
+
+          sources[cellContent.source.id][cellContent.target.id].push(cellContent.id)
+
+        }
+        
+      }
+
+      var incr;
+      var mult;
+
+      var base_x
+
+      var base_y 
+
+
+      console.log("beans")
+      console.log(sources)
     
-    }
+      for(var source in sources){
+    
+        for(var target in sources[source]){
+
+          if(sources[source][target].length > 1){
+            
+            
+            base_x = (cells[source].geometry.x + cells[target].geometry.x) / 2 + (cells[source].geometry.width)/2 
+            base_y = cells[target].geometry.y  
+            
+            incr = cells[target].geometry.height / sources[source][target].length
+
+            console.log(incr)
+            
+            mult = 0.5
+                        
+            for(var edge in sources[source][target]){
+              
+              // cells[sources[source][target][edge]].geometry.y += mult * source_y - cells[source].geometry.height/2
+              
+              if(cells[sources[source][target][edge]].geometry.points.length === 0){
+
+                cells[sources[source][target][edge]].geometry.points.push(new mxPoint(base_x,base_y + incr*mult))
+
+              }
+
+              mult += 1
+              
+            }
+            
+          }
+          
+        }
+
+          
+      }
+
+      graph.refresh()
+
+      console.log(graph.getModel())
+        
+      }
   }
 
   onChange(model, e){
