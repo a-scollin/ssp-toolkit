@@ -38,14 +38,17 @@ export function buildMxFile(graphModels){
                     continue 
                 
                 }
+                
             
+                // TODO Add export feature to consume the cells numbering _[x] => _{x}
+
                 geom = '<mxGeometry x="' + cellContent.geometry.x.toString() + '" y ="' + cellContent.geometry.y.toString() + '" width="' + cellContent.geometry.width.toString() + '" height="' + cellContent.geometry.height.toString() + '" as="geometry"/>'
                 
-                ret += '<mxCell value="'+ cellContent.value + '" id="' + id.toString() + '" parent="1"  vertex="1">'
+                ret += '<mxCell value="'+ cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" id="' + id.toString() + '" parent="1"  vertex="1">'
 
                 ret +=  geom
                 
-                ret += '</mxCell>'
+                ret += '</mxCell>'     
 
                 ids[cellContent.value] = id
                     
@@ -81,7 +84,7 @@ export function buildMxFile(graphModels){
             
               id += 1 
               
-              ret += '<mxCell id="'+ id.toString() + '" value="' + cellContent.value + '" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="' + (id-1).toString() + '"><mxGeometry x="-0.205" y="-5" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>'
+              ret += '<mxCell id="'+ id.toString() + '" value="' + cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="' + (id-1).toString() + '"><mxGeometry x="-0.205" y="-5" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>'
           
               id += 1
         }

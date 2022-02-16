@@ -388,6 +388,9 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
                  
       layout.execute(parent, parent.children);    
 
+      // Swimlanes layout very well apart from the overlapping edges,
+      // Solved below. 
+
       var cellContent
 
       var cells = graph.getModel().cells
@@ -421,14 +424,10 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       var incr;
       var mult;
 
-      var base_x
+      var base_x;
+      var base_y;
 
-      var base_y 
 
-
-      console.log("beans")
-      console.log(sources)
-    
       for(var source in sources){
     
         for(var target in sources[source]){
@@ -440,8 +439,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             base_y = cells[target].geometry.y  
             
             incr = cells[target].geometry.height / sources[source][target].length
-
-            console.log(incr)
             
             mult = 0.5
                         
