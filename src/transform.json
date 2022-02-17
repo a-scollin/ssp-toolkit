@@ -1,0 +1,51 @@
+"to_run": {
+    "GraphName": {
+        "type": "substitute",
+        "lhs": {
+            "oracles": [
+                [
+                    "PKECCA^{0}_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "PKECCA^{0}_[1]": [],
+                "Adv_pkg": []
+            }
+        },
+        "rhs": {
+            "oracles": [
+                [
+                    "MOD_CCA_[1]",
+                    "PKEGEN,\nPKEENC,\nPKEDEC"
+                ]
+            ],
+            "graph": {
+                "MOD_CCA_[1]": [
+                    [
+                        "KEM^{0}_CCA_[1]",
+                        "KEMGEN,\nKEMENC,\nKEMDEC"
+                    ],
+                    [
+                        "DEM^{0}_CCA_[1]",
+                        "DEMDEC,\nDEMENC"
+                    ]
+                ],
+                "KEM^{0}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "SET"
+                    ]
+                ],
+                "DEM^{0}_CCA_[1]": [
+                    [
+                        "KEY_[1]",
+                        "GET"
+                    ]
+                ],
+                "KEY_[1]": [],
+                "Adv_pkg": []
+            }
+        }
+    }
+}

@@ -8,6 +8,10 @@ import PublishIcon from '@mui/icons-material/Publish';
 import Tooltip from '@mui/material/Tooltip';
 import SaveIcon from '@mui/icons-material/Save';
 import ListIcon from '@mui/icons-material/List';
+import TransformIcon from '@mui/icons-material/Transform';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ClearIcon from '@mui/icons-material/Clear';
+import HistoryIcon from '@mui/icons-material/History';
 
 export default function CustomIconButton(props) {
     
@@ -40,6 +44,19 @@ export default function CustomIconButton(props) {
                 case 'import':
                     items.push(<PublishIcon/>)
                     break;
+                case 'transform':
+                    items.push(<TransformIcon/>)
+                    break;
+                case 'run':
+                    items.push(<PlayArrowIcon/>)
+                    break;
+                case 'clear':
+                    items.push(<ClearIcon/>)
+                    break;
+                case 'history':
+                    items.push(<HistoryIcon/>)
+                    break;
+
                 default:
                     break;
                   // code block

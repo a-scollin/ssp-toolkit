@@ -517,9 +517,17 @@ function invertGraphData(obj){
 
 export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialMatches = false, include = []) {
     
+    console.log(graphData)
+    console.log(graphData_with_oracles)
+    console.log(lhs)
+    console.log(rhs)
+    console.log(partialMatches)
+    console.log(include)
+
     var visited = []
 
-    var newGraphData = JSON.parse(JSON.stringify(graphData_with_oracles))
+    var newGraphData = JSON.parse(JSON.stringify({graph : graphData_with_oracles.graph, oracles : graphData_with_oracles.oracles}))
+
 
     var [lhs_in,lhs_out,rhs_in,rhs_out] = getAndCheckExternalEdges(lhs, rhs)
 
@@ -687,9 +695,9 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
 
     }
 
+    console.log(newGraphData)
     return newGraphData
 
-    console.log(newGraphData)
 
 }
 

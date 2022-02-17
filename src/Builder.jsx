@@ -25,6 +25,7 @@ import Divider from '@mui/material/Divider';
 import { useFormControlUnstyled } from "@mui/material";
 import { resolveInput } from "./helpers/import_helper"
 
+import { substitute, buildIncoming, buildNonIndexedIncoming } from "./helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -37,6 +38,37 @@ const saveFile = async (blob) => {
   });
   a.click();
 };
+
+function add_child(children,parent,child){
+
+  var child_can;
+
+  for(var element in children){
+    
+    child_can = null
+    
+    if(children[element].graphname === parent){
+
+      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+
+      return children
+
+    }else if(children[element].children.length > 0){
+
+      child_can = add_child(children[element].children, parent, child)
+
+    }
+
+    if(child_can != null){
+      children[element].children = child_can
+      return children
+    }
+
+  }
+
+  return null
+
+}
 
 
 export default class Builder extends Component {
@@ -296,6 +328,9 @@ deleteGraph(graphname){
 
 selectGraph(graphname){
   
+  console.log(this.state.graphdata)
+  console.log(graphname)
+
   if(this.transform_type == null){
 
     this.setState({selected : graphname});
@@ -346,6 +381,88 @@ selectGraph(graphname){
 
     });
   }
+
+ 
+
+  runTransformations(parent,passedgraphdata=null, passedtree_data=null){
+
+    var graphdata = passedgraphdata === null ? this.state.graphdata : passedgraphdata
+    var tree_data = passedtree_data === null ? this.state.tree_data : passedtree_data
+    
+    if(!graphdata.modular_pkgs[parent].hasOwnProperty('to_run')){
+      return
+    }
+
+    var more_to_run;
+    var parentGraphData = buildIncoming(graphdata.modular_pkgs[parent])
+    var parentGraphData_with_oracles = graphdata.modular_pkgs[parent]
+    var newGraphData
+    var can_tree_data;
+
+    var lhs;
+    var rhs;
+    var partialMatching;
+    var include;
+
+
+    for(var newGraph in parentGraphData_with_oracles.to_run){
+
+      if(parentGraphData_with_oracles.to_run[newGraph].type === 'substitute'){
+
+          lhs = buildNonIndexedIncoming(parentGraphData_with_oracles.to_run[newGraph].lhs)
+          rhs = buildNonIndexedIncoming(parentGraphData_with_oracles.to_run[newGraph].rhs)
+          
+
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(partialMatching)){
+            partialMatching = parentGraphData_with_oracles.to_run[newGraph].partialMatching
+          }else{
+            partialMatching = false;
+          }
+
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(include)){          
+            include = parentGraphData_with_oracles.to_run[newGraph].include
+          
+          }else{
+            include = []
+          }
+
+          newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partialMatching, include)
+
+          console.log(parent)
+          console.log(lhs)
+          console.log(rhs)
+          console.log(newGraph)          
+          console.log(newGraphData)
+
+          if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
+            throw "Name already exists!"
+          }
+
+          graphdata.modular_pkgs[newGraph] = newGraphData 
+
+          can_tree_data = add_child(tree_data, parent, newGraph)
+
+          if(can_tree_data === null){
+            throw "Parent package doesn't exist!"
+          }
+
+          tree_data = can_tree_data
+
+      }
+
+      if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty("to_run")){
+        graphdata.modular_pkgs[newGraph] = { newGraphData, ...parentGraphData_with_oracles.to_run[newGraph].to_run} 
+        [graphdata, tree_data] = this.runTransformations(newGraph)
+      }
+
+      graphdata.modular_pkgs[parent].history = {...graphdata.modular_pkgs[parent].to_run}
+      graphdata.modular_pkgs[parent].to_run = {}
+      
+    }
+
+    return [graphdata, tree_data]
+
+  }
  
   render() {
 
@@ -389,8 +506,24 @@ selectGraph(graphname){
                 {/* <ReflexElement flex={0.5} className="video-panels" >
                 <Packages graphdata={this.state.graphdata}/>
                 </ReflexElement> */}
-                <ReflexElement flex={1} className="video-panels" >
-                  <>{editor}</>
+                <ReflexElement flex={0.1} className="video-panels">
+                  
+                <Stack direction="row" spacing={1}>
+<CustomIconButton tip="Import transformations" type={["import","transform"]} func={() => alert("Import transformations")}/>
+<CustomIconButton tip="Run transformations" type={["run","transform"]} func={() => {
+  var graphdata;
+  var tree_data;
+  [graphdata, tree_data] = this.runTransformations(this.state.selected)
+  this.setState({graphdata, tree_data})
+  }}/>
+<CustomIconButton tip="Clear transformation history" type={["clear","history"]} func={() => alert("Clear transformation history")}/>
+
+ </Stack>
+                  
+                </ReflexElement>
+                  <ReflexSplitter/>
+                <ReflexElement flex={0.9} className="video-panels" >
+                  {editor}
                 </ReflexElement>
               </ReflexContainer>
               
