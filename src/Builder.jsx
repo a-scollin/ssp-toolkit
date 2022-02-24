@@ -81,7 +81,8 @@ export default class Builder extends Component {
     this.transform_node = null
     this.transform_basename = null
     this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation_base : {}, transformation_display : {}};    
- 
+    this.toolbarRef = React.createRef()    
+
   }
 
 
@@ -220,7 +221,7 @@ if(fin){
 
   for(var element in this.state.tree_data) {
                 
-    if(this.matchSortableTreeElmSave(this.state.tree_data[element],newGraphData, transform_name)){
+    if(this.matchSortableTreeElmSave(this.state.tree_data[element], newGraphData, transform_name)){
       return 
     }
 
@@ -263,6 +264,10 @@ if(fin){
 }
 
 matchSortableTreeElmSave(element,newGraphData, transform_name){
+
+  if(this.transform_type == null){
+    return false
+  }
 
   if (element.graphname == this.state.selected){
 
@@ -325,6 +330,8 @@ deleteGraph(graphname){
   alert(graphname)
 
 }
+
+
 
 selectGraph(graphname){
   
@@ -471,17 +478,15 @@ selectGraph(graphname){
     if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
     var transform = []
 
-    if(this.transform_type != null){
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
+    if(this.transform_type !== null){
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
       transform.push(<ReflexSplitter/>)
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
     }else{
       transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
-      <GraphView allow_editing={true} selected={this.state.selected} update={this.updateSelected.bind(this)} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+      <GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
     </ReflexElement>)
     }
-
-
 
     var editor = [<CodeEditor text={JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected], null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 
@@ -495,7 +500,8 @@ selectGraph(graphname){
     }else{
       var graphEquivs = []
     }    
-    
+    console.log(this)
+
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
         <ReflexElement flex={0.9} className="site-content">
@@ -533,7 +539,12 @@ selectGraph(graphname){
             
             <ReflexElement>
               <ReflexContainer>
-                <>{transform}</>
+                <ReflexElement flex={0.05}>
+                <div ref={this.toolbarRef} style={{backgroundColor : "#F9F6EE", height:"100%", width : "100%"}} id="divGraph" />
+                </ReflexElement>
+                <ReflexElement flex={0.95}>
+                {transform}
+                </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
             

@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+
 export function buildIncoming(graphdata){
 
     var new_graph = {}

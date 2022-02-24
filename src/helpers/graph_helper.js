@@ -1,7 +1,9 @@
 import { V } from "mathjax-full/js/output/common/FontData";
 import { default as MxGraph } from "mxgraph";
 import { buildMxFile } from "./export_helper.js";
-
+import GrahamScan from '@lucio/graham-scan'
+import { isFunction } from "lodash";
+import { InputGroup, Overlay } from "react-bootstrap";
 const {
   mxEvent,
   mxRubberband,
@@ -24,6 +26,60 @@ const {
   mxEdgeHandler
 } = MxGraph(); 
 
+
+function scan(selected_cells){
+
+    var target_coords = []
+
+    for(var cell in selected_cells){
+
+      if(selected_cells[cell].edge){
+
+        for(var point in selected_cells[cell].geometry.points){
+          target_coords.push([selected_cells[cell].geometry.points[point].x,selected_cells[cell].geometry.points[point].y])  
+        }
+
+      }else{
+        target_coords.push([selected_cells[cell].geometry.x,selected_cells[cell].geometry.y])
+
+      }
+
+    }
+
+    //Create a new instance.
+    var grahamScan = new GrahamScan();
+  
+    grahamScan.setPoints(target_coords);
+
+    //getHull() returns the array of points
+    //that make up the convex hull.
+    return grahamScan.getHull();  // [1,0], [2,1], [0,1]
+}
+
+function applyOverlay(graph,other_cells){
+
+  console.log(graph)
+  console.log(other_cells)
+
+}
+
+function inside(point, vs) {
+  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html/pnpoly.html
+  
+  var x = point[0], y = point[1];
+  
+  var inside = false;
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      var xi = vs[i][0], yi = vs[i][1];
+      var xj = vs[j][0], yj = vs[j][1];
+      
+      var intersect = ((yi > y) != (yj > y))
+          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+  }
+  
+  return inside;
+};
 
 const saveFile = async (blob) => {
   const a = document.createElement('a');
@@ -91,6 +147,44 @@ export function configureKeyBindings(graph, selected) {
     mxClipboard.paste(graph)
     });
 
+
+  // HULL handler: CTRL + H
+  keyHandler.bindControlKey(72, function(evt) {
+   
+    var target_cells = graph.getSelectionModel().cells
+
+    var all_cells = graph.getModel().cells
+    
+    var other_cells = []
+    
+    for(var cell in all_cells){
+      if(!target_cells.includes(all_cells[cell]) && all_cells[cell].style !== 'swimlane' && all_cells[cell].value !== 'Adv_pkg' && all_cells[cell].value !== 'terminal_pkg' && (all_cells[cell].vertex || all_cells[cell].edge)){
+        other_cells.push(all_cells[cell])
+      }
+    }
+    
+    var hullpoints = scan(target_cells)
+
+    applyOverlay(graph,other_cells)
+
+    
+  });
+    
+    // HULL handler: CTRL + F
+    keyHandler.bindControlKey(70, function(evt) {
+  
+      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 20);
+    
+    });
+
+    // HULL handler: CTRL + G
+    keyHandler.bindControlKey(71, function(evt) {
+  
+      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
+    
+    });
+
+
   // export handler: CTRL + E
   keyHandler.bindControlKey(69, () => buildMxFile([[selected, graph.getModel()]]))
 
@@ -107,64 +201,49 @@ export function configureKeyBindings(graph, selected) {
 
 export function selectedCellsToGraphData(selectmodel){
   
-  var selectedvalues = []
+  var vertex = {}
+
+  var new_graph = {"graph" : {}, "oracles" : []}
 
   for(var id in selectmodel.cells){
 
     if(selectmodel.cells[id].value === ""){
       throw 'Unamed ' + selectmodel.cells[id].vertex ? "vertex!" : "edge!";
     }
+
+    if(selectmodel.cells[id].vertex && selectmodel.cells[id].style !== 'swimlane'){
+
+      new_graph.graph[selectmodel.cells[id].value] = []
     
-    selectedvalues.push(selectmodel.cells[id].value)
-    
+    }
+        
   }
 
-  var model = selectmodel.graph.model
-  
-     var outgoing_edges = {}
+  var target_name;
 
-    var new_graph = {"graph" : {}, "oracles" : []}
+  var source_name;
 
-    var thecell
+  for(var id in selectmodel.cells){
 
-    var cells
+    if(selectmodel.cells[id].edge){
 
-    for(var id in model.cells){
+      target_name = new_graph.graph.hasOwnProperty(selectmodel.cells[id].target.value) ? selectmodel.cells[id].target.value : ""
 
-      thecell = model.cells[id]
+      source_name = selectmodel.cells[id].source.value
 
-      if(thecell.style !== "swimlane" && selectedvalues.includes(thecell.value)){
+      if(new_graph.graph.hasOwnProperty(source_name)){
 
-        console.log("here")
-        if (thecell.vertex === true) {
+        new_graph.graph[source_name].push([target_name,selectmodel.cells[id].value])
 
-          cells = model.getOutgoingEdges(thecell)
+      }else if(target_name !== ""){
 
-          for(var edge in cells){
-
-            if(!new_graph.graph.hasOwnProperty(cells[edge].target.value) && (cells[edge].target.value !== "terminal_pkg" || cells[edge].target.value !== "")){
-              new_graph.graph[cells[edge].target.value] = []
-            }
-
-              if(selectedvalues.includes(cells[edge].value)){
-
-                if(thecell.value == 'Adv_pkg'){
-                  new_graph.oracles.push([cells[edge].target.value,cells[edge].value])
-                }else{
-                  if(!new_graph.graph.hasOwnProperty(cells[edge].source.value)){
-                    new_graph.graph[cells[edge].source.value] = []
-                  }
-                  new_graph.graph[cells[edge].source.value].push([cells[edge].target.value,cells[edge].value])
-                }
-
-              }
-
-
-          }
-        }
+        new_graph.oracles.push([target_name, selectmodel.cells[id].value])
 
       }
+
     }
+
+  }
 
     return new_graph
 }

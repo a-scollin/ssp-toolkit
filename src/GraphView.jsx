@@ -7,12 +7,14 @@ import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
 import { default as MxGraph } from "mxgraph";
-import { initToolbar, configureKeyBindings, selectedCellsToGraphData } from "./helpers/graph_helper.js"
+import { initToolbar, configureKeyBindings, selectedCellsToGraphData} from "./helpers/graph_helper.js"
 import addToolbarItem from "./helpers/addToolbarItem";
 import getStyleStringByObj from "./helpers/getStyleStringByObj";
 import { resolve_diagram_to_json } from "./helpers/import_helper.js";
 import { touchRippleClasses } from "@mui/material";
 import { V } from "mathjax-full/js/output/common/FontData";
+import { GradingSharp } from "@mui/icons-material";
+import { style } from "@mui/system";
 
 
 const {
@@ -48,12 +50,24 @@ var mx = require("mxgraph")({
   mxBasePath: "./mxgraph/javascript/src"
 })
 
+var graphHandlerGetInitialCellForEvent = mxGraphHandler.prototype.getInitialCellForEvent;
+mxGraphHandler.prototype.getInitialCellForEvent = function(me)
+{
+  var cell = graphHandlerGetInitialCellForEvent.apply(this, arguments);
+  
+  if (this.graph.isPart(cell))
+  {
+    cell = this.graph.getModel().getParent(cell)
+  }
+  
+  return cell;
+};
+
 export default class GraphView extends Component {
   constructor(props) {
     super(props);
     this.state = {selected_graphdata : props.selected_graphdata, transform : props.transform, graph : null, lane : null, parent : null, toolbar : null};
     this.GraphRef = React.createRef()
-    this.toolbarRef = React.createRef()    
 
   }
   
@@ -83,7 +97,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   initToolbar(graph, selected) {
     
-    var tbContainer = ReactDOM.findDOMNode(this.toolbarRef.current);
+    var tbContainer = ReactDOM.findDOMNode(this.props.toolbarRef.current);
 
     tbContainer.innerHTML = ""
 
@@ -106,7 +120,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
     var rubberband = new mxRubberband(graph);
   
-    var addVertex = function(icon, w, h, style, value = null) {
+    var addDropper = function(icon, w, h, style, value = null) {
       var vertex = new mxCell("", new mxGeometry(0, 0, w, h), style);
  
       vertex.setVertex(true);
@@ -121,15 +135,43 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       });
   
     };
+
+    var addPainter = function(icon, w, h, style, value = null) {
+      var vertex = new mxCell("", new mxGeometry(0, 0, w, h), style);
+ 
+      vertex.setVertex(true);
+
+      var funct = function(){
+        alert("beans");
+      };
+  
+      var img = addToolbarItem(graph, toolbar, vertex, icon, value, funct);
+      img.enabled = true;
+  
+      graph.getSelectionModel().addListener(mxEvent.CHANGE, function() {
+        var tmp = !graph.isSelectionEmpty();
+        mxUtils.setOpacity(img, tmp ? 100 : 20);
+        img.enabled = tmp;
+      });
+  
+    };
   
     var baseStyle = { ...graph.getStylesheet().getDefaultVertexStyle() };
   
-    addVertex(
+    addDropper(
       "images/rectangle.gif", 
       100,
       40,
       '!toolbar!'
     );
+
+    // addPainter(
+    //   "images/rectangle.gif", 
+    //   100,
+    //   40,
+    //   '!toolbar!'
+    // );
+
   
     return toolbar
   
@@ -141,15 +183,18 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       this.state.graph.destroy();
     }
     
-    var graph, lane, parent;
+    var graph, lane, parent, dict, edgedict;
 
 
     console.log(selected_graphdata);
     console.log(selected);
     console.log(allow_editing);
 
-    [graph, lane, parent] = this.LoadGraph(selected_graphdata, selected, allow_editing);
+    [graph, lane, parent, dict, edgedict] = this.LoadGraph(selected_graphdata, selected, allow_editing);
     
+    graph.foldingEnabled = false;
+    graph.recursiveResize = true;
+  
     this.executeLayout(graph, lane, parent);
     
     if(allow_editing){
@@ -163,6 +208,88 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       
     }
 
+
+
+  //   // Helper method to mark parts with constituent=1 in the style
+  //   graph.isPart = function(cell)
+  //   {
+  //     return this.getCurrentCellStyle(cell)['constituent'] == '1';
+  //   };
+    
+  //   // Redirects selection to parent
+  //   graph.selectCellForEvent = function(cell)
+  //   {
+  //     if (this.isPart(cell))
+  //     {
+  //       cell = this.model.getParent(cell);
+  //     }
+      
+  //     mxGraph.prototype.selectCellForEvent.apply(this, arguments);
+  //   };
+
+  // // try {
+        
+  //   graph.getModel().beginUpdate();
+
+  //   // var overlay = new mx.mxCellOverlay(new mx.mxImage("https://www.vhv.rs/file/max/18/186017_gray-rectangle-png.png", 10, 10), "Reduction");
+  //   // graph.addCellOverlay(edgedict['EV_[1...d]']['SETBIT_[d+1]'], overlay);
+  //   // overlay.addListener(mxEvent.CLICK, function(sender, evt)
+  //   // {
+  //   //   var cell = evt.getProperty('cell');
+  //   //   graph.setSelectionCell(cell);
+  //   // });
+
+
+
+  //   var redcell = new mx.mxCell("test", new mx.mxPolyline([new mx.mxPoint(0,0), new mx.mxPoint(0,1)]))
+    
+  //   // mxUtils.setCellStyles(graph.getModel(), [dict['EV_[1...d]'], edgedict['EV_[1...d]']['SETBIT_[d+1]']], 'opacity', 20);
+    
+  //   var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100);
+    
+  //   red.style = 'fillColor=gray;strokeColor=none;fontSize=none;opacity=50;constituent=1';   
+    
+  //   red.setConnectable(false)
+    
+  //   graph.getModel().add(red, dict['EV_[1...d]'])
+    
+
+  // }finally{
+
+  //   graph.getModel().endUpdate();
+
+  // }
+
+
+
+
+    if(allow_editing){
+    graph.doResizeContainer(window.innerWidth, window.innerHeight)
+
+    
+    var margin = 250;
+    var max = 1;
+    
+    var bounds = graph.getGraphBounds();
+    var cw = graph.container.clientWidth - margin;
+    var ch = graph.container.clientHeight - margin;
+    var w = bounds.width / graph.view.scale;
+    var h = bounds.height / graph.view.scale;
+    var s = Math.min(max, Math.min(cw / w, ch / h));
+    
+    graph.view.scaleAndTranslate(s,
+      (margin + cw - w * s) / (2 * s) - bounds.x / graph.view.scale,
+      (margin + ch - h * s) / (2 * s) - bounds.y / graph.view.scale);
+      
+    graph.swimlaneSelectionEnabled = false
+    
+  }else{
+    graph.fit()
+  }
+
+  
+
+  graph.refresh()
     this.setState({graph : graph, lane : lane, parent : parent})
       
   }
@@ -186,6 +313,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);    
+
+      graph.graphHandler.scaleGrid = true;
       
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
@@ -259,6 +388,10 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             selected_graphdata.graph.Adv_pkg = [];
           }
 
+          if(!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
+            selected_graphdata.graph.terminal_pkg = [];
+          }
+
           for (var element in selected_graphdata.graph){
          
             if(element == 'Adv_pkg' || element == 'terminal_pkg'){
@@ -267,6 +400,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
               
             }else{
               var graphElement = graph.insertVertex(lane, null, element, 20, 20, 80, 50);            
+              
             }
 
             
@@ -274,11 +408,23 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
             dict[element] = graphElement;
 
             }
+
+            var edgedict = {}
           
               for(var oracle in selected_graphdata.oracles){
               
-                graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
+                var edge_element = graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
               
+                if(!edgedict.hasOwnProperty('Adv_pkg')){
+                  edgedict['Adv_pkg'] = {}
+                }
+
+                if(edgedict['Adv_pkg'].hasOwnProperty(selected_graphdata.oracles[oracle][1])){
+                  alert("Multiple similarly named oracles?")
+                }
+
+                edgedict['Adv_pkg'][selected_graphdata.oracles[oracle][1]] = edge_element
+
               }
 
               for(var element in selected_graphdata.graph){
@@ -286,13 +432,28 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
                 for(var edge in selected_graphdata.graph[element]){
                   if(selected_graphdata.graph[element][edge][0] == ""){
-                    graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
+                    var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
                     
                   }else{
-                    graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict[selected_graphdata.graph[element][edge][0]]);
+                    var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict[selected_graphdata.graph[element][edge][0]]);
 
                   }
                 }
+
+                if(!edgedict.hasOwnProperty(element)){
+                  edgedict[element] = {}
+                }
+
+                if(edgedict[element].hasOwnProperty(selected_graphdata.graph[element][edge][1])){
+                  alert("Multiple similarly named edges from one package!")
+                }
+
+                console.log(element)
+                console.log(selected_graphdata.graph[element][edge][1])
+
+
+                edgedict[element][selected_graphdata.graph[element][edge][1]] = edge_element
+
               }
 
               }
@@ -305,8 +466,6 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       }
       
 				graph.popupMenuHandler.autoExpand = true;
-
-        graph.fit()
         
         if(allow_editing){
 			    // Installs context menu
@@ -335,7 +494,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
         }
 
-      return [graph, lane, parent];
+      return [graph, lane, parent, dict, edgedict];
 
     }
 
@@ -356,8 +515,20 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   extractGraph(arg1){
 
-    console.log(arg1)     
+    console.log(this.state.graph.getSelectionModel())
 
+    var graphdata = selectedCellsToGraphData(this.state.graph.getSelectionModel())
+
+    var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
+
+    if(this.state.transform){
+      if(!window.confirm("This will overwrite the current transformation, are you sure you want to continue?")){
+        return 
+      }
+    }
+
+    this.props.update(graphdata, true, graphname)
+    
   }
 
   executeLayout(graph, lane, parent){
@@ -395,12 +566,38 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
       var cells = graph.getModel().cells
 
+      var terminal_id;
+      var adv_id;
+      
+      for(var id in cells){
+
+        if(cells[id].value == 'Adv_pkg'){
+          
+          adv_id = id
+          
+        }
+
+        if(cells[id].value == 'terminal_pkg'){
+          
+          terminal_id = id
+          
+        }
+
+      }
+
+      var source_id;
+      var target_id;
+
+      console.log(cells)
+
       var sources = {}
 
       for(var cell in cells){
         
         cellContent = cells[cell]
 
+        console.log(cellContent)
+        
         if(cellContent.edge){
 
           if(!sources.hasOwnProperty(cellContent.source.id)){
@@ -409,15 +606,29 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
           }
 
-          if(!sources[cellContent.source.id].hasOwnProperty(cellContent.target.id)){
+          if(cellContent.target == null){
+            target_id = terminal_id
+          }else{
+            target_id = cellContent.target.id
+          }
 
-            sources[cellContent.source.id][cellContent.target.id] = []
+          if(cellContent.source == null){
+            source_id = adv_id
+          }else{
+            source_id = cellContent.source.id
+          }
+
+          if(!sources[source_id].hasOwnProperty(target_id)){
+
+            sources[source_id][target_id] = []
 
           }
 
-          sources[cellContent.source.id][cellContent.target.id].push(cellContent.id)
+          sources[source_id][target_id].push(cellContent.id)
 
         }
+
+        console.log("Pass")
         
       }
 
@@ -647,8 +858,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       return (
         
         <div className="graphview-container">
-      <div ref={this.toolbarRef} style={{backgroundColor : "white"}}className="graph-container" id="divGraph" />
-      <div ref={this.GraphRef} className="graph-container" id="divGraph" />
+      <div ref={this.GraphRef} style={{height : "100%", width : "100%"}} className="graph-container" id="divGraph" />
       </div>
       );
    

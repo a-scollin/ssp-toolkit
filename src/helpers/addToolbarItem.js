@@ -3,12 +3,15 @@ import { getStyleStringByObj } from "./getStyleStringByObj";
 
 const { mxEvent, mxUtils } = MxGraph();
 
-export default function addToolbarItem(graph, toolbar, prototype, image, value) {
+export default function addToolbarItem(graph, toolbar, prototype, image, value, passedFunct=null) {
   // Function that is executed when the image is dropped on
   // the graph. The cell argument points to the cell under
   // the mousepointer if there is one.
-  var funct = function(graph, evt, cell, x, y) {
+  var funct = passedFunct === null ? function(graph, evt, cell, x, y) {
     graph.stopEditing(false);
+
+    
+    
 
     var vertex = graph.getModel().cloneCell(prototype);
     vertex.geometry.x = x;
@@ -19,7 +22,7 @@ export default function addToolbarItem(graph, toolbar, prototype, image, value) 
       graph.setSelectionCell(vertex);
       
 
-  };
+  } : passedFunct
 
   // Creates the image which is used as the drag icon (preview)
   var img = toolbar.addMode(null, image, function(evt, cell) {

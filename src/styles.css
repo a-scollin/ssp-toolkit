@@ -64,7 +64,7 @@ h2 {
 }
 
 .workboard {
-    background: #cfc;
+    background: white;
     align-items: center;
     justify-content: center;
 }
@@ -80,7 +80,7 @@ h2 {
 }
 
 .graphview-container {
-    background: bisque;
+    background: url("/src/styles/grid.gif");
     overflow: auto;
     position: abolute;
     width: 100%;

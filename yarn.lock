@@ -1702,6 +1702,11 @@
     "@types/yargs" "^16.0.0"
     "chalk" "^4.0.0"
 
+"@lucio/graham-scan@^1.0.0":
+  "integrity" "sha512-BXUL3vWM27BkqKcR6dVh/GUxK1niaAJybDKFxegs/TUPkorBxK6CAlykZGz6ffprCfpAJTshn86/BDFTzheD5Q=="
+  "resolved" "https://registry.npmjs.org/@lucio/graham-scan/-/graham-scan-1.0.0.tgz"
+  "version" "1.0.0"
+
 "@material-ui/core@^4.0.0", "@material-ui/core@^4.12.1":
   "integrity" "sha512-sdpgI/PL56QVsEJldwEe4FFaFTLUqN+rd7sSZiRCdx2E/C7z5yK0y/khAWVBH24tXwto7I1hCzNWfJGZIYJKnw=="
   "resolved" "https://registry.npmjs.org/@material-ui/core/-/core-4.12.3.tgz"
