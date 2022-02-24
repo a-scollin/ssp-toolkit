@@ -314,8 +314,19 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);    
 
+      mxConstants.HANDLE_SIZE = 0;
+      mxConstants.VERTEX_SELECTION_COLOR = '#00ff0080';
+      mxConstants.EDGE_SELECTION_COLOR = '#00ff0080';
+      mxConstants.EDGE_SELECTION_STROKEWIDTH = 2;
+      mxConstants.VERTEX_SELECTION_STROKEWIDTH = 2;
+      mxConstants.VERTEX_SELECTION_DASHED = false;
+      mxConstants.EDGE_SELECTION_DASHED = false;
+
+
       graph.graphHandler.scaleGrid = true;
-      
+
+      graph.ordered = false;
+
       // Gets the default parent for inserting new cells. This is normally the first
       // child of the root (ie. layer 0).
       var parent = graph.getDefaultParent();

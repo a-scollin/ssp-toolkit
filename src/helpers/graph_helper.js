@@ -2,7 +2,7 @@ import { V } from "mathjax-full/js/output/common/FontData";
 import { default as MxGraph } from "mxgraph";
 import { buildMxFile } from "./export_helper.js";
 import GrahamScan from '@lucio/graham-scan'
-import { isFunction } from "lodash";
+import { fromPairs, isFunction } from "lodash";
 import { InputGroup, Overlay } from "react-bootstrap";
 const {
   mxEvent,
@@ -16,6 +16,7 @@ const {
   mxGeometry,
   mxCell,
   mxUndoManager,
+  mxCellHighlight,
   mxClipboard,
   mxEllipse,
   mxConstants,
@@ -33,14 +34,20 @@ function scan(selected_cells){
 
     for(var cell in selected_cells){
 
+      console.log(selected_cells[cell])
       if(selected_cells[cell].edge){
 
         for(var point in selected_cells[cell].geometry.points){
-          target_coords.push([selected_cells[cell].geometry.points[point].x,selected_cells[cell].geometry.points[point].y])  
+
+          // Negitive y as the coords are flipped
+          target_coords.push([selected_cells[cell].geometry.points[point].x,-selected_cells[cell].geometry.points[point].y]);
+
         }
 
       }else{
-        target_coords.push([selected_cells[cell].geometry.x,selected_cells[cell].geometry.y])
+        
+        target_coords.push([selected_cells[cell].geometry.x,-selected_cells[cell].geometry.y]);
+        target_coords.push([selected_cells[cell].geometry.x + selected_cells[cell].geometry.width,-selected_cells[cell].geometry.y + selected_cells[cell].geometry.height]);
 
       }
 
@@ -61,25 +68,47 @@ function applyOverlay(graph,other_cells){
   console.log(graph)
   console.log(other_cells)
 
-}
+  for(var cell in other_cells){
 
-function inside(point, vs) {
-  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html/pnpoly.html
-  
-  var x = point[0], y = point[1];
-  
-  var inside = false;
-  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-      var xi = vs[i][0], yi = vs[i][1];
-      var xj = vs[j][0], yj = vs[j][1];
+    if(other_cells[cell].vertex){
+
+      var highlight = new mxCellHighlight(graph, 'white', 10);
+      highlight.spacing = 1
+      highlight.highlight(graph.view.getState(other_cells[cell]));
+
+    }else{
       
-      var intersect = ((yi > y) != (yj > y))
-          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
+      
+      var highlight = new mxCellHighlight(graph, 'white', 5);
+      
+      var clone = other_cells[cell].clone()
+
+      console.log(clone)
+
+      highlight.highlight(graph.view.getState(other_cells[cell]));
+
+      graph.getModel().add(other_cells[cell],clone)
+
+      
+    }
+    
+    
   }
   
-  return inside;
-};
+}
+
+
+function isInsideRect(point, box){
+
+  var [px, py] = point
+
+  var [x1, y1, w, h] = box
+
+  var x2 = x1+w
+  var y2 = y1+h
+
+	return px >= x1 && px <= x2 && py >= y1 && py <= y2; 
+}
 
 const saveFile = async (blob) => {
   const a = document.createElement('a');
@@ -155,18 +184,87 @@ export function configureKeyBindings(graph, selected) {
 
     var all_cells = graph.getModel().cells
     
+    var hullpoints = scan(target_cells)
+    
+    if(hullpoints.length === 0){
+      return 
+    }
+
+    var lowest_x = hullpoints[0][0]
+    var lowest_y = hullpoints[0][1]
+    var biggest_x = hullpoints[0][0]
+    var biggest_y = hullpoints[0][1]
+    var x,y
+
+    console.log(hullpoints)
+
+    for(var point in hullpoints){
+      
+      [x,y] = hullpoints[point]
+
+      if(x < lowest_x){
+        lowest_x = x
+      }
+
+      if(x > biggest_x){
+        biggest_x = x
+      }
+      
+      if(y < lowest_y){
+        lowest_y = y
+      }
+
+      if(y > biggest_y){
+        biggest_y = y
+      }
+
+    }
+    // box in format x,y,w,
+    var box = [lowest_x, -biggest_y, biggest_x-lowest_x, -(biggest_y + lowest_y)]
+
     var other_cells = []
     
     for(var cell in all_cells){
       if(!target_cells.includes(all_cells[cell]) && all_cells[cell].style !== 'swimlane' && all_cells[cell].value !== 'Adv_pkg' && all_cells[cell].value !== 'terminal_pkg' && (all_cells[cell].vertex || all_cells[cell].edge)){
-        other_cells.push(all_cells[cell])
+        
+        if(all_cells[cell].vertex){
+          // middle of vertex in box
+          if(isInsideRect([all_cells[cell].geometry.x,all_cells[cell].geometry.y],box)){
+            other_cells.push(all_cells[cell])
+          }
+        }else if(all_cells[cell].edge){
+          for(var point in all_cells[cell].geometry.points){
+            
+            if(isInsideRect([all_cells[cell].geometry.points[point].x,all_cells[cell].geometry.points[point].y],box)){
+
+              other_cells.push(all_cells[cell])
+              break
+
+            }
+          }
+        }
+
       }
     }
-    
-    var hullpoints = scan(target_cells)
+  
 
-    applyOverlay(graph,other_cells)
 
+
+      try {
+        
+        graph.getModel().beginUpdate();
+      
+        var red = graph.insertVertex(graph.getDefaultParent(), null, "", box[0], box[1], box[2], box[3], 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
+        // var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100, 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
+        
+        red.setConnectable(false)
+
+        applyOverlay(graph,other_cells)
+
+      } finally {
+        graph.getModel().endUpdate();
+        graph.refresh()
+      }
     
   });
     
