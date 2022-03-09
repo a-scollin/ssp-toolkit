@@ -13,8 +13,10 @@ const {
   mxDivResizer,
   mxKeyHandler,
   mxCodec,
+  mxShape,
   mxGeometry,
   mxCell,
+  mxStencil,
   mxUndoManager,
   mxCellHighlight,
   mxClipboard,
@@ -224,6 +226,8 @@ export function configureKeyBindings(graph, selected) {
 
     var other_cells = []
     
+    var box = [0, 0, 100, 100]
+
     for(var cell in all_cells){
       if(!target_cells.includes(all_cells[cell]) && all_cells[cell].style !== 'swimlane' && all_cells[cell].value !== 'Adv_pkg' && all_cells[cell].value !== 'terminal_pkg' && (all_cells[cell].vertex || all_cells[cell].edge)){
         
@@ -248,14 +252,48 @@ export function configureKeyBindings(graph, selected) {
     }
   
 
+    function ReductionShape() { }
 
+    ReductionShape.prototype = new mxShape();
+    ReductionShape.prototype.constructor = ReductionShape;
+   
+    
+
+    ReductionShape.prototype.redrawShape = function(c, x, y, w, h)
+    {
+        c.begin();
+        
+        var point_x,point_y;
+        console.log("jil")
+
+        for(var point in hullpoints){
+    
+          [point_x,point_y] = hullpoints[point]
+          c.lineTo(x + point_x, y + point_y);
+    
+        }
+    
+        c.close();
+        c.fillAndStroke();
+    
+    };
+    
+    mxCellRenderer.registerShape('reduction', ReductionShape);
+    
+    var style = graph.getStylesheet().getDefaultVertexStyle();
+    style[mxConstants.STYLE_SHAPE] = 'reduction';
 
       try {
         
         graph.getModel().beginUpdate();
       
-        var red = graph.insertVertex(graph.getDefaultParent(), null, "", box[0], box[1], box[2], box[3], 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
+        var red = graph.insertVertex(graph.getDefaultParent(), null, "", box[0], box[1], box[2], box[3], style);
         // var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100, 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
+        
+        
+        console.log(red)
+
+        console.log("here")
         
         red.setConnectable(false)
 

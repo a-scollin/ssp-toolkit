@@ -91,6 +91,7 @@ export default class TransformationTools extends Component {
 
 newSubstitute(lhs,rhs){
     
+
     // const [ lhs, rhs ] = this.state.selected_equiv
     
     // const [ lhs, rhs ] = [{
@@ -146,16 +147,19 @@ newSubstitute(lhs,rhs){
     //     }
     // }]
 
-    
-    var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildNonIndexedIncoming(lhs),buildNonIndexedIncoming(rhs))
-    console.log("RAN")
+    try {
+        var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildNonIndexedIncoming(lhs),buildNonIndexedIncoming(rhs))
+
+    } catch (e) {
+        console.log(e)
+        alert(e)
+        return
+    }
     
     this.updateGraph(false,newGraphData)
 
-    
     return 
     
-
 }
 
 build_incoming(){
@@ -616,7 +620,7 @@ renderDecompose(){
                                             }})} name="decomp_input"/>
                                         <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import new graph'/>
                                         <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose graph from imported'/>
-                                        <CustomIconButton type={['write']} func={() => alert("beans")} tip='Write new graph'/>
+                                        <CustomIconButton type={['write']} func={() => alert("Not implemented yet")} tip='Write new graph'/>
                                         <CustomPopup
                                         open={this.state.input_data != null ? true : false}
                                         onChoice={(choice) => {
@@ -711,7 +715,8 @@ options.push(
                                         open={this.state.select_from_list && this.state.equiv_lhs !== null}
                                         onChoice={(choice) => {
                                             this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice])
-                                            this.setState({equiv_lhs : null, select_from_list : false })}}
+                                            this.setState({equiv_lhs : null, select_from_list : false })
+                                            }}
                                         items={Object.keys(this.state.allGraphData.modular_pkgs)}
                                         title="Choose graph for RHS of equivalence:"
                                         />
