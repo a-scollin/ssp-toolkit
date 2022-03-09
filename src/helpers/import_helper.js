@@ -110,8 +110,6 @@ export function resolve_diagram_to_json(cells,parent_id="1"){
 
     var packids = {}
     
-    var pack_base_names = []
-
     var pack_names = []
 
     var pack_index = {}
@@ -136,8 +134,11 @@ export function resolve_diagram_to_json(cells,parent_id="1"){
 
         if(!thecell.attributes.hasOwnProperty("connectable") & !thecell.attributes.hasOwnProperty("target") & !thecell.attributes.hasOwnProperty("source")){
           
-          pack_base_names.push(thecell.attributes.value.split("_[")[0])
-          pack_names.push(thecell.attributes.value)
+          if(thecell.attributes.value.split("_[").length === 1){
+            pack_names.push(thecell.attributes.value + '_[1]')
+          }else{
+            pack_names.push(thecell.attributes.value)
+          }
         }
       
       }

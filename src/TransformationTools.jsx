@@ -40,7 +40,7 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, findAllExpandableChains, expand, substitute, buildNonIndexedIncoming } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
 
 export default class TransformationTools extends Component {
   constructor(props) {
@@ -148,7 +148,7 @@ newSubstitute(lhs,rhs){
     // }]
 
     try {
-        var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,buildNonIndexedIncoming(lhs),buildNonIndexedIncoming(rhs))
+        var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,lhs,rhs)
 
     } catch (e) {
         console.log(e)

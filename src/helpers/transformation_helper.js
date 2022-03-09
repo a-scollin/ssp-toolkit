@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _, { fromPairs } from 'lodash'
 
 
 export function buildIncoming(graphdata){
@@ -287,7 +287,7 @@ export function getExapandableRange(edge){
         
     }else{
         
-        return [Infinity, Infinity]
+        throw edge + " : range start isn't a number!"
         
     }
     
@@ -516,7 +516,7 @@ function invertGraphData(obj){
 
 }
 
-export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialMatches = false, include = []) {
+export function substitute(graphData, graphData_with_oracles, passed_lhs, passed_rhs, partialMatches = false, include = []) {
     
     console.log(graphData)
     console.log(graphData_with_oracles)
@@ -525,10 +525,13 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
     console.log(partialMatches)
     console.log(include)
 
+    var lhs = buildNonIndexedIncoming(passed_lhs)
+    
+    var rhs = buildNonIndexedIncoming(passed_rhs)
+
     var visited = []
 
     var newGraphData = JSON.parse(JSON.stringify({graph : graphData_with_oracles.graph, oracles : graphData_with_oracles.oracles}))
-
 
     var [lhs_in,lhs_out,rhs_in,rhs_out] = getAndCheckExternalEdges(lhs, rhs)
 
@@ -702,9 +705,7 @@ export function substitute(graphData, graphData_with_oracles, lhs, rhs, partialM
 
 }
 
-export function buildNonIndexedIncoming(graphData){
-
-    var newpacks = []
+function buildNonIndexedIncoming(graphData){
 
     var newGraph = {"oracles" : [], "graph" : {}}
 
@@ -849,6 +850,254 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
     }
 
     return [newGraph, increment]
+
+}
+
+export function compose(graphData,graphData_with_oracles,selectedNodes,packageName){
+    
+
+    if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
+        throw "Please ensure subgraph file is correct!"
+    }
+
+    var incoming_edge_dict = {}
+    var outgoing_edge_dict = {}
+
+    // Build the new graph without any mention of the graph to be decomposed.
+
+    var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
+
+    for(var pack in selectedNodes){
+
+        for(var edge in graphData[pack].incoming){
+
+            if(!selectedNodes.includes(graphData[pack].incoming[edge][0])){
+
+                if(!incoming_edge_dict.hasOwnProperty(graphData[pack].incoming[edge][1].split('_[')[0])){
+
+                    incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]] = {}
+                }
+
+                if(!incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]].hasOwnProperty(graphData[pack].incoming[edge][0])){
+                    
+                    incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]][graphData[pack].incoming[edge][0]] = []
+
+                }
+
+                    [range_start, range_end] = getExapandableRange(graphData[pack].incoming[edge][1])
+
+                    if(range_end === -1){
+
+                        incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]][graphData[pack].incoming[edge][0]].push([range_start])
+
+                    }else if(range_end === Infinity){
+
+                        incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]][graphData[pack].incoming[edge][0]].push([range_start,Infinity])
+                    
+                    }else{
+                    
+                        for(i = range_start; i < range_end + 1; i++){
+                            incoming_edge_dict[graphData[pack].incoming[edge][1].split('_[')[0]][graphData[pack].incoming[edge][0]].push([i])
+                        }
+
+                    }
+
+            }
+
+        }
+
+        for(var edge in graphData[pack].outgoing){
+
+            if(!selectedNodes.includes(graphData[pack].outgoing[edge][0])){
+
+                if(!outgoing_edge_dict.hasOwnProperty(graphData[pack].outgoing[edge][1].split('_[')[0])){
+
+                    outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]] = {}
+                }
+
+                if(!outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]].hasOwnProperty(graphData[pack].outgoing[edge][0])){
+                    
+                    outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]][graphData[pack].outgoing[edge][0]] = []
+
+                }
+
+                    [range_start, range_end] = getExapandableRange(graphData[pack].outgoing[edge][1])
+
+                    if(range_end === -1){
+
+                        outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]][graphData[pack].outgoing[edge][0]].push([range_start])
+
+                    }else if(range_end === Infinity){
+
+                        outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]][graphData[pack].outgoing[edge][0]].push([range_start,Infinity])
+                    
+                    }else{
+                    
+                        for(i = range_start; i < range_end + 1; i++){
+                            outgoing_edge_dict[graphData[pack].outgoing[edge][1].split('_[')[0]][graphData[pack].outgoing[edge][0]].push([i])
+                        }
+
+                    }
+
+            }
+
+        }
+
+        delete newGraph.graph[pack]
+
+        newGraph.oracles = newGraph.oracles.filter(e => e[0] !== pack)
+        
+        for(var node in newGraph.graph){
+
+            newGraph.graph[node] = newGraph.graph[node].filter(e => e[0] !== pack)          
+        }
+
+    }
+
+    var edges, index_range, infranges;
+
+    for(var edge in incoming_edge_dict){
+        
+        for(var pack in incoming_edge_dict[edge]){
+            
+            [indexes, infranges] = _.partition(incoming_edge_dict[edge][pack],x => x.length === 1)
+            
+            if(infranges.length > 1){
+                throw "Multiple arbitrary edges of same name : " + edge + " from " + pack 
+            }
+
+            indexes.sort()
+            
+            edges = []
+
+            index_range = []
+           
+            for(var i = 0; i < indexes.length-1; i++){
+
+                if(indexes[i] >= infranges[0][1]){
+                    throw "Overlapping edge ranges for : " + edge.toString() 
+                }
+                
+                index_range.push(indexes[i])
+                
+                if(indexes[i] + 1 === infranges[0][1]){
+
+                    index_range.push(Infinity)
+                    
+                    edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+                    
+                    break
+
+                }
+                
+                if(i === indexes.length - 2 && indexes[i] + 1 === indexes[i+1]){
+                
+                    index_range.push(indexes[i])
+                
+                }else if(indexes[i] + 1 !== indexes[i+1]){
+
+                    if (index_range.length > 1){
+                        edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+
+                    }else{
+
+                        edges.push([packageName,edge + '_[' + index_range[0] + ']'])
+
+                    }
+
+                    index_range = []
+
+                }
+
+            }
+
+            if(pack === 'ORACLE'){
+            for(var toAdd in edges){
+
+                    newGraph.oracles.push(edges[toAdd])
+
+                }
+            } else{
+                for(var toAdd in edges){
+
+                    newGraph.graph[pack].push(edges[toAdd])
+
+                }
+
+            }
+        }
+        
+    }
+
+    newGraph.graph[packageName] = []
+    
+    for(var edge in outgoing_edge_dict){
+        for(var pack in outgoing_edge_dict[edge]){
+            
+            [indexes, infranges] = _.partition(outgoing_edge_dict[edge][pack],x => x.length === 1)
+            
+            if(infranges.length > 1){
+                throw "Multiple arbitrary edges of same name : " + edge + " from " + pack 
+            }
+
+            indexes.sort()
+            
+            edges = []
+
+            index_range = []
+           
+            for(var i = 0; i < indexes.length-1; i++){
+
+                if(indexes[i] >= infranges[0][1]){
+                    throw "Overlapping edge ranges for : " + edge.toString() 
+                }
+                
+                index_range.push(indexes[i])
+                
+                if(indexes[i] + 1 === infranges[0][1]){
+
+                    index_range.push(Infinity)
+                    
+                    edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+                    
+                    break
+
+                }
+                
+                if(i === indexes.length - 2 && indexes[i] + 1 === indexes[i+1]){
+                
+                    index_range.push(indexes[i])
+                
+                }else if(indexes[i] + 1 !== indexes[i+1]){
+
+                    if (index_range.length > 1){
+                        edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+
+                    }else{
+
+                        edges.push([packageName,edge + '_[' + index_range[0] + ']'])
+
+                    }
+
+                    index_range = []
+
+                }
+
+            }
+
+                for(var toAdd in edges){
+
+                    newGraph.graph[packageName].push(edges[toAdd])
+
+                }
+
+            
+        }   
+        
+    }
+
+    return newGraph
+
 
 }
 

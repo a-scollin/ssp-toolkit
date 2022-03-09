@@ -25,7 +25,7 @@ import Divider from '@mui/material/Divider';
 import { useFormControlUnstyled } from "@mui/material";
 import { resolveInput } from "./helpers/import_helper"
 
-import { substitute, buildIncoming, buildNonIndexedIncoming } from "./helpers/transformation_helper";
+import { substitute, buildIncoming } from "./helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -416,10 +416,9 @@ selectGraph(graphname){
 
       if(parentGraphData_with_oracles.to_run[newGraph].type === 'substitute'){
 
-          lhs = buildNonIndexedIncoming(parentGraphData_with_oracles.to_run[newGraph].lhs)
-          rhs = buildNonIndexedIncoming(parentGraphData_with_oracles.to_run[newGraph].rhs)
+          lhs = parentGraphData_with_oracles.to_run[newGraph].lhs
+          rhs = parentGraphData_with_oracles.to_run[newGraph].rhs
           
-
           if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(partialMatching)){
             partialMatching = parentGraphData_with_oracles.to_run[newGraph].partialMatching
           }else{

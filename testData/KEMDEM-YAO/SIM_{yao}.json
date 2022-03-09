@@ -1,6 +1,6 @@
 {
     "modular_pkgs": {
-        "SIM_{yao}": {
+        "SIM_{yao}_[1]": {
             "oracles": [
                 [
                     "BITS_[1]",
@@ -11,16 +11,16 @@
                     "GETKEYS"
                 ],
                 [
-                    "SIM_{yao}",
+                    "SIM_{yao}_[1]",
                     "GBL_[1...d]"
                 ],
                 [
-                    "SIM_{yao}",
+                    "SIM_{yao}_[1]",
                     "GETA^{out}"
                 ]
             ],
             "graph": {
-                "SIM_{yao}": [
+                "SIM_{yao}_[1]": [
                     [
                         "EV_[1...d]",
                         "EVAL_[1...d]"
