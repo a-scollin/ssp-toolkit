@@ -15,6 +15,7 @@ import { touchRippleClasses } from "@mui/material";
 import { V } from "mathjax-full/js/output/common/FontData";
 import { GradingSharp } from "@mui/icons-material";
 import { style } from "@mui/system";
+import { compose, buildIncoming } from './helpers/transformation_helper.js'
 
 
 const {
@@ -290,7 +291,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
   
 
   graph.refresh()
-    this.setState({graph : graph, lane : lane, parent : parent})
+    this.setState({graph : graph, selected_graphdata : selected_graphdata, lane : lane, parent : parent})
       
   }
       
@@ -496,6 +497,32 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 					menu.addItem('Decompose', null, function()
 				    {
               this.props.triggerTransformationProp('decompose', cell.value);
+            }.bind(this), transform_submenu);
+          	menu.addItem('Compose', null, function()
+				    {
+
+              var allcells = graph.getSelectionModel().cells
+              var selectednodes = []
+
+              for(var cell in allcells){
+
+                if(allcells[cell].vertex){
+                  
+                  selectednodes.push(allcells[cell].value)
+
+                }
+
+              }
+
+              var packageName = window.prompt("Please enter a name for the composed package: ")
+
+              var graphname = window.prompt("Please enter a name for the new graph: ")
+
+              console.log(this.state.selected_graphdata)
+              console.log(selectednodes)
+
+              this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
+
             }.bind(this), transform_submenu);
           menu.addItem('Equivalence', null, function()
 				    {

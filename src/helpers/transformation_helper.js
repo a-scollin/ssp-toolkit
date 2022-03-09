@@ -44,6 +44,7 @@ export function buildIncoming(graphdata){
         }
     }
 
+    console.log(new_graph)
 
     return new_graph
 }
@@ -855,19 +856,29 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
 
 export function compose(graphData,graphData_with_oracles,selectedNodes,packageName){
     
+    console.log(graphData)
+    console.log(graphData_with_oracles)
+    console.log(selectedNodes)
+    console.log(packageName)
 
-    if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
-        throw "Please ensure subgraph file is correct!"
+    if(packageName === ''){        
+        throw "Please enter a packagename!"
     }
 
     var incoming_edge_dict = {}
     var outgoing_edge_dict = {}
 
+    var range_start, range_end;
+    var indexes;
     // Build the new graph without any mention of the graph to be decomposed.
 
     var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
 
-    for(var pack in selectedNodes){
+    var pack 
+
+    for(var thepack in selectedNodes){
+
+        pack = selectedNodes[thepack]
 
         for(var edge in graphData[pack].incoming){
 
@@ -966,6 +977,12 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
                 throw "Multiple arbitrary edges of same name : " + edge + " from " + pack 
             }
 
+
+            console.log(edge)
+            console.log(pack)
+            console.log(indexes)
+            console.log(infranges)
+
             indexes.sort()
             
             edges = []
@@ -1011,6 +1028,15 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
             }
 
+            if (index_range.length > 1){
+                edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+
+            }else if(index_range.length !== 0){
+
+                edges.push([packageName,edge + '_[' + index_range[0] + ']'])
+
+            }
+
             if(pack === 'ORACLE'){
             for(var toAdd in edges){
 
@@ -1036,6 +1062,7 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
             
             [indexes, infranges] = _.partition(outgoing_edge_dict[edge][pack],x => x.length === 1)
             
+
             if(infranges.length > 1){
                 throw "Multiple arbitrary edges of same name : " + edge + " from " + pack 
             }
@@ -1085,6 +1112,15 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
             }
 
+            if (index_range.length > 1){
+                edges.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
+
+            }else if(index_range.length !== 0){
+
+                edges.push([packageName,edge + '_[' + index_range[0] + ']'])
+
+            }
+
                 for(var toAdd in edges){
 
                     newGraph.graph[packageName].push(edges[toAdd])
@@ -1095,6 +1131,9 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
         }   
         
     }
+
+    console.log(incoming_edge_dict)
+    console.log(outgoing_edge_dict)
 
     return newGraph
 

@@ -757,6 +757,7 @@ return options
         case "decompose":
             transform_options = this.renderDecompose();
         break;
+    
         case "expand" : 
             transform_options = this.renderExpand();                    
         break;
