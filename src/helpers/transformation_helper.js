@@ -442,17 +442,22 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
 
             if(!lhs[packname.split("_[")[0]].outgoing.some(element => element[0] === nodeSplit[0] && element[1] === edgename.split("_[")[0])){
+                console.log("Fail 1")
                 return [false, visited, [], []]
             }
 
             [complete, visited, toRemove, toAdd] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from, visited, toAdd, toRemove)
 
             if(!complete){
+                console.log("Fail 2")
                 return [false, visited, [], []]
             }
 
         }else{
             if(!visited.includes(packname)){
+                console.log("Fail 3")
+                console.log(visited)
+                console.log(packname)
                 return [false, visited, [], []]
 
             }
@@ -480,17 +485,22 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
 
             if(!lhs[nodeSplit[0]].outgoing.some(element => element[0] === packname.split("_[")[0] && element[1] === edgename.split("_[")[0])){
+                console.log("Fail 4")
                 return [false, visited, [], []]
             }
 
             [complete, visited, toRemove, toAdd] = checkComplete(graphData, packname, lhs_packs, lhs, rhs, lhs_in, lhs_out, rhs_in_maps_to, rhs_out_maps_from, visited, toAdd, toRemove)
 
             if(!complete){
+                console.log("Fail 5")
                 return [false, visited, [], []]
             }
 
         }else{ 
             if(!visited.includes(packname)){
+                console.log("Fail 6")
+                console.log(visited)
+                console.log(packname)
                 return [false, visited, [], []]
             }
         }
@@ -582,7 +592,7 @@ export function substitute(graphData, graphData_with_oracles, passed_lhs, passed
             if(counter_dict[packbase] < range[0] && packbase === pack.split("_[")[0]){
 
                 if(range[0] === Infinity || range[1] === Infinity){
-                    throw "Equivilance has a package with a variable base elsewhere in graph."
+                    continue
                 }
 
                 counter_dict[packbase] = range[0]
@@ -1092,7 +1102,7 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
             
             
             index_range = []
-           
+
             for(var i = 0; i < indexes.length-1; i++){
 
                 console.log(index_range)
@@ -1134,7 +1144,19 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
             }
 
-            if (index_range.length > 1){
+             if(indexes.length == 1){
+
+
+                if(indexes[0]+1 !== infranges[0][0]){
+
+                    edges_toadd.push([packageName,edge + '_[' + indexes[0].toString() +']'])
+                
+                }else{
+                
+                    edges_toadd.push([packageName,edge + '_[' + indexes[0].toString() + '...d]'])
+                
+                }
+            }else if (index_range.length > 1){
                 edges_toadd.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
 
             }else if(index_range.length == 1){
@@ -1145,11 +1167,9 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
                 edges_toadd.push([packageName,edge + '_[' + infranges[0][0].toString() + '...d]'])
 
             }
+           
 
 
-            if(indexes.length == 1){
-                edges_toadd.push([packageName,edge + '_[' + indexes[0].toString() +']'])
-            }
             
             if(splitranges.length > 0){
                 for(var split in splitranges){
@@ -1299,7 +1319,19 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
             }
 
             console.log("WHAT")
-            if (index_range.length > 1){
+            if(indexes.length == 1){
+
+                if(indexes[0]+1 !== infranges[0][0]){
+
+                    edges_toadd.push([pack,edge + '_[' + indexes[0].toString() +']'])
+                
+                }else{
+                
+                    edges_toadd.push([pack,edge + '_[' + indexes[0].toString() + '...d]'])
+                
+                }
+
+            }else if (index_range.length > 1){
                 edges_toadd.push([pack,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
 
             }else if(index_range.length == 1){
@@ -1309,10 +1341,6 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
             }else if(index_range.length == 0 && infranges[0][0] !== -1){
                 edges_toadd.push([pack,edge + '_[' + infranges[0][0].toString() + '...d]'])
 
-            }
-
-            if(indexes.length == 1){
-                edges_toadd.push([pack,edge + '_[' + indexes[0].toString() +']'])
             }
             
             if(splitranges.length > 0){
@@ -1354,12 +1382,18 @@ function isNumeric(str) {
     return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
            !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
   }
-export function decompose(graphData,graphData_with_oracles,nodeSelection,subGraph){
+export function decompose(graphData,graphData_with_oracles,nodeSelection,passedsubGraph){
 
 
-    if(!subGraph.hasOwnProperty("oracles") || !subGraph.hasOwnProperty("graph")){        
+    if(!passedsubGraph.hasOwnProperty("oracles") || !passedsubGraph.hasOwnProperty("graph")){        
         throw "Please ensure subgraph file is correct!"
     }
+
+    console.log(passedsubGraph)
+
+    var subGraph = JSON.parse(JSON.stringify(passedsubGraph))
+
+    console.log(subGraph)
 
     var expandable_edges = []
 
@@ -1649,8 +1683,13 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
     for(var edge in static_edges){
 
         match = 0
+        
+        
 
         for(var out_edge in subGraphOutgoing){
+
+     
+
 
             if(static_edges[edge][1] === subGraphOutgoing[out_edge][1] || static_edges[edge][1].split(']')[0] === subGraphOutgoing[out_edge][1].split('*')[0]){
 
@@ -1684,14 +1723,20 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
     for(var edge in expandable_edges){
 
-        [expand_range_start, expand_range_end, splitString] = getExapandableRange(expandable_edges[edge])
+        
+        [expand_range_start, expand_range_end, splitString] = getExapandableRange(expandable_edges[edge][1])
 
         if(expand_range_start == Infinity){
+            
+            if(expand_range_end == Infinity){
+                continue
+            }
+
             throw expandable_edges[edge][1] + ' has a variable base, please ensure edges have static bases.'
         }
 
         if(expand_range_end == -1){
-            throw "Error! do you have multiple ...'s in the same edge name?"
+            throw "Error! do you have multiple ...'s for " + expandable_edges[edge][1]
         }
 
         if(edge_ranges.hasOwnProperty(expandable_edges[edge][0])){
@@ -1723,8 +1768,8 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,subGrap
 
     for(var edge in subGraphOutgoing){
 
-
-        [expand_range_start, expand_range_end, splitString] = getExapandableRange(subGraphOutgoing[edge])
+        
+        [expand_range_start, expand_range_end, splitString] = getExapandableRange(subGraphOutgoing[edge][1])
 
         match = 0
 

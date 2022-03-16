@@ -1,0 +1,337 @@
+{
+  "modular_pkgs": {
+    "SIM_{yao}_[1]": {
+      "oracles": [
+        [
+          "BITS_[1]",
+          "SETBIT_[1]"
+        ],
+        [
+          "KEYS_[d+1]",
+          "GETKEYS"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GBL_[1...d]"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GETA^{out}"
+        ]
+      ],
+      "graph": {
+        "SIM_{yao}_[1]": [
+          [
+            "EV_[1...d]",
+            "EVAL_[1...d]"
+          ],
+          [
+            "EV_[1...d]",
+            "CHECK_[2...d]"
+          ],
+          [
+            "BITS_[1]",
+            "CHECK_[1]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "GETA^{out}"
+          ]
+        ],
+        "EV_[1...d]": [
+          [
+            "BITS_[1]",
+            "GETBIT_[1]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "SETBIT_[d+1]"
+          ]
+        ],
+        "BITS_[1]": [],
+        "KEYS_[d+1]": [],
+        "Adv_pkg": [],
+        "terminal_pkg": []
+      }
+    },
+    "EV Encoding - SUBGRAPH": {
+      "oracles": [
+        [
+          "EV_[1...d-1]",
+          "EVAL_[1...d-1]"
+        ],
+        [
+          "EV_[d]",
+          "EVAL_[d]"
+        ],
+        [
+          "BITS_[2...d-1]",
+          "CHECK_[2...d-1]"
+        ]
+      ],
+      "graph": {
+        "EV_[1...d-1]": [
+          [
+            "BITS_[2...d-1]",
+            "SETBIT_[2*]"
+          ],
+          [
+            "BITS_[1]",
+            "GETBIT_[1*]"
+          ]
+        ],
+        "EV_[d]": [
+          [
+            "BITS_[d]",
+            "GETBIT_[d]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "SETBIT_[d+1]"
+          ]
+        ],
+        "BITS_[2...d-1]": [],
+        "BITS_[d]": [],
+        "terminal_pkg": [],
+        "Adv_pkg": []
+      }
+    },
+    "Page-1": {
+      "oracles": [
+        [
+          "AKEYS",
+          "GETA^{in},GETINA^{in}"
+        ],
+        [
+          "AKEYS",
+          "GETA^{out}"
+        ],
+        [
+          "BITS",
+          "SETBIT"
+        ]
+      ],
+      "graph": {
+        "AKEYS": [
+          [
+            "BITS",
+            "CHECK"
+          ]
+        ],
+        "BITS": []
+      }
+    },
+    "Page-2": {
+      "oracles": [
+        [
+          "KEYS",
+          "GETA^{in},GETINA^{in}"
+        ],
+        [
+          "KEYS",
+          "GETA^{out}"
+        ],
+        [
+          "KEYS",
+          "SETBIT"
+        ]
+      ],
+      "graph": {
+        "KEYS": []
+      }
+    },
+    "SIM_{yao}_[1] - decompose": {
+      "oracles": [
+        [
+          "BITS_[1]",
+          "SETBIT_[1]"
+        ],
+        [
+          "KEYS_[d+1]",
+          "GETKEYS"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GBL_[1...d]"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GETA^{out}"
+        ]
+      ],
+      "graph": {
+        "EV_[1...d-1]": [
+          [
+            "BITS_[2...d-1]",
+            "SETBIT_[2*]"
+          ],
+          [
+            "BITS_[1]",
+            "GETBIT_[1*]"
+          ]
+        ],
+        "EV_[d]": [
+          [
+            "BITS_[d]",
+            "GETBIT_[d]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "SETBIT_[d+1]"
+          ]
+        ],
+        "BITS_[2...d-1]": [],
+        "BITS_[d]": [],
+        "terminal_pkg": [],
+        "Adv_pkg": [],
+        "SIM_{yao}_[1]": [
+          [
+            "BITS_[1]",
+            "CHECK_[1]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "GETA^{out}"
+          ],
+          [
+            "EV_[1...d-1]",
+            "EVAL_[1...d-1]"
+          ],
+          [
+            "EV_[d]",
+            "EVAL_[d]"
+          ],
+          [
+            "BITS_[2...d-1]",
+            "CHECK_[2...d-1]"
+          ]
+        ],
+        "BITS_[1]": [],
+        "KEYS_[d+1]": []
+      }
+    },
+    "SIM_{yao}_[1] - decompose - expand": {
+      "oracles": [
+        [
+          "BITS_[1]",
+          "SETBIT_[1]"
+        ],
+        [
+          "KEYS_[d+1]",
+          "GETKEYS"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GBL_[1...d]"
+        ],
+        [
+          "SIM_{yao}_[1]",
+          "GETA^{out}"
+        ]
+      ],
+      "graph": {
+        "EV_[d]": [
+          [
+            "BITS_[d]",
+            "GETBIT_[d]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "SETBIT_[d+1]"
+          ]
+        ],
+        "BITS_[d]": [],
+        "terminal_pkg": [],
+        "Adv_pkg": [],
+        "SIM_{yao}_[1]": [
+          [
+            "BITS_[1]",
+            "CHECK_[1]"
+          ],
+          [
+            "KEYS_[d+1]",
+            "GETA^{out}"
+          ],
+          [
+            "EV_[d]",
+            "EVAL_[d]"
+          ],
+          [
+            "BITS_[2]",
+            "CHECK_[2]"
+          ],
+          [
+            "BITS_[3]",
+            "CHECK_[3]"
+          ],
+          [
+            "BITS_[5...d-1]",
+            "CHECK_[...]"
+          ],
+          [
+            "EV_[1]",
+            "EVAL_[1]"
+          ],
+          [
+            "EV_[2]",
+            "EVAL_[2]"
+          ],
+          [
+            "EV_[3]",
+            "EVAL_[3]"
+          ],
+          [
+            "EV_[4...d-1]",
+            "EVAL_[...]"
+          ]
+        ],
+        "BITS_[1]": [],
+        "KEYS_[d+1]": [],
+        "BITS_[2]": [],
+        "BITS_[3]": [],
+        "BITS_[4]": [],
+        "EV_[1]": [
+          [
+            "BITS_[2]",
+            "SETBIT_[2]"
+          ],
+          [
+            "BITS_[1]",
+            "GETBIT_[1]"
+          ]
+        ],
+        "EV_[2]": [
+          [
+            "BITS_[3]",
+            "SETBIT_[3]"
+          ],
+          [
+            "BITS_[2]",
+            "GETBIT_[2]"
+          ]
+        ],
+        "EV_[3]": [
+          [
+            "BITS_[4]",
+            "SETBIT_[4]"
+          ],
+          [
+            "BITS_[3]",
+            "GETBIT_[3]"
+          ]
+        ],
+        "BITS_[5...d-1]": [],
+        "EV_[4...d-1]": [
+          [
+            "BITS_[5...d-1]",
+            "SETBIT_[...]"
+          ],
+          [
+            "BITS_[4]",
+            "GETBIT_[...]"
+          ]
+        ]
+      }
+    }
+  }
+}
