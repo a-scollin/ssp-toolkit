@@ -1,0 +1,571 @@
+% Do not change the options here
+\documentclass[bsc,frontabs,singlespacing,parskip,deptreport]{infthesis}
+
+\usepackage{graphicx} 
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{subcaption}
+\usepackage{makecell}
+
+% \usepackage{bera}% optional: just to have a nice mono-spaced font
+\usepackage{listings}
+\usepackage{xcolor}
+
+\colorlet{punct}{red!60!black}
+\definecolor{background}{HTML}{EEEEEE}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{numb}{magenta!60!black}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{background},
+    literate=
+     *{0}{{{\color{numb}0}}}{1}
+      {1}{{{\color{numb}1}}}{1}
+      {2}{{{\color{numb}2}}}{1}
+      {3}{{{\color{numb}3}}}{1}
+      {4}{{{\color{numb}4}}}{1}
+      {5}{{{\color{numb}5}}}{1}
+      {6}{{{\color{numb}6}}}{1}
+      {7}{{{\color{numb}7}}}{1}
+      {8}{{{\color{numb}8}}}{1}
+      {9}{{{\color{numb}9}}}{1}
+      {:}{{{\color{punct}{:}}}}{1}
+      {,}{{{\color{punct}{,}}}}{1}
+      {\{}{{{\color{delim}{\{}}}}{1}
+      {\}}{{{\color{delim}{\}}}}}{1}
+      {[}{{{\color{delim}{[}}}}{1}
+      {]}{{{\color{delim}{]}}}}{1},
+}
+
+
+
+\usepackage [n, adversary , landau , probability , notions , logic ,
+ff, mm, operators, primitives , events , complexity , oracles , asymptotics , keys]{cryptocode}
+\newtheorem{theorem}{Theorem}
+\newtheorem{defin}{Definition}
+
+
+
+                  
+\newcommand{\chapsubhead}[1]{\vspace{0.5em}\textbf{\large #1 \vspace{0.5em}}}
+
+
+\begin{document}
+\begin{preliminary}
+
+
+\title{Visualization of composed cryptographic games and automatic derivation of simple cryptographic reductions}
+
+\author{Andrew Scollin }
+
+% to choose your course
+% please un-comment just one of the following
+%\course{Artificial Intelligence}
+%\course{Artificial Intelligence and Computer Science}
+%\course{Artificial Intelligence and Mathematics}
+%\course{Artificial Intelligence and Software Engineering}
+%\course{Artificial Intelligence with Management}
+%\course{Cognitive Science}
+\course{Computer Science}
+%\course{Computer Science and Management Science}
+%\course{Computer Science and Mathematics}
+%\course{Computer Science and Physics}
+%\course{Computer Science with Management}
+%\course{Software Engineering}
+%\course{Software Engineering with Management}
+
+\project{4th Year Project Report}
+
+\date{\today}
+
+\abstract{
+abstract hmm
+}
+\maketitle
+
+\section*{Acknowledgements}
+Acknowledgements hmm
+
+\tableofcontents
+\end{preliminary}
+
+
+
+\chapter{Introduction}
+
+\section{Modern Cryptography}
+Modern cryptography requires provable security that is mathematically rigorous. This is obvious as basing security off of intuition alone is a terrible idea however it's also not intuitive to formally prove the security of a scheme - how can we prove something is secure to an attack we haven't seen yet? This therefore seems like an impossible task and in some sense it is (Discussed in section **(computational vs perfect)**), however computational security can in fact be proven under certain assumptions. If we assume that there exists a hard problem that can't be solved in polynomial time and we can show that breaking the security of a system could also solve the problem then we have some asymptotic measure of the security of our scheme. This is formalised as a \textit{reduction} and involves an adversarial algorithm $\adv$ that participates in a security game - this is expanded on in **(background chapter section)**.  
+
+
+\section{State Separating Proofs}
+State Separating Proofs (SSP) \cite{ssp} introduces a new technique for structuring code-based game-playing cryptographic proofs. The technique can be used to reason about constructions at different levels of abstraction by using a well defined pseudocode to build monolithic \textit{packages}. The pseudocode of a package defines the functionality of a certain component in a system and also specifies the interactions of components through function calls. This allows two or more packages to share common state variables by effectively refactoring out the variables to be stored in a package that can be accessed by both. Packages and the function calls between them can be arranged as directed acyclic graphs (DAG) that represent the games used in security proofs. We will sometimes refer to the game constructions made from monolithic packages as \textit{modular} packages as this process of monolithic package \textit{composition} is allows one to achieve modularity through the re-use of code packages. Demonstrating game equivalence is the most common way to define a security property (Sometimes we use **(search games)**); The negligible probability difference in an adversaries outcome between one game and another can provide a concrete way of showing if a certain scheme leaks information in the "real" and "ideal" case. Composing packages in this way not only helps to provide an understandable visualisation of the schema but also allows for clear and concise display of equivalence between games. The specific details of SSPs are expanded upon in **(background chapter)**
+
+\section{The Problem}
+SSPs arose from the need to capture the complexity of key exchange protocols in a format that is not only easy for the reader to understand but easy for the cryptographer to formulate. The former goal relates to proof communication and is discussed in **(link)**. This project was initially motivated by the latter task of writing SSPs. Whilst SSPs enrich a cryptographers proof writing by providing a framework that serves a fluid and straight forward method for constructing proofs they also impose the challenge of illustrating the graphs. The work imposed from this task of drawing graphs is an inevitable consequence of the work saved from writing traditional proofs as the structure of the system in question has to be shown somehow. Creating graphs is albeit less work than dealing with the issues of traditional cryptographic proofs that SSPs address, but there is always room for improvement.
+
+\subsection{The current workflow}
+
+Diagrams.net (formerly Draw.io) is an open source diagram visualisation application and is currently the most accessible way of drawing these graphs. Whilst it has all the functionality needed to fully alter the appearance and layout of the graphs, there is a lack of functionality for the specific graph transformations that are useful in writing SSPs. Using Diagrams.net in this way can be very tedious especially since the changes that need applied to a graph are usually quite straightforward and could in theory be scripted. The main reason this is can be frustrating is that the user has to import or create a base graph, make the changes then export the graph whilst keeping the spatial layout of the graph and the text consistent. This wouldn't be a problem if we only had a few graphs to make however with the huge number of graphs needed for a proof the current workflow is just too error prone and time consuming. 
+
+
+\section{Contributions}
+This project aims to create a user friendly solution to the failings of the current workflow for generating SSP graphs. There are many approaches that can be taken (many of which are discussed in **(the initial requirements)**) but this project will ultimately aim to serve a web based application specifically for creating SSP graphs. The objective is for the graph editor environment to integrate smoothly into the current workflow and serve as a valuable aid to writing SSPs. 
+
+\newpage
+\section{Content}
+
+\chapsubhead{2. Background}
+\newline
+Brief explanation of the traditional method for cryptographic proofs. Brief explaination of description of the state separated method. A review of the current workflow and a mention of existing SSP graph visualising tools.
+
+\chapsubhead{3. Methodology}
+\newline
+An explanation of the methods adopted in developing this tool.s
+
+\chapsubhead{4. Initial requirements analysis and design}
+\newline
+ A semi-formal requirements analysis of the specific functionality of the tool and an outline of the design process. 
+ 
+\chapsubhead{5. Implementation}
+\newline
+A description of the current state of the project and the functionality it provides. 
+
+\chapsubhead{6. Evaluation}
+\newline
+A review of the projects implementation and revisions to be made. 
+
+\chapsubhead{7. Conclusion}
+\newline
+Concluding remarks 
+
+\chapter{Background}
+
+\section{Traditional cryptographic Proofs}\label{sec-tcp}
+Since the herald of public key cryptography in the early 70's \cite{DH,RSA} cryptography underwent a paradigm shift towards mathematically rigorous proofs. This was a necessity brought upon by the proposal of numerous insecure protocols that were published on a basis of intuition and were ultimately deemed insecure by-way of countering attacks \cite{lowe_1995,shamir_1982}. A cryptographer cannot assume to know every way their system will be attacked which makes proving security principles a tricky problem. The running example we present throughout this chapter is an encryption scheme. An encryption scheme is defined by three algorithms $Gen,Enc$ and $Dec$ as well as a specification of a key space $\mathcal{K}$, message space $\mathcal{M}$ and a resulting cipher text space $\mathcal{C}$. The first step necessary to design any cryptosystem is defining the functionality or \textit{correctness}. Below we provide an example definition for encryption.
+
+{\defin[Symmetric encryption correctness]{a symmetric encryption scheme $\Pi = (Gen,Enc,Dec)$ is correct if for all valid messages $m\in \mathcal{M}$ and for all keys $k\in \mathcal{K}$ generated from $Gen$ it follows that $$Dec(k,Enc(k,m))=m$$}}
+
+ie. that decryption of the ciphertext under the same key as it was encrypted will yield the same message.
+
+\subsection{Designing secure schemes}
+
+
+The next step in designing a cryptosystem is then defining the \textit{security} of the scheme. Making security statements requires us to define the adversaries capabilities and the set of security properties our scheme fulfils. 
+
+
+\chapsubhead{The Threat Model}\\
+Perfect secrecy is a notion that assumes an adversary with unbounded computational power and whilst the concept was a landmark in modern cryptography\cite{ShannonPerf} in practice, perfectly secret systems aren't viable as the notion imposes severe limitations on the usefulness of perfectly secure scheme. For this reason, most cryptographic protocols are designed to be secure against \textit{computationally bounded} adversaries that work as \textit{probabilistic polynomial time} (PPT) algorithms. In this setup, polynomial time is established with respect to the \textit{security parameter} (usually $n$ or $\lambda$) of the system, which scales the difficultly of breaking a cryptosystem. This is usually implemented as a key with variable length. We also assume the adversary is probabilistic\footnote{Note that a scheme secure against a probabilistic adversary will also be secure against a deterministic adversary} not only because some cryptography requires it (a party participating in a protocol may need to choose random keys) but also because the ability to generate randomness may provide additional power. Computational security is useful for real applications as it provides practical security; A proof to this effect conveys that it would likely take a computationally bounded adversary using state-of-the-art computers many lifetimes to break the security of a system when a sufficiently large security parameter is used. 
+
+\chapsubhead{Defining a security property}\\
+Once we have defined the capabilities of our adversary we can start building our security properties. When a cryptographic protocol between honest parties is maliciously interfered with or eavesdropped on by some adversary we can say that this adversary is conducting an \textit{attack} on the cryptosystem. Game-based security definitions (**(Shoupp)**) formalise the idea of security against a cryptosystem attack by setting up an experiment in which an adversary can attempts to distinguish a \textit{real} and \textit{ideal} version of the system. The real system ("system" and "game" are interchangeable) is the construction we want to prove secure and the ideal system exhibits perfect behaviour by design. Different cryptographic protocols have different requirements to be considered secure. We define a game $G^b$ where $b\in\{0,1\}$ is the \textit{security bit} (hidden from $\adv$) that represents if the real (0) or ideal (1) game is being played. For consistency between the following definitions and the state separated method the interaction between the adversary and a game is conveyed as $\adv\circ G^b$. If the adversary succeeds in guessing the security bit $b$, the security game $G^b$ will output a 1 otherwise a 0 is returned. We define the notions of a negligible function and advantage as follows :
+
+{\defin[Negligible function]{
+A function $f$ is negligible if for every polynomial $p(.)$ there exists an  $N$ such that for all integers $n>N$ it holds that $f(n) < \frac{1}{p(n)}$
+}}
+{\defin[Adversarial Advantage]{
+The advantage of an adversary {\adv} that attempts to distinguish between a real game $G^0$ and an ideal game $G^1$ is defined as 
+$$Adv(\adv;G^0,G^1) := |Pr[ 1\sample\adv \circ G^0] - Pr[1 \sample \adv \circ G^1]|$$
+}}
+
+For example the core function of an encryption scheme is \textit{confidentiality} - the ciphertext generated from an encryption shouldn't leak any information about the plaintext or key that generated it. To imagine this as a security definition, if we fix an adversary that, with a non negligible advantage, distinguishes the \textit{real} probabilistic encryption of some message (using our scheme $\Pi$) from an \textit{ideal } encryption of all 0's ($\{0\}^n$), that adversary would need to have learned some additional information in comparing the outputs or exploited some weakness of the real system which in either case constitutes a successful attack. Note that probabilistic encryption, when used correctly, means a message  $m$ submitted for encryption twice can encrypt to two different ciphertexts, this is discussed further in section (***(IND-cPA SSP)**). This idea is used to define Indistinguishability under Chosen-Plaintext Attack (\indcpa). This notion suggests that confidentiality is upheld even in the case that the adversary has unlimited access to an encryption \textit{oracle} ($Enc_k(.)$) that will encrypt any message under the legitimate scheme. The adversary can query the oracle as many times as they want (in polynomial time w.r.t the security parameter) before presenting a message $m$ that hasn't yet been queried for. Then a secret bit $b\sample\{0,1\}$ (hidden from the adversary) is chosen and the oracle returns a challenge cipher text $c$ that is generated from $\indcpa^b$. Killian and Rogaway\cite{kilian2001protect} introduced the idea of using code to reason about games; by defining their oracles syntax using an informal pseudocode; The monolithic $\indcpa^0$ and $\indcpa^1$ definitions can be seen in Figure \ref{fig:monoindsyntax}.
+
+\begin{figure}
+    \centering
+
+\begin{tabular}{c|c}
+
+
+$\underline{\underline{\indcpa^0}}$
+
+&
+
+$\underline{\underline{\indcpa^1}}$\\
+
+\thead{Initialise a shared state $k=\bot$.\\ Then answer each adversary query \\as follows:}
+
+&
+
+\thead{Initialise a shared state $k=\bot$.\\ Then answer each adversary query \\as follows:}\\
+
+\procedure{SAMPLE()}{\pcassert k = \bot\\k \sample Gen(1^n)}
+
+\procedure{ENC(m)}{\pcassert k \not = \bot\\\pcreturn Enc_k(m)}
+
+&
+
+\procedure{SAMPLE()}{\pcassert k = \bot\\k \sample Gen(1^n)}
+
+\procedure{ENC(m)}{\pcassert k \not = \bot\\\pcreturn Enc_k(0^{|m|})}
+
+\end{tabular}
+
+    \caption{Monolithic {\indcpa} games}
+    \label{fig:monoindsyntax}
+\end{figure}
+
+%
+
+
+\subsection{Proving the security of a scheme}
+Code-based game-playing proofs by Bellare and Rogaway\cite{bellare2006code} was proposed due to a lack of consistency and conformity to mathematical rigour in cryptographic proofs. This general method not only benefits from being consistent and coherent but also makes demonstrating functional equivalence easier through \textit{code transformations}. Showing that two pieces of code induce the same probability distribution on their common variables essentially shows that their function is identical. This is important in simplifying proofs, as the mundane steps of verifying arguments of functional equivalence can be easily verified and even machine checked (See **(CertiCrypt)**). 
+
+A cryptosystem simply put, is a system that employs cryptographic methods. The functions that we use to build our cryptosystem are called \textit{cryptographic primitives}. These primitives are based on mathematical problems that are easy to formulate but are difficult to solve (in polynomial time \cite{pvnp}). An example of a hard mathematical problem that is considered to be computationally intractable is the discrete logarithm problem \cite{dlp}, which is the foundation for several public key encryption cryptosystems, an example being the Diffie-Hellman key exchange \cite{DH}.
+
+If we assumed an infinite amount of resources in storage space and computation time, there would be no such thing as security, as every key would inevitably be broken by brute force. However, in the computational security model, we reason with the hardness of problems using polynomial-time reducibility. A polynomial time \textit{reduction} is a method of solving a problem by using the hardness of another \cite{complexity}. To prove the security of a cryptosystem, we first assume there exists a PPT adversary $\mathcal{A}$ that can break the system. Then, if one can reduce this adversary into an efficient solution to the hard mathematical problem that the system is built on, they can show that exploiting the system is at least as hard as the mathematical problem. This is a cryptographic reduction, and it is the key step in the modern approach to provable security as outlined by Katz and Lindell \cite{katz_lindell}. This is, simply put, a mathematical proof by contradiction which is better than intuition but does still rely on the assumption that the hard problem isn't solvable in polynomial time. We also can't know \textit{how} our hypothetical adversary $\adv$ will break the system, therefore $\adv$ must be used as a subroutine in some other algorithm $\adv'$; hence this algorithm $\adv'$ must \textit{simulate} the execution of the security game for $\adv$. Clearly this method is quite involved and as such it can get very complicated once we start working with modern protocols that are very complex and require multiple reductions. In our example we examine the security of a probabilistic encryption scheme by reducing $\indcpa$ security to the "pseudorandomness" of the pseudorandom function (PRF) $F_k(.)$ it is built upon. A part of this process is shown in the following section.   
+
+\section{State Separating Proofs}\label{sec-ssp}
+
+SSPs expand upon the code-based game-playing proof methodology and aim to provide a framework for even more concise and understandable security statements. In the SSP framework, we compose pseudocode into a series of \textit{packages} that hold their own state variables and interact using function calls. A package $P$ can be visualised as a node in a DAG that represents an adversary, game or reduction. Each inner edge of the graph represents the function calls between components, known simply as a packages \textit{dependencies} denoted $[P\rightarrow]$. The "outer" interface of a package (ie. the graphs incoming edges that have no source) are known as the \textit{oracles} of a package and are denoted $[\rightarrow P]$. The adversarial algorithm used in a proof is also represented as a package, however it is sometimes omitted for brevity as the adversary is usually only hypothetical and therefore has no real code within it. The state variables of a package are private, meaning the rest of the code can only access them through oracle calls; hence the term \textit{state separation}. The big advantage to splitting games into packages is that we can reason about systems in a modular fashion. This makes proofs easier for the cryptographer to write and analyse as the structure of the scheme is more evident and reasoning can be inherited from a similar construction elsewhere in the paper. This is important as we can give more attention to complex analysis that would normally be hidden amongst the straightforward steps such as demonstrating code equivalences. Using this methodology we can also benefit from simpler algorithm composition (interactions) through properties found in binary operations such as associativity and commutativity. It's important to note that the graphical proofs used in SSP's are not visual proofs - they are not self evident mathematical statements without extra information - rather they are used to the cryptographers benefit for their own proof communication and analysis of other state separated proofs.  
+
+\subsection{IND-CPA}
+The best way to convey the usefulness of SSPs is through an example; We will continue by showing the state separated structure of the {$\indcpa^b$} games :
+{
+
+\begin{figure}[!h]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+    \includegraphics[width=0.9\linewidth]{screenshots/ind-cpa-0.png}
+    \caption{$\indcpa^0$}
+  \label{fig:sub1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+    \includegraphics[width=0.9\linewidth]{screenshots/ind-cpa-1.png}
+  \label{fig:sub2}
+    \caption{$\indcpa^1$}
+\end{subfigure}
+\caption{The decomposed {\indcpa} games}
+\label{fig:indgraph}
+\end{figure}
+
+\begin{figure}
+\centering
+\vspace{0.3cm}
+\begin{minipage}{\textwidth}
+\begin{center}
+\scalebox{1}{
+\begin{minipage}{1\textwidth}
+\centering
+\begin{pchstack}
+
+\begin{pcvstack}
+\underline{\underline{Key}}\\
+\procedure{SAMPLE()}{\pcassert k = \bot\\k \sample \{0,1\}^n}
+\pcvspace
+\procedure{GET()}{\pcassert k \not = \bot\\\pcreturn k}
+\end{pcvstack}
+
+\pchspace
+
+
+\begin{pcvstack}
+\underline{\underline{Enc}}\\
+\procedure{ENC(m)}{k \leftarrow GET()\\c \sample Enc_k(m)\\\pcreturn c}
+\end{pcvstack}
+
+
+\pchspace
+
+\begin{pcvstack}
+\underline{\underline{Zeroer}}\\
+\procedure{ENC(m)}{k \leftarrow ENC(0^{|m|})\\\pcreturn c}
+\end{pcvstack}
+\end{pchstack}
+
+\end{minipage}
+}
+\end{center}
+\end{minipage}
+\caption{State Separated IND-CPA syntax\label{fig:sspindcode}}
+\end{figure}
+}
+
+
+{\defin[IND-CPA Security]{
+A symmetric encryption scheme $\Pi = (Gen,Enc,Dec)$ is {\indcpa} secure if for all PPT adversaries \adv
+$$Adv(\adv;\indcpa^0,\indcpa^1) \leq negl(n)$$
+for security parameter $n$ and negligible function $negl(.)$
+}}
+
+
+Figure \ref{fig:indgraph} shows the decomposed games and each of their packages interacting with each other. Each package is defined with specific state variables and oracles with code which can be seen in Figure \ref{fig:sspindcode}. We now look to a construction for a small cryptosystem for which we want to prove the {\indcpa} property holds. Our construction uses a PRF to build a probabilistic symmetric encryption scheme. To prove {\indcpa} is upheld, we define the adversary and show them interacting with the IND-CPA games like so $\adv\circ\indcpa^b$. The state separation method lets us decompose $\indcpa^b$ into 2 packages $\pcnotionstyle{MOD\textendash CPA}^b$ and $\pcnotionstyle{PRF}$ which when used together fulfil the code equivalence with our definition of $\indcpa^b$. $\pcnotionstyle{MOD\textendash CPA}^b$ in this case is just the bridge from the adversary to $\pcnotionstyle{PRF}$.
+
+$$\adv\circ\indcpa^b \equiv^{\tiny\pcnotionstyle{perf}} \adv\circ(\pcnotionstyle{MOD\textendash CPA}^b \circ \pcnotionstyle{PRF})$$ 
+
+and due to the assosiative property mentioned above we can complete our reduction under the security of the PRF like so 
+
+$$\adv\circ(\pcnotionstyle{MOD\textendash CPA}^b \circ \pcnotionstyle{PRF}) \equiv^{\tiny\pcnotionstyle{code}} (\adv\circ\pcnotionstyle{MOD\textendash CPA}^b) \circ \pcnotionstyle{PRF}$$ 
+
+This process of decomposition (presented in full in the appendix of the original paper\cite{ssp}) is used to show the functional equivalence of the $\indcpa^0$ and $\indcpa^1$ games. This means that the games are equivalent in adversarial advantage which means that {\indcpa} security is upheld.  
+
+\section{Graph Theory}
+As this project is closely linked to the modification of graphs, there are some concepts prevalent in graph theory that need an introduction. In the most common sense of the term a \textit{graph} is an ordered pair $G=(V,E)$ defined as:
+\begin{itemize}
+    \item $V$ a set of vertices (also called nodes)
+    \item$E \subseteq \{ \{x, y\} \mid x, y \in V \;\textrm{ and }\; x \neq y \}$ a set of edges which are \textbf{unordered} pairs of vertices (ie. an edge is associated with two distinct vertices).
+\end{itemize}
+In SSPs we deal exclusively with DAGs meaning the edge set $E$ contains \textbf{ordered} tuples and never forms a closed loop anywhere across the graph.  
+
+\subsection{Subgraph isomorphism}
+A subgraph of a graph $G$ is another graph made from a subset of the vertices and edges of $G$. The subgraph isomorphism problem is a task in which two graphs $G$ and $H$ are given, and one must determine whether G contains a subgraph that is isomorphic to H. Isomorphism in this case refers to a structure preserving bijection between two graphs meaning the vertices and edges of one graph correspond to the same vertices and edges of another. This problem has been shown NP-complete through the use of Turing machines\cite{cook1971complexity}. A recursive backtracking solution to this problem was proposed back in 1971\cite{ullmann1976algorithm} and although newer state-of-the art procedures exist that compute this matching faster\cite{mccreesh2020glasgow} they use efficient typed languages that benefit from parallel code execution and are excessively complex for the performance gain in this projects use case.
+
+\subsection{Graph rewriting}
+Graph rewriting (or graph transformation) is the process of creating a new graph out of an original graph algorithmically. Whilst this project need not concern itself with the state-of-the-art graph rewriting techniques, it's worth mentioning as SSP transformations invariably become graph transformations when visualised. Our definitions of decomposition and composition of code packages shouldn't be confused with definitions of decomposition and composition in graph rewriting. An aim for this project is to make these transformations accessible within our tool through a scripting language, therefore it's worthwhile to mention the existence of graph rewriting systems - commonly referred to as graph grammar.  
+
+\section{Layout Algorithms}
+As our tool will focus mainly on the positioning of nodes and edges instead of styling options (which we leave as a task to complete in Diagrams.net) and since SSPs deal exclusively with DAGs, we put a focus on automating \textit{hierarchical graph drawing}. The Sugiyama layout algorithm\cite{sugiyama1981methods} aims to produce a layout that spaces nodes evenly and attempts to minimise edge crossings whilst keeping edges directed in the same orientation. A \textit{planar} graph is a graph that optimally has no edge crossings when visualised - SSP graphs can be non-planar and planar meaning our method must deal with both. 
+
+The first step in the Sugiyama method involves transforming the input digraph $G$ into a DAG and \textit{layering} the nodes out in different horizontal levels to form a \textit{proper hierarchy}. A proper hierarchy is made by inserting a dummy vertex at each crossing of a long-span edge with a level. We can practically skip the first sub task of this step as we are already working with DAGs, meaning we don't need to solve the \textit{minimum feedback arc set} problem which is NP-hard \cite{lempel1966minimum}. Then, we are left with the problem of determining what levels to sort the nodes into. If we apply an upper bound on the number of levels we have (say one level per package at max) this is known as the \textit{layering problem}, which is NP-complete \cite{eades1989draw}. 
+
+Once we have a proper hierarchy we then preform a vertex reordering at each level to attempt to minimise edge crossings whilst keeping vertices close to their parent vertex and evenly spaced relative to the other vertices and dummy vertices. Whilst we would like to always illustrate a graph with it's optimally minimal edge crossings, the problem of reducing the crossing number of a bipartite graph to a minimum is NP-hard \cite{newton2004new} (bipartite graph being the worst case in our application) therefore our layout algorithm must approximate this using a heuristic. 
+
+Once this order is determined we space the vertices out evenly across the level and finally redraw the graph with dummy vertices as edge points. A summary of the steps in the Sugiyama method can be seen in Figure \ref{fig:sugi}. 
+
+\begin{figure} [H]
+\centering
+\begin{tabular}{cccc}
+\includegraphics[width=0.3\textwidth]{screenshots/sugi1.png}&
+\includegraphics[width=0.3\textwidth]{screenshots/sugi2.png} &
+\includegraphics[width=0.3\textwidth]{screenshots/sugi3.png} \\
+Base Graph  & Step 1. & Step 2.  \\[6pt]
+\end{tabular}
+\begin{tabular}{cccc}
+\includegraphics[width=0.3\textwidth]{screenshots/sugi4.png} &
+\includegraphics[width=0.3\textwidth]{screenshots/sugi5.png} \\
+Step 3.  & Step 4. (Final Graph)  \\[6pt]
+\end{tabular}
+
+\caption{The Sugiyama method}
+\label{fig:sugi}
+\end{figure}
+
+
+\section{Technical Background}
+
+\subsection{MxGraph}
+MxGraph\cite{mxgraph} is an open source diagramming library made by JGraph. The library we aim to use is written in JavaScript and runs natively on most modern browsers. MxGraph visualises graphs and other diagramming elements as Scalable Vector Graphics (SVG) that should be simple to work with as they have well defined geometry and coordinates. MxGraph was primarily made to serve as the framework for Diagrams.net, which is the common option for cryptographers that want to illustrate graphs for use in SSPs. This is the main reason it was chosen as the main library for displaying and altering the graphs and will be mentioned throughout this project.      
+
+\chapsubhead{ssp-proofviewer}\\
+The ssp-proofviewer project is a full proof visualiser for SSPs \cite{Puniamurthy2021}. This project aimed to provide a space for SSPs to be explored without the restrictions of a traditional journal style paper and contains different examples of definitions and proofs written in the state separated style. The software developed focuses on displaying all elements of an SSP including the reasoning steps, pseudocode and graph and also provides a proof of concept for the MxGraph library. It's important to mention as the ideas and concepts from the ssp-proofviewer project are very valuable to the requirements and design of this undertaking.    
+
+\subsection{React.js}
+React.js is a JavaScript library for building user interfaces (UI). The framework makes building dynamic web applications simple through the declaration reusable UI components. This is important in reducing the size of the code base as the process of editing and displaying graphs will require translation between the verbose, XML-based *.drawio file type to a format that a user can easily edit. Handling this translated data is simple when using a framework like React as a child component accesses data through arguments passed to them meaning one parent component can handle this translation for all graphs being displayed. The other big benefit to using React is the inclusion of a virtual document object model (DOM) which, in most cases, affords an increase in performance when compared to a similarly structured UI with the same functionality written in vanilla HTML + JavaScript. This speed up will be useful when we start performing transformations on larger graphs with many edges.     
+
+
+
+
+
+\chapter{Initial Requirements and Design}
+
+\section{Methodology}
+The approach to adopt when developing this software was an interesting decision to make as the problem is so specialised that there are only a handful of users (cryptographers) that can provide valuable feedback. 
+
+Before choosing this project, there was an introductory meeting between myself, Kohlweiss and Brzuska. In the meeting they presented the state separated method and discussed the challenges they faced when making SSP graphs before introducing the ssp-proofviewer project. Reviewing this project sparked the initial idea for a web-based application which we discussed in the meeting; This impromptu brainstorming eventually turned into a weekly meeting between myself, Kohlweiss and Oechsner where we discussed what changes had been made and discussed functionality objectives for the following week. This project therefore naturally took an iterative approach throughout the design and implementation of the system. 
+
+This resembles an AGILE development process\cite{shore2021art} as there were multiple iterations and releases. The first few iterations revolved around fulfilling the core functionality (**(discussed in)**) to to gather feedback on in the weekly meetings whereas the last few iterations aimed to make a minimum viable product (MVP) that would actually serve as a useful tool in the current workflow. 
+
+\subsection{Pros for using this approach}
+
+The main benefit to using this kind of iterative approach (and AGILE practices in general) is that changes in project features can be quickly implemented and evaluated. This methodology is especially fitting as having the opportunity to gain rapid feedback on new project features from two of the biggest proponents of SSPs is invaluable. This approach also means that requirements drawn from anecdotes can be made more detailed as development progresses, moreover it also makes adopting new requirements much more natural; During the initial implementation, changes had to be made to the specifications of the system which would not have been possible in a linear approach.
+
+\subsection{Cons for using this approach}
+
+This iterative approach did involve research, but didn't include a formal evaluation of the libraries used in development. This became an evident problem as the documentation and support for usage of the MxGraph library is severely lacking. This is a theme throughout the project and may be the biggest shortcoming of the iterative approach; At many points of development and testing there were roadblocks that came as a consequence of MxGraph being a depreciated library which then lead to time estimations for completion being off. 
+
+\section{Initial requirements}
+ 
+ \begin{center}\textbf{"What are all the things done when writing a graphical proof?" }
+\end{center}
+
+Whilst the working requirements changed with each iteration of the project, the initial requirements are nevertheless important to note. 
+
+\subsection{Non-Functional Requirements}
+The problem at the heart of this project is that the current workflow for building and visualising SSP graphs lacks the functionality for specific semi-automated transformations therefore, at a high level, the tools most important requirement is to facilitate easy proof writing. This categorises this tool as a type of \textit{proof assistant} which is by definition software made to assist with the writing of proofs. V{\"o}lker\cite{volker2004thoughts} outlines several non-functional requirements for a general proof assistant which are applicable in this case. We would like to also stress the importance of some other requirements that are paramount for this project :
+\begin{enumerate}
+    \item \textbf{Usability \& Adaptability}\\
+    The tool should be easy to use and accessible to all users. Since the use cases for this tool are so specialised, it's also important that the users can adapt the UI to their own preferences. 
+    \item \textbf{Modularity \& Maintainablilty}\\
+    The tool should be future-proof, extensible and support existing tools and workflows (namely Diagrams.net). 
+    \item \textbf{Help \& Documentation}\\
+    The tool should have thorough documentation and active prompts to help users understand how to use the system. 
+\end{enumerate}
+
+\subsection{Functional Requirements}
+Below is a list of the initial functional requirements that outline the core tasks the system will help with :
+
+\begin{enumerate}
+    \item \textbf{Editing graph templates consisting of modular packages.}\\
+    This requirement relates to the tools ability to create and modify the base graphs of a proof. This is just the initial structure of a game, before any transformations are applied.
+    
+    \item \textbf{Decomposing a large package into a collection of smaller packages.}\\
+    This requirement relates to the decomposition transformation commonly used in SSPs as we would often like to split up a game into multiple packages to analyse the interactions between certain components. Automating code transformations is an interesting extension (**(discussed in)**), however this tool only needs to serve the user in defining \textit{graph} transformations meaning the incoming and outgoing edges of a package to be decomposed are consistently mapped to those of the subgraph. An example of decomposition\footnote{This is also an example for composition, just in reverse} can be seen in Figure \ref{fig:decomp}.
+
+    \item \textbf{Composing a collection of packages into another package.}\\
+    This requirement relates to the composition transformation used in SSPs as composing multiple packages together in a single point of reference, serves to simplify reasoning with large constructions. Again however, for this project, this feature will be limited to dealing with graph transformations, meaning all selected packages and their incoming and outgoing edges are mapped to a single composed package of the users specification.   
+    
+    \item \textbf{Scripting transformations.}\\
+    This requirement is a chief motive for why this project exists. Many SSP graphs tend to be quite similar within the same proof, apart from perhaps a security bit being flipped or a filter package added (A good example of this is shown in the section on KEM-DEM security (**(KEM-DEM)**)). Therefore, a user would likely want to carry out a series of graph transformations programmatically.      
+    
+    \item \textbf{Importing and exporting graph data from/to Diagrams.net}\\
+    This requirement is important to note as this tool doesn't aim to replace Diagrams.net completely. Outmatching the usefulness of Diagrams.net for mathematical typesetting and performing fine style editing isn't the goal of this project. Whilst it definitely would be a feasible goal since the Diagrams.net editor has open source code, the lack of informative documentation available when using MxGraph meant it would have taken very long to debug if we were to build a complete Diagrams.net clone which wasn't a interesting goal given this projects time constraints.     
+\end{enumerate}
+
+**These requirements are \textit{anecdotal} as they were gathered from a discussion in the first weekly meeting between myself, Kohlweiss and Oechsner.**   
+
+
+\subsection{On checking code}
+Formally a decomposition can be seen as a substitution between a package and a collection of functionally equivalent packages. Including package code verification for these equivalences would be a very valuable feature in this tool that could further mitigate human error and open pathways for more accessible formal verification. This however, is not within scope for this project and as such we will be working under the assumption that any graph transformation that would require supplementary reasoning about code is already proven correct. For this reason we place no requirement on including monolithic package code along with a graph definition.    
+
+*** Another project by B \& P is currently underway to do automatic machine verification of package equivalence. In ***
+
+
+    \begin{figure}[h!]
+        \centering
+        \resizebox{\textwidth}{!}{\includegraphics{screenshots/decomp1.png}}\vspace{1em}\\
+        \resizebox{\textwidth}{!}{\includegraphics{screenshots/decomp2.png}}
+        \caption{Example decomposition}
+        \label{fig:decomp}
+    \end{figure}
+    
+
+\section{Initial design}
+\subsection{Data Input Methods}
+An interesting point that V{\"o}lker\cite{volker2004thoughts} makes, is the distinction between good proof assistant design for graphical user interfaces (GUI) versus the design of text-based interfaces. Our tool deals with a data structure that is unequivocally visual; Consequently, the best data input methods in our case are accessible through the visualisation of the graphs themselves. This is easy to realise once you try and define a graph by typing the vertices and edges in a text file. Since one must define the source and target for each edge, any vertex name with multiple incoming and outgoing edges will have to be mentioned multiple times which simply isn't nice to read. This also makes renaming vertices a challenge as the edges who have the renamed vertex as a source or target will also need to be amended. This means working with graphs represented in a text based format isn't as intuitive as working with already visualised graphs. 
+
+Despite this, we still must be able to script transformations which inevitably involves defining graphs in a text based way. Therefore this project will require both a text based \textit{and} a graphical representation for the graphs a user is working on.   
+
+% This means we need a way to interface between the graphical representation and the text representation of the same graph.
+
+
+
+\subsection{Low-Fidelity UI Prototype}
+Taking into consideration that the tool is focused on modifying particularly visual data structures, the design of the UI is very important. The first design (Figure \ref{fig:lowfid}) was sketched out using a digital stylus on Notability; This design features three prominent UI components.
+
+The left sidebar is for creating, importing, deleting and applying transformations on the selected graph. Whilst the exact format of the transformations isn't specified, we conceptualise that this side of the screen will contain an editor for data relating to the graph that is being displayed and the transformations the user want's to run on that graph. There will also be an export option to export the transformation scripts. 
+
+% The left sidebar is for creating / applying transformations. The thought process here was that transformations of graphs could be represented in a tree, where each base graph would be shown as the parent for the graphs generated by performing transformations. This setup would let us chain multiple transformations on the same base graph whilst ordering the sequence in which they are performed in an understandable format. The buttons at the top of this component would let the user add, remove and run the transformations. % The root of the tree would be a list of base graphs 
+
+The middle view port is for visualising and editing the selected graph. This graph will be rendered using the MxGraph library which should also provide the functionality for editing the graph - Without the use of the poorly documented and complex MxEditor class, this proved quite a challenge and only basic functionality could be implemented (discussed in **(implemnetation)**). 
+ 
+The right sidebar is for managing the modular packages and their respective monolithic packages. Here a user can select what base graph they want to work on and create, delete and import new graphs to bring into the work space. There will also be an export option to export the graph data. 
+
+\begin{figure}
+    \centering
+    \resizebox{\textwidth}{!}{
+    \includegraphics{screenshots/prot1.jpeg}}
+    \caption{Initial UI prototype}
+    \label{fig:lowfid}
+\end{figure}
+
+\subsection{Data format}
+The ssp-proofviewer project \cite{Puniamurthy2021} proposed a data format (Figure \cite{code:df}) for storing graph and proof data in JSON format. This format was adopted for this project to keep the possibility for future compatibility between the two environments and also because it's in a readable and understandable format for cryptographers.
+
+There are four main aspects of the proposed data format (\texttt{monolithic\_pkgs}, \texttt{modular\_pkgs}, \texttt{name} and \texttt{prooftree}) however we only concern ourselves with the "package" objects as we are, first and foremost, making a package visualisation tool. This doesn't close the door for including these objects in the project file as we won't place any restrictions on extra objects being present within it. 
+
+The \texttt{monolithic\_pkgs} object holds the code for the monolithic packages used in the graphs. As mentioned in **(requirements)**, package code isn't involved in the logic of our transformations, however we still include package code in our data format as displaying a construction along with it's package code can be useful for the user if they want to keep all their related materials within a single project file. **This is also done for future compatibility with a code equivalence checking tool**. Specific package code is omitted in the figure however we will work with {\LaTeX} formatted code. 
+
+The \texttt{modular\_pkgs} object holds the structure of the graphs and their respective transformations. We differ from a generic text representation of a graph with the specification of the  \texttt{oracles} object that is specifically dedicated for the constructions incoming edges. This distinction is made for readability and to conform to the same format as the proof viewer project. We also store the \texttt{transformations} to be ran. The format of these transformations will be specified later in the **(implementation section)**. A \texttt{transformation\_history} is kept to afford a user the opportunity to amend an accidental execution of an incomplete chain of transformations.
+
+\begin{figure}
+    \centering
+    \begin{lstlisting}[language=json,firstnumber=1]
+    {
+        "monolithic_pkgs" : {
+            <package_name> : <package_code>
+                          ...
+        },
+        "modular_pkgs" : {
+            <graph_name> : {
+                "oracles" : [[
+                    <edge_target>, <edge_name>
+                                ...
+                ]],
+                "graph" : {
+                    <package_name> : [
+                        <edge_target>, <edge_name>
+                                    ...
+                    ]
+                        ...
+                },
+                "transformations" : {
+                    ...
+                }, 
+                "transformations_history" : {
+                    ... 
+                }
+            }
+        }
+    }
+    \end{lstlisting}
+    \caption{JSON data format}
+    \label{code:df}
+\end{figure}
+
+
+\chapter{Final Design and Implementation}
+\section{System Structure}
+\subsection{Libraries}
+The react framework and packages used
+\subsection{React Component Interaction}
+a react component breakdown of the system 
+\section{User Interface}
+Talk about the builder component buttons
+\subsection{Graph Editor}
+Talk about the graph model and the keyboard shortcuts, context menu function, multiselect. All implemented outside of MxEditor. 
+\subsection{Code Editor}
+Talk about the Code editor the linting and the autocomplete / auto jump to codfunctionality.  
+\section{Original Transformations}
+\subsection{Decomposition}
+How decomposition was designed and implemented
+\subsection{Composition}
+How composition was designed and implemented
+
+\section{Additional transformations}
+
+\subsection{Subgraph Replacement}
+How equivalence was designed and implemented
+
+\subsection{Defining Reductions}
+
+How auto reductions was designed and how it could be implemented (was too complex to use with MxGraph's flipped coodinate system)
+
+\section{Scripting the transformations}
+Talk about the code editor and the scripting of transformations to provide semi-automation. Expand to discussion about the methods of data selection and example workflows. 
+
+\chapter{Evaluation}
+
+\section{KEM-DEM}
+Used to present the usefulness of the system, show a before and after workflow. 
+
+\section{Yao's garbled circut}
+Used to present the usefulness of the system, show a before and after workflow. 
+
+\section{Feedback}
+A discussion on the qualitative feedback from users.
+
+\chapter{Conclusion}
+
+
+\bibliographystyle{ieeetr}
+\bibliography{mybibfile}
+
+%% You can include appendices like this:
+% \appendix
+%
+% \chapter{First appendix}
+%
+% \section{First section}
+%
+% Markers do not have to consider appendices. Make sure that your contributions
+% are made clear in the main body of the dissertation (within the page limit).
+
+\end{document}
