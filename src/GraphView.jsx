@@ -75,7 +75,7 @@ export default class GraphView extends Component {
 
   componentDidMount(prevProps){
 
-    console.log(this.props)
+    // console.log(this.props)
 
 if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}){
   this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
@@ -84,7 +84,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   componentDidUpdate(prevProps){
 
-    console.log(this.props)
+    // console.log(this.props)
 
     if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.allow_editing != prevProps.allow_editing){
       
@@ -187,9 +187,9 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     var graph, lane, parent, dict, edgedict;
 
 
-    console.log(selected_graphdata);
-    console.log(selected);
-    console.log(allow_editing);
+    // console.log(selected_graphdata);
+    // console.log(selected);
+    // console.log(allow_editing);
 
     [graph, lane, parent, dict, edgedict] = this.LoadGraph(selected_graphdata, selected, allow_editing);
     
@@ -460,8 +460,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
                   alert("Multiple similarly named edges from one package!")
                 }
 
-                console.log(element)
-                console.log(selected_graphdata.graph[element][edge][1])
+                // console.log(element)
+                // console.log(selected_graphdata.graph[element][edge][1])
 
 
                 edgedict[element][selected_graphdata.graph[element][edge][1]] = edge_element
@@ -518,8 +518,8 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
               var graphname = window.prompt("Please enter a name for the new graph: ")
 
-              console.log(this.state.selected_graphdata)
-              console.log(selectednodes)
+              // console.log(this.state.selected_graphdata)
+              // console.log(selectednodes)
 
               this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
 
@@ -543,7 +543,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   copyGraph(arg1){
 
-    console.log(arg1)
+    // console.log(arg1)
     var graphdata = selectedCellsToGraphData(this.state.graph.getSelectionModel())
 
     navigator.clipboard.writeText(JSON.stringify(graphdata, null, '\t'))
@@ -553,7 +553,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   extractGraph(arg1){
 
-    console.log(this.state.graph.getSelectionModel())
+// console.log(this.state.graph.getSelectionModel())
 
     var graphdata = selectedCellsToGraphData(this.state.graph.getSelectionModel())
 
@@ -626,7 +626,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       var source_id;
       var target_id;
 
-      console.log(cells)
+// console.log(cells)
 
       var sources = {}
 
@@ -634,7 +634,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
         
         cellContent = cells[cell]
 
-        console.log(cellContent)
+        // console.log(cellContent)
         
         if(cellContent.edge){
 
@@ -666,7 +666,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
         }
 
-        console.log("Pass")
+        // console.log("Pass")
         
       }
 
@@ -714,15 +714,15 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
       graph.refresh()
 
-      console.log(graph.getModel())
+      // console.log(graph.getModel())
         
       }
   }
 
   onChange(model, e){
 
-    console.log(model)
-    console.log(e)
+    // console.log(model)
+    // console.log(e)
 
     // var outgoing_edges = {}
     // var thecell;

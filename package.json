@@ -46,6 +46,7 @@
         "react-scripts": "4.0.3",
         "react-select": "^5.2.2",
         "react-split": "^2.0.13",
+        "react-tabs": "^4.0.1",
         "react-xml-parser": "^1.1.8",
         "web-vitals": "^1.0.1"
     },

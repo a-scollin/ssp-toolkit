@@ -24,6 +24,9 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import { useFormControlUnstyled } from "@mui/material";
 import { resolveInput } from "./helpers/import_helper"
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+
 
 import { substitute, buildIncoming } from "./helpers/transformation_helper";
 
@@ -472,9 +475,10 @@ selectGraph(graphname){
  
   render() {
 
+    console.log(this.state.tree_data)
 
 
-    if(this.state.graphdata.hasOwnProperty("modular_pkgs")){
+    if(this.state.selected !== null){
     var transform = []
 
     if(this.transform_type !== null){
@@ -487,11 +491,19 @@ selectGraph(graphname){
     </ReflexElement>)
     }
 
-    var editor = [<CodeEditor text={JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected], null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+    var code = {"oracles" : this.state.graphdata.modular_pkgs[this.state.selected].oracles, "graph" : this.state.graphdata.modular_pkgs[this.state.selected].graph}
+
+    var code_editor = [<CodeEditor text={JSON.stringify(code, null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+
+    var transform_code = {"to_run" : this.state.graphdata.modular_pkgs[this.state.selected].to_run == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].to_run, "transformation_history" : this.state.graphdata.modular_pkgs[this.state.selected].transformation_history == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].transformation_history}
+
+    var transform_editor = [<CodeEditor text={JSON.stringify(transform_code, null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+
 
     }else{
       var transform = <div></div>
-      var editor = <div></div>
+      var code_editor = <div></div>
+      var transform_editor = <div></div>
     }
     
     if(this.state.graphdata.hasOwnProperty('equivs')){
@@ -503,6 +515,20 @@ selectGraph(graphname){
 
     return (      
       <ReflexContainer style={{height:"100vh"}}orientation="horizontal">
+        <ReflexElement flex={0.05} className="video-panels">
+
+<Stack direction="row" spacing={1}>
+
+  <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
+  <CustomIconButton tip="Import project file" type={["import"]} func={() => this.projUpload.click()}/>
+  <CustomIconButton tip="Create new project file" type={["write"]} func={this.createProj.bind(this)}/>
+  <CustomIconButton tip="Export current project file" type={["export"]} func={() => saveFile(new Blob([JSON.stringify(this.state.graphdata, null, 2)], {type : 'application/json'}))}/>
+
+   </Stack>
+
+
+        </ReflexElement>
+        <ReflexSplitter/>
         <ReflexElement flex={0.9} className="site-content">
           <ReflexContainer className="site-content" orientation="vertical">
 
@@ -511,25 +537,42 @@ selectGraph(graphname){
                 {/* <ReflexElement flex={0.5} className="video-panels" >
                 <Packages graphdata={this.state.graphdata}/>
                 </ReflexElement> */}
-                <ReflexElement flex={0.1} className="video-panels">
-                  
-                <Stack direction="row" spacing={1}>
-<CustomIconButton tip="Import transformations" type={["import","transform"]} func={() => alert("Import transformations")}/>
-<CustomIconButton tip="Run transformations" type={["run","transform"]} func={() => {
-  var graphdata;
-  var tree_data;
-  [graphdata, tree_data] = this.runTransformations(this.state.selected)
-  this.setState({graphdata, tree_data})
-  }}/>
-<CustomIconButton tip="Clear transformation history" type={["clear","history"]} func={() => alert("Clear transformation history")}/>
+ <Tabs>
+    <TabList>
+      <Tab>Code</Tab>
+      <Tab>Transformations</Tab>
+    </TabList>
+    <TabPanel>
+                  <ReflexElement flex={1} className="video-panels" >
+                    {code_editor}
+                  </ReflexElement>    
+    </TabPanel>
 
- </Stack>
+    <TabPanel>
+    <ReflexElement flex={0.1} className="video-panels">
                   
-                </ReflexElement>
-                  <ReflexSplitter/>
-                <ReflexElement flex={0.9} className="video-panels" >
-                  {editor}
-                </ReflexElement>
+                  <Stack direction="row" spacing={1}>
+  <CustomIconButton tip="Import transformations" type={["import","transform"]} func={() => alert("Import transformations")}/>
+  <CustomIconButton tip="Run transformations" type={["run","transform"]} func={() => {
+    var graphdata;
+    var tree_data;
+    [graphdata, tree_data] = this.runTransformations(this.state.selected)
+    this.setState({graphdata, tree_data})
+    }}/>
+  <CustomIconButton tip="Clear transformation history" type={["clear","history"]} func={() => alert("Clear transformation history")}/>
+  
+   </Stack>
+                    
+                  </ReflexElement>
+                    <ReflexSplitter/>
+                  <ReflexElement flex={0.9} className="video-panels" >
+                    {transform_editor}
+                  </ReflexElement>    
+    </TabPanel>
+  </Tabs>
+
+          
+
               </ReflexContainer>
               
             </ReflexElement>
@@ -541,8 +584,11 @@ selectGraph(graphname){
                 <ReflexElement flex={0.05}>
                 <div ref={this.toolbarRef} style={{backgroundColor : "#F9F6EE", height:"100%", width : "100%"}} id="divGraph" />
                 </ReflexElement>
+                <ReflexSplitter/>
                 <ReflexElement flex={0.95}>
+                <ReflexContainer>
                 {transform}
+                </ReflexContainer>
                 </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
@@ -551,21 +597,13 @@ selectGraph(graphname){
         
             <ReflexElement flex={0.2} className="video-panels" >
               <ReflexContainer orientation="horizontal">
-                <ReflexElement flex={0.07} minSize="50">
-
-                <Stack direction="row" spacing={1}>
-
-                  <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
-                  <CustomIconButton tip="Import project file" type={["import"]} func={() => this.projUpload.click()}/>
-                  <CustomIconButton tip="Create new project file" type={["write"]} func={this.createProj.bind(this)}/>
-                  <CustomIconButton tip="Export current project file" type={["export"]} func={() => saveFile(new Blob([JSON.stringify(this.state.graphdata, null, 2)], {type : 'application/json'}))}/>
-
-                   </Stack>
-                </ReflexElement>
-
-                <ReflexSplitter/>
-                
-                <ReflexElement flex={0.05} minSize="50"> 
+              <Tabs>
+    <TabList>
+      <Tab>Modular</Tab>
+      <Tab>Monolithic</Tab>
+    </TabList>
+    <TabPanel>           
+                <ReflexElement flex={0.1} minSize="50"> 
                   <Stack direction="row" spacing={1}>
                   <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
                   <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
@@ -577,14 +615,19 @@ selectGraph(graphname){
 
                   <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
+    </TabPanel>
+    <TabPanel>
+                  <ReflexElement flex={1} className="video-panels" >
+                    <Packages graphdata={this.state.graphdata}/>
+                  </ReflexElement>    
+    </TabPanel>
+  </Tabs>
               </ReflexContainer>
             </ReflexElement>
         
           </ReflexContainer>
         </ReflexElement>
-        
         <ReflexSplitter/>
-        
         <ReflexElement className="video-panels">
           <TransformationTools update={this.updateGraphData.bind(this)} allGraphData={this.state.graphdata} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
         </ReflexElement>
