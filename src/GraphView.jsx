@@ -36,6 +36,7 @@ const {
   mxUndoManager,
   mxKeyHandler,
   mxGraphHandler,
+  mxElbowEdgeHandler,
   mxConstraintHandler,
   mxGuide,
   mxCellState,
@@ -50,6 +51,11 @@ var mx = require("mxgraph")({
   mxImageBasePath: "./mxgraph/javascript/src/images",
   mxBasePath: "./mxgraph/javascript/src"
 })
+
+mx.mxEdgeHandler.prototype.virtualBendsEnabled = true;
+mx.mxEdgeHandler.prototype.snapToTerminals = false;
+mx.mxEdgeHandler.prototype.addEnabled = true;
+mx.mxEdgeHandler.prototype.allowHandleBoundsCheck = false;
 
 var graphHandlerGetInitialCellForEvent = mxGraphHandler.prototype.getInitialCellForEvent;
 mxGraphHandler.prototype.getInitialCellForEvent = function(me)
@@ -91,9 +97,19 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       if(this.props.selected_graphdata != null){
         this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
       }
+
+      if(this.state.graph){
+        this.state.graph.fit()
+      }
+
       return
     
     }    
+
+    if(this.state.graph){
+      this.state.graph.fit()
+    }
+
   }
 
   initToolbar(graph, selected) {
@@ -111,15 +127,14 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       document.body.style.overflow = "hidden";
       new mxDivResizer(tbContainer);
     }
-  
-    mxEdgeHandler.prototype.addEnabled = true;
+
     // Allow multiple edges between two vertices
     graph.setMultigraph(true);
   
     // Stops editing on enter or escape keypress
     configureKeyBindings(graph, selected, this.props.exportGraph);
 
-    var rubberband = new mxRubberband(graph);
+    var rubberband = new mx.mxRubberband(graph);
   
     var addDropper = function(icon, w, h, style, value = null) {
       var vertex = new mxCell("", new mxGeometry(0, 0, w, h), style);
@@ -288,7 +303,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     graph.fit()
   }
 
-  
+  this.graph = graph
 
   graph.refresh()
     this.setState({graph : graph, selected_graphdata : selected_graphdata, lane : lane, parent : parent})
@@ -311,6 +326,11 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     } else {
       // Disables the built-in context menu
       mx.mxEvent.disableContextMenu(container);
+
+
+      // mxElbowEdgeHandler.prototype.snapToTerminals = true;
+
+   
 
       // Creates the graph inside the given container
       var graph = new mx.mxGraph(container);    
@@ -411,7 +431,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
               graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
               
             }else{
-              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 80, 50);            
+              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 100, 60);            
               
             }
 
@@ -484,51 +504,69 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)
 				{
 					if(cell != null){
+
 					if(cell.hasOwnProperty("vertex")) {
+
             if(cell.vertex){
               var transform_submenu = menu.addItem('Apply Transformation', null, null);
               var copy_graph = menu.addItem('Copy Graph', null, this.copyGraph.bind(this));
               var extract_graph_to_project = menu.addItem('Extract graph', null, this.extractGraph.bind(this));
 
               menu.addItem('Expand', null, function()
-				    {
+            {
               this.props.triggerTransformationProp('expand', cell.value);
-				    }.bind(this), transform_submenu);
-					menu.addItem('Decompose', null, function()
-				    {
-              this.props.triggerTransformationProp('decompose', cell.value);
-            }.bind(this), transform_submenu);
-          	menu.addItem('Compose', null, function()
-				    {
+            }.bind(this));
 
-              var allcells = graph.getSelectionModel().cells
-              var selectednodes = []
 
-              for(var cell in allcells){
-
-                if(allcells[cell].vertex){
+              
+              menu.addItem('Decompose', null, function()
+              {
+                this.props.triggerTransformationProp('decompose', cell.value);
+              }.bind(this), transform_submenu);
+              
+              menu.addItem('Compose', null, function()
+              {
+                
+                var allcells = graph.getSelectionModel().cells
+                var selectednodes = []
+                
+                for(var cell in allcells){
                   
-                  selectednodes.push(allcells[cell].value)
-
+                  if(allcells[cell].vertex){
+                    
+                    selectednodes.push(allcells[cell].value)
+                    
+                  }
+                  
                 }
+                
+                var packageName = window.prompt("Please enter a name for the composed package: ")
+                
+                var graphname = window.prompt("Please enter a name for the new graph: ")
+                
+                // console.log(this.state.selected_graphdata)
+                // console.log(selectednodes)
+                
+                this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
+                
+              }.bind(this), transform_submenu);
+              
+              menu.addItem('Substitute', null, function()
+              {
+                this.props.triggerTransformationProp('equiv', cell.value);
+              }.bind(this), transform_submenu);
 
-              }
+              menu.addItem('Reduce', null, function()
+              {
+                this.props.triggerTransformationProp('equiv', cell.value);
+              }.bind(this), transform_submenu);
 
-              var packageName = window.prompt("Please enter a name for the composed package: ")
+            }
 
-              var graphname = window.prompt("Please enter a name for the new graph: ")
-
-              // console.log(this.state.selected_graphdata)
-              // console.log(selectednodes)
-
-              this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
-
-            }.bind(this), transform_submenu);
-          menu.addItem('Equivalence', null, function()
-				    {
-              this.props.triggerTransformationProp('equiv', cell.value);
-            }.bind(this), transform_submenu);
-        }}}}.bind(this);
+          }
+        }
+        
+      }.bind(this);
 
         }
 
@@ -596,6 +634,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       layout.execute(lane, lane.children)   
                  
       layout.execute(parent, parent.children);    
+
 
       // Swimlanes layout very well apart from the overlapping edges,
       // Solved below. 

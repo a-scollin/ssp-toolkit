@@ -116,20 +116,20 @@ function findChain(graphData, node, visitedNodes = [], isBase = false){
 
             if(graphData[node].outgoing[edge][0].split('...').length == 2){
                 
-                if(graphData[node].outgoing[edge][1].split('*').length != 2){
-                    throw node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
-                }
+                // if(graphData[node].outgoing[edge][1].split('*').length != 2){
+                //     throw node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
+                // }
 
                 [more_chain, visited] = findChain(graphData,graphData[node].outgoing[edge][0],visited)
                 
                 chain = [...more_chain, ...chain]
                 
-
-            }else if(graphData[node].outgoing[edge][1].split('*').length != 2){
-
-                throw  node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
-
             }
+            // }else if(graphData[node].outgoing[edge][1].split('*').length != 2){
+
+            //     throw  node + " connects to " + graphData[node].outgoing[edge][0] + " with a non encoding edge! ("+ graphData[node].outgoing[edge][1] +")"; 
+
+            // }
 
     }
 
@@ -142,11 +142,11 @@ function findChain(graphData, node, visitedNodes = [], isBase = false){
 
         if(graphData[node].incoming[edge][0].split('...').length == 2){
 
-            if(graphData[node].incoming[edge][1].split('*').length != 2){
+            // if(graphData[node].incoming[edge][1].split('*').length != 2){
 
-                throw graphData[node].incoming[edge][0] + " connects to " + node + " with a non encoding edge! ("+ graphData[node].incoming[edge][1] +")"; 
+            //     throw graphData[node].incoming[edge][0] + " connects to " + node + " with a non encoding edge! ("+ graphData[node].incoming[edge][1] +")"; 
 
-            }
+            // }    
                 
                 
                 [more_chain, visited] = findChain(graphData,graphData[node].incoming[edge][0],visited)
@@ -170,8 +170,6 @@ function findChain(graphData, node, visitedNodes = [], isBase = false){
 
     }
 }
-
-
     // This is wrong assumes that there is only one chain for one package. 
     return [[...chain, node],visited] 
     
@@ -224,15 +222,24 @@ export function findAllExpandableChains(graphData){
 }
 function getEncodableEdgeNumber(edge){
 
-    var number = edge.split("_[")[1].split("*")[0]
+    var number_split = edge.split("_[")[1].split("*")[0]
 
-    if(/^-?\d+$/.test(number)){
-        return parseInt(number)
+    if(number_split.length === 2){
+        var number = number_split[0]
+        if(/^-?\d+$/.test(number)){
+            return parseInt(number)
+        }else{
+    
+            throw "Encodable edge " + edge + " is not correctly formatted! Must be a numeric."
+        
+        }
     }else{
 
-        throw "Encodable edge " + edge + " is not correctly formatted! Must be a numeric."
-    
+        return parseInt(number_split[0].split("]")[0])
+
     }
+
+
 }
 
 function getNumber(edge){
@@ -1027,12 +1034,12 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
             console.log(edge)
             console.log(pack)
-            console.log(indexes)
             console.log(infranges)
             console.log(splitranges)
             
             indexes.sort()
             
+            console.log(indexes)
             edges_toadd = []
             
             if(infranges[0][0] === Infinity && infranges[0][1] === Infinity){
@@ -1100,20 +1107,19 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
             }
             
-            
             index_range = []
 
             for(var i = 0; i < indexes.length-1; i++){
 
                 console.log(index_range)
 
-                if(indexes[i] >= infranges[0][0]){
-                    throw "Overlapping edge ranges for : " + edge.toString() 
-                }
+                console.log(infranges)
                 
-                index_range.push(indexes[i])
-                
-                if(indexes[i] + 1 === infranges[0][0]){
+                // if(indexes[i] >= infranges[0][0]){
+                //     throw "Overlapping edge ranges for : " + edge.toString() 
+                // }
+                                
+                if(indexes[i][0] + 1 === infranges[0][0]){
 
                     index_range.push(Infinity)
                     
@@ -1123,23 +1129,30 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
 
                 }
                 
-                if(i === indexes.length - 2 && indexes[i] + 1 === indexes[i+1]){
+                if(i === indexes.length - 2 && indexes[i][0] + 1 === indexes[i+1][0]){
                 
-                    index_range.push(indexes[i])                
+                    
+                    index_range.push(indexes[i][0])     
+                    index_range.push(indexes[i+1][0])                
+                    
                 
-                }else if(indexes[i] + 1 !== indexes[i+1]){
+                }else if(indexes[i][0] + 1 !== indexes[i+1][0]){
 
+                    
                     if (index_range.length > 1){
                         edges_toadd.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
-
+                        
                     }else{
-
+                        
                         edges_toadd.push([packageName,edge + '_[' + index_range[0] + ']'])
-
+                        
                     }
-
-                    index_range = i !== indexes.length - 2 ? [indexes[i+1]] : []
-
+                    
+                    index_range = i !== indexes.length - 2 ? [indexes[i+1][0]] : []
+                    
+                }else{
+                    console.log("PASS")
+                    index_range.push(indexes[i][0])
                 }
 
             }
@@ -1157,10 +1170,10 @@ export function compose(graphData,graphData_with_oracles,selectedNodes,packageNa
                 
                 }
             }else if (index_range.length > 1){
+                console.log("HEREEEEEEFFFF")
                 edges_toadd.push([packageName,edge + '_[' + index_range[0].toString() + '...' + index_range[index_range.length - 1].toString() + ']'])
 
             }else if(index_range.length == 1){
-                console.log("HEREEEEEEFFFF")
                 edges_toadd.push([packageName,edge + '_[' + index_range[0].toString()  + ']'])
 
             }else if(index_range.length == 0 && infranges[0][0] !== -1){
@@ -1762,7 +1775,7 @@ export function decompose(graphData,graphData_with_oracles,nodeSelection,passeds
     }
 
 
-    // We then check if the incoming edge maps to any expandable edge range
+    // We then check if the outgoing edge maps to any expandable edge range
 
     var matched = []
 

@@ -16,10 +16,8 @@
     }
     
     
-    }else if (file.name.split('.').pop().toLowerCase() == "xml") {
-      try {
-
-        
+    }else if (file.name.split('.').pop().toLowerCase() == "xml" || file.name.split('.').pop().toLowerCase() == "drawio") {
+      try {        
 
         var XMLParser = require('react-xml-parser');
         var xml = new XMLParser().parseFromString(event.target.result.replace(/&lt;(.*?)&gt;/g,""));    // Assume xmlText contains the example XML

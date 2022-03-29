@@ -4,6 +4,7 @@ import { buildMxFile } from "./export_helper.js";
 import GrahamScan from '@lucio/graham-scan'
 import { fromPairs, isFunction } from "lodash";
 import { InputGroup, Overlay } from "react-bootstrap";
+
 const {
   mxEvent,
   mxRubberband,
@@ -28,7 +29,6 @@ const {
   mxGraph,
   mxEdgeHandler
 } = MxGraph(); 
-
 
 function scan(selected_cells){
 
@@ -319,6 +319,23 @@ export function configureKeyBindings(graph, selected) {
       mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
     
     });
+
+        // HULL handler: CTRL + G
+        keyHandler.bindControlKey(71, function(evt) {
+  
+          mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
+        
+        });
+
+
+
+        keyHandler.bindControlKey(187, function(evt) {
+          graph.zoomIn();
+        })
+
+        keyHandler.bindControlKey(189, function(evt) {
+          graph.zoomOut();
+        })
 
 
   // export handler: CTRL + E

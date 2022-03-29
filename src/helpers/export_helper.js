@@ -44,7 +44,7 @@ export function buildMxFile(graphModels){
 
                 geom = '<mxGeometry x="' + cellContent.geometry.x.toString() + '" y ="' + cellContent.geometry.y.toString() + '" width="' + cellContent.geometry.width.toString() + '" height="' + cellContent.geometry.height.toString() + '" as="geometry"/>'
                 
-                ret += '<mxCell value="'+ cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" id="' + id.toString() + '" parent="1"  vertex="1">'
+                ret += '<mxCell value="'+ cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" id="' + id.toString() + '"  style="rounded=1;" parent="1"  vertex="1">'
 
                 ret +=  geom
                 
