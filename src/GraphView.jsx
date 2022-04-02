@@ -449,6 +449,9 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       
       [graph, xml] = this.LoadNewGraph(selected_graphdata, selected, allow_editing);
 
+      console.log(graph)
+      console.log(selected_graphdata)
+
       if(allow_editing){
         this.props.updateSelected(xml,[])
       }
@@ -547,7 +550,20 @@ this.props.triggerTransformationProp('equiv', cell.value);
 
 menu.addItem('Reduce', null, function()
 {
-this.props.triggerTransformationProp('reduction', cell.value);
+
+  var allcells = graph.getSelectionModel().cells
+var selectednodes = []
+
+for(var cell in allcells){
+  
+  if(allcells[cell].vertex){
+    
+    selectednodes.push(allcells[cell].value)
+    
+  }
+  
+}
+this.props.triggerTransformationProp('reduction', selectednodes);
 }.bind(this), transform_submenu);
 
 }
@@ -680,7 +696,15 @@ if(selected_graphdata.hasOwnProperty("history")){
                             
                           }else{
                             var graphElement = graph.insertVertex(lane, null, element, 20, 20, 100, 60);            
+                            
                             graphElement.style = vertStyleString;
+
+                            if(selected_graphdata.hasOwnProperty("reduction")){
+                              if(selected_graphdata.reduction.includes(element)){
+                                console.log(selected_graphdata.reduction)
+                                graphElement.style += "gradientColor=#808080;"
+                              }
+                            }                          
                             
                           }
                           
@@ -757,7 +781,6 @@ if(selected_graphdata.hasOwnProperty("history")){
                       // layout and save to xml
 
                       this.executeLayout(graph, lane, parent);
-
 
                       var codec = new mx.mxCodec();
 
@@ -870,9 +893,9 @@ if(selected_graphdata.hasOwnProperty("history")){
         
         cellContent = cells[cell]
 
-        console.log(cells)
-        console.log(cell)
-        console.log(cellContent)
+        // console.log(cells)
+        // console.log(cell)
+        // console.log(cellContent)
 
         // console.log(cellContent)
         

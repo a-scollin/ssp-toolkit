@@ -54,7 +54,7 @@ function add_child(children,parent,child){
     
     if(children[element].graphname === parent){
 
-      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
+      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
 
       return children
 
@@ -175,7 +175,7 @@ export default class Builder extends Component {
 
           for(var graphname in json_data.modular_pkgs){
 
-            tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+            tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
             graphdata.modular_pkgs[graphname] = json_data.modular_pkgs[graphname];                     // update the name property, assign a new value                 
 
           }
@@ -187,7 +187,7 @@ export default class Builder extends Component {
         if(json_data.hasOwnProperty("graph")){
 
           var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
-          tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+          tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
           graphdata.modular_pkgs[graphname] = json_data;                     // update the name property, assign a new value                 
           return { graphdata, tree_data };            
 
@@ -209,7 +209,7 @@ export default class Builder extends Component {
     let items = [];         
     var i = 0;
     for (var graphname in this.state.graphdata.modular_pkgs) {   
-         items.push({title : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, graphname : graphname, children : []});   
+         items.push({title : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, graphname : graphname, children : []});   
          i++;
          //here I will be creating my options dynamically based on
          //what props are currently passed to the parent component
@@ -222,6 +222,8 @@ export default class Builder extends Component {
 
 
 updateGraphData(newGraphData, fin, transform_name=null){
+
+  console.log(newGraphData)
 
 if(fin){
 

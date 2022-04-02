@@ -61,11 +61,11 @@ export default class TransformationTools extends Component {
 
 
   componentDidUpdate(prevProps){
-
+      
+    this.incomingGraph = buildIncoming(this.props.base)
+    
     if(this.props.type !== prevProps.type || this.props.node !== prevProps.node){
         
-        this.incomingGraph = buildIncoming(this.props.base)
-
         if(this.props.type == 'expand'){
             this.expandableChains = findAllExpandableChains(this.incomingGraph)
             console.log(this.expandableChains)
@@ -74,10 +74,19 @@ export default class TransformationTools extends Component {
         }
 
         this.setState({allGraphData : this.props.allGraphData, selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
-            if (this.props.type != null){
-                return
-            }
-        });
+            switch(this.props.type){
+                case "reduction":
+                    this.newReduction(this.props.node);
+                    break;
+                    
+                    case "compose" : 
+                    this.newCompose(this.props.node, this.state.packagename);                    
+                    break;
+                }
+                if (this.props.type != null){
+                    return
+                }
+            });
     }
 
     if(this.state.equivs.length != this.props.equivs.length){
@@ -560,7 +569,9 @@ copyTransformation(){
         case "expand" : 
             text = '"expand" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "value : ' + this.targetval.toString() + '}'
         break;
-        
+        case "reduction":
+            
+        break;
         case "compose" : 
             text = '"compose" : {\n\t"packages" : ['
             
@@ -591,6 +602,8 @@ copyTransformation(){
         this.displayed = displayed
     }
 
+    console.log(this.displayed)
+    
         this.props.update(this.displayed, fin);
         if (fin){
         this.setState({selected_graphdata : null, type : null, options : []});
@@ -757,6 +770,61 @@ renderCompose(){
             return options
 }
 
+newReduction(selected){
+
+
+    var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
+
+    newGraph.reduction = selected
+
+    console.log(newGraph)
+
+    alert("HERE")
+
+    this.updateGraph(false,newGraph)
+
+}
+
+
+renderReduction(){
+    var options = []
+                options.push(<ReflexElement flex={0.4} key={'save'}>
+                                        <Stack direction="row" spacing={1}>
+                                    <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
+
+                                        <CustomPopup
+                                        open={this.state.select_from_list}
+                                        onChoice={(packchoice) => {
+                                            
+                                                this.newReduction([packchoice,...this.state.selected_node])                                            
+                                                this.setState({selected_node : [packchoice,...this.state.selected_node], select_from_list : false});
+                                            
+                                           }}
+                                        items={Object.keys(this.state.selected_graphdata.graph)}
+                                        title={"Choose package to reduce:"}
+                                        />
+                                        </Stack>
+                    </ReflexElement>)
+
+                if(this.state.selected_nodes != []){
+                    for (var node in this.state.selected_node){
+                        options.push(<ReflexSplitter/>)
+                        options.push(<ReflexElement key={this.state.selected_node[node]}><p>{this.state.selected_node[node]}</p><CustomIconButton type={['delete']} value={this.state.selected_node[node]} func={(v) => this.setState((prevProps) =>{
+                    
+                            var selected_node = [...prevProps.selected_node]
+                            const index = selected_node.indexOf(v);
+                            if (index > -1) {
+                                selected_node.splice(index, 1); // 2nd parameter means remove one item only
+                            }
+                            return {selected_node}
+
+                        })} tip='Remove selected'/>
+                        </ReflexElement>)
+
+                    }
+                }
+            return options
+}
 
 addEquiv(){
 
@@ -863,7 +931,9 @@ return options
         case "decompose":
             transform_options = this.renderDecompose();
         break;
-    
+        case "reduction":
+            transform_options = this.renderReduction();
+        break;
         case "expand" : 
             transform_options = this.renderExpand();                    
         break;
