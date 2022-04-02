@@ -2,6 +2,14 @@
 import { getPopoverUtilityClass } from "@mui/material";
 import { default as MxGraph } from "mxgraph";
 
+
+// styling 
+
+
+var vertStyleString = "strokeColor=gray;undefined=gray;rounded=1;fillColor=white;fontColor=black;fontSize=12;spacing=4;"
+
+var edgeStyleString = "strokeColor=#0C0C0C;labelBackgroundColor=white;rounded=true;fontColor=black;fontSize=10;strokeWidth=1.25;"
+
 export function buildMxFile(graphModels){
 
     var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'
@@ -44,7 +52,7 @@ export function buildMxFile(graphModels){
 
                 geom = '<mxGeometry x="' + cellContent.geometry.x.toString() + '" y ="' + cellContent.geometry.y.toString() + '" width="' + cellContent.geometry.width.toString() + '" height="' + cellContent.geometry.height.toString() + '" as="geometry"/>'
                 
-                ret += '<mxCell value="'+ cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" id="' + id.toString() + '"  style="rounded=1;" parent="1"  vertex="1">'
+                ret += '<mxCell value="'+ cellContent.value.replace(/\n/g,"&lt;br&gt;") + '" id="' + id.toString() + '"  style="' + vertStyleString + '" parent="1"  vertex="1">'
 
                 ret +=  geom
                 
@@ -80,7 +88,7 @@ export function buildMxFile(graphModels){
 
               console.log(geom)
 
-              ret += '<mxCell id="' + id.toString() + '" style="noEdgeStyle=1;orthogonal=1;" edge="1" parent="1" source="' + ids[cellContent.source.value].toString() + '" target="' + ids[cellContent.target.value].toString() + '">' + geom + '</mxCell>';
+              ret += '<mxCell id="' + id.toString() + '" style="' + edgeStyleString + '"  edge="1" parent="1" source="' + ids[cellContent.source.value].toString() + '" target="' + ids[cellContent.target.value].toString() + '">' + geom + '</mxCell>';
             
               id += 1 
               

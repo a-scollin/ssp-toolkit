@@ -490,7 +490,6 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
 
         }else if(lhs_packs.includes(packname.split("_[")[0]) && !visited.includes(packname)){
 
-
             if(!lhs[nodeSplit[0]].outgoing.some(element => element[0] === packname.split("_[")[0] && element[1] === edgename.split("_[")[0])){
                 console.log("Fail 4")
                 return [false, visited, [], []]

@@ -26,6 +26,8 @@ import { useFormControlUnstyled } from "@mui/material";
 import { resolveInput } from "./helpers/import_helper"
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
+import { buildMxFile } from "./helpers/export_helper.js";
+
 
 
 import { substitute, buildIncoming } from "./helpers/transformation_helper";
@@ -82,6 +84,7 @@ export default class Builder extends Component {
     super(props);
     this.transform_type = null
     this.transform_node = null
+    this.meta = null
     this.transform_basename = null
     this.state = {graphdata : new Object(null), tree_data : [], selected : null, transformation_base : {}, transformation_display : {}};    
     this.toolbarRef = React.createRef()    
@@ -218,6 +221,7 @@ export default class Builder extends Component {
 
 }  
 
+
 updateGraphData(newGraphData, fin, transform_name=null){
 
 if(fin){
@@ -334,23 +338,38 @@ deleteGraph(graphname){
 
 }
 
-
-
-selectGraph(graphname){
+selectGraph(selected){
   
   console.log(this.state.graphdata)
-  console.log(graphname)
+  console.log(selected)
 
   if(this.transform_type == null){
 
-    this.setState({selected : graphname});
+    if(this.meta == null){
+      this.setState({selected : selected});
+    }else{
+      this.setState(prevState =>{
+
+      let graphdata = {...prevState.graphdata}
+      
+      graphdata.modular_pkgs[prevState.selected] = {...graphdata.modular_pkgs[prevState.selected], ...this.meta}
+      
+      this.meta = null
+
+      return {graphdata,selected}
+
+    });
+
+    
+  }
+
   }else if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change seleceted graph?")){
       return
     } else {
 
       this.transform_type = null
 
-      this.setState({selected : graphname, transformation_base : {}, transformation_display : {}});
+      this.setState({selected : selected, transformation_base : {}, transformation_display : {}});
     }
   }
 
@@ -390,6 +409,13 @@ selectGraph(graphname){
       return {graphdata}
 
     });
+  }
+
+
+  updateSelectedMeta(xml, history){
+   
+      this.meta = {"xml" : xml, "history" : history}
+
   }
 
  
@@ -487,7 +513,7 @@ selectGraph(graphname){
       transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
     }else{
       transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
-      <GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+      <GraphView updateSelected={this.updateSelectedMeta.bind(this)} update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
     </ReflexElement>)
     }
 

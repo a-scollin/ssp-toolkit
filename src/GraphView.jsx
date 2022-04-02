@@ -16,8 +16,10 @@ import { V } from "mathjax-full/js/output/common/FontData";
 import { GradingSharp } from "@mui/icons-material";
 import { style } from "@mui/system";
 import { compose, buildIncoming } from './helpers/transformation_helper.js'
+import { Codesandbox } from "react-feather";
+import { buildMxFile } from "./helpers/export_helper.js";
 
-
+// legacy TODO : remove
 const {
   mxGraph,
   mxEvent,
@@ -47,10 +49,28 @@ const {
   mxCell
 } = MxGraph();
 
+// GETTING MXGRAPH IN
+
 var mx = require("mxgraph")({
   mxImageBasePath: "./mxgraph/javascript/src/images",
   mxBasePath: "./mxgraph/javascript/src"
 })
+
+// Workaround because window['mxGraphModel'] is not defined
+Object.keys(mx).forEach ( (key)=>{
+
+  window[key] = mx[key]
+
+});
+
+        
+// mx.mxConstants.HANDLE_SIZE = 0;
+// mx.mxConstants.VERTEX_SELECTION_COLOR = '#00ff0080';
+// mx.mxConstants.EDGE_SELECTION_COLOR = '#00ff0080';
+// mx.mxConstants.EDGE_SELECTION_STROKEWIDTH = 2;
+// mx.mxConstants.VERTEX_SELECTION_STROKEWIDTH = 2;
+// mx.mxConstants.VERTEX_SELECTION_DASHED = false;
+// mx.mxConstants.EDGE_SELECTION_DASHED = false;
 
 mx.mxEdgeHandler.prototype.virtualBendsEnabled = true;
 mx.mxEdgeHandler.prototype.snapToTerminals = false;
@@ -69,6 +89,69 @@ mxGraphHandler.prototype.getInitialCellForEvent = function(me)
   
   return cell;
 };
+
+// styling 
+
+var swimlanestyle = {};
+swimlanestyle[mx.mxConstants.STYLE_SHAPE] = mx.mxConstants.SHAPE_SWIMLANE;
+swimlanestyle[mx.mxConstants.STYLE_PERIMETER] = mx.mxPerimeter.RectanglePerimeter;
+swimlanestyle[mx.mxConstants.STYLE_STROKECOLOR] = 'none';
+swimlanestyle[mx.mxConstants.STYLE_FONTCOLOR] = '#606060';
+swimlanestyle[mx.mxConstants.STYLE_FILLCOLOR] = 'none';
+swimlanestyle[mx.mxConstants.STYLE_GRADIENTCOLOR] = 'white';
+swimlanestyle[mx.mxConstants.STYLE_STARTSIZE] = 30;
+swimlanestyle[mx.mxConstants.STYLE_ROUNDED] = false;
+swimlanestyle[mx.mxConstants.STYLE_FONTSIZE] = 12;
+swimlanestyle[mx.mxConstants.STYLE_FONTSTYLE] = 0;
+swimlanestyle[mx.mxConstants.STYLE_HORIZONTAL] = false;
+// To improve text quality for vertical labels in some old IE versions...
+swimlanestyle[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#efefef';
+
+var swimlaneStyleString = ""
+
+for(var key in swimlanestyle){
+  if(typeof swimlanestyle[key] != 'function'){
+    swimlaneStyleString += key + '=' + swimlanestyle[key] + ';'
+  }
+}
+
+     
+var vertstyle = {}
+vertstyle[mx.mxConstants.STYLE_STROKECOLOR] = 'gray';
+vertstyle[mx.mxConstants.STYLE_STROKE] = 'gray';
+vertstyle[mx.mxConstants.STYLE_ROUNDED] = '1';
+vertstyle[mx.mxConstants.STYLE_FILLCOLOR] = 'white';
+vertstyle[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
+vertstyle[mx.mxConstants.STYLE_FONTSIZE] = '12';
+vertstyle[mx.mxConstants.STYLE_SPACING] = 4;
+
+var vertStyleString = ""
+
+for(var key in vertstyle){
+  if(typeof vertstyle[key] != 'function'){
+    vertStyleString += key + '=' + vertstyle[key] + ';'
+  }
+}
+console.log(vertStyleString)
+
+// edge style
+var edgestyle = {}
+edgestyle[mx.mxConstants.STYLE_STROKECOLOR] = '#0C0C0C';
+edgestyle[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
+edgestyle[mx.mxConstants.STYLE_ROUNDED] = true;
+edgestyle[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
+edgestyle[mx.mxConstants.STYLE_FONTSIZE] = '10';
+edgestyle[mx.mxConstants.STYLE_STROKEWIDTH] = '1.25';
+
+var edgeStyleString = ""
+
+for(var key in edgestyle){
+  if(typeof edgestyle[key] != 'function'){
+    edgeStyleString += key + '=' + edgestyle[key] + ';'
+  }
+}
+console.log(edgeStyleString)
+
 
 export default class GraphView extends Component {
   constructor(props) {
@@ -112,7 +195,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   }
 
-  initToolbar(graph, selected) {
+  initToolbar(graph, history, selected) {
     
     var tbContainer = ReactDOM.findDOMNode(this.props.toolbarRef.current);
 
@@ -131,8 +214,123 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     // Allow multiple edges between two vertices
     graph.setMultigraph(true);
   
-    // Stops editing on enter or escape keypress
-    configureKeyBindings(graph, selected, this.props.exportGraph);
+    
+  console.log("configure new key bindings")
+  console.log(graph)
+
+  if (!graph.isEditing()){
+    graph.container.setAttribute('tabindex', '-1');
+    graph.container.focus();
+  }else{
+    alert("what")
+  }
+
+  var undoManager = new mx.mxUndoManager();
+
+  undoManager.history = history
+
+  console.log(undoManager)
+
+  var listener = function(sender, evt) {
+    undoManager.undoableEditHappened(evt.getProperty("edit"));
+
+    var codec = new mx.mxCodec();
+    var result = codec.encode(graph.getModel());
+    var xml = mx.mxUtils.getXml(result);
+    
+    this.props.updateSelected(xml,undoManager.history)
+
+  }.bind(this);
+
+  graph.getModel().addListener(mxEvent.UNDO, listener);
+  graph.getView().addListener(mxEvent.UNDO, listener);
+
+  const keyHandler = new mx.mxKeyHandler(graph);
+
+  keyHandler.getFunction = function(evt)
+{
+  if (evt != null)
+  {
+    return (mxEvent.isControlDown(evt) || (mxClient.IS_MAC && evt.metaKey)) ? this.controlKeys[evt.keyCode] : this.normalKeys[evt.keyCode];
+  }
+
+  return null;
+};
+
+  // Undo handler: CTRL + Z
+  keyHandler.bindControlKey(90, function(evt) {
+    console.log("undo")
+    undoManager.undo();
+  });
+
+  // Redo handler: CTRL + X
+  keyHandler.bindControlKey(88, function(evt) {
+    console.log("redo")
+    undoManager.redo();
+  });
+
+  // copy handler: CTRL + C
+  keyHandler.bindControlKey(67, function(evt) {
+    mx.mxClipboard.copy(graph)
+    });
+
+  // paste handler: CTRL + V
+  keyHandler.bindControlKey(86, function(evt) {
+    mx.mxClipboard.paste(graph)
+    });
+
+
+
+    // HULL handler: CTRL + F
+    keyHandler.bindControlKey(70, function(evt) {
+  
+      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 20);
+    
+    });
+
+    // HULL handler: CTRL + G
+    keyHandler.bindControlKey(71, function(evt) {
+  
+      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
+    
+    });
+
+        // HULL handler: CTRL + G
+        keyHandler.bindControlKey(71, function(evt) {
+  
+          mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
+        
+        });
+
+
+
+        keyHandler.bindControlKey(187, function(evt) {
+          graph.zoomIn();
+        })
+
+        keyHandler.bindControlKey(189, function(evt) {
+          graph.zoomOut();
+        })
+
+
+  // export handler: CTRL + E
+  keyHandler.bindControlKey(69, () => {
+    var codec = new mx.mxCodec();
+    var result = codec.encode(graph.getModel());
+    var xml = mx.mxUtils.getXml(result);
+
+    console.log(xml)
+  })
+
+  // Delete handler.
+  keyHandler.bindKey(8, function(evt) {
+    console.log("delete")
+    if (graph.isEnabled()) {
+      const currentNode = graph.getSelectionCell();
+      graph.removeCells([currentNode]);
+    }
+  });
+
 
     var rubberband = new mx.mxRubberband(graph);
   
@@ -199,378 +397,358 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
       this.state.graph.destroy();
     }
     
-    var graph, lane, parent, dict, edgedict;
-
-
+    var graph, xml;
+    
+    
     // console.log(selected_graphdata);
     // console.log(selected);
     // console.log(allow_editing);
 
-    [graph, lane, parent, dict, edgedict] = this.LoadGraph(selected_graphdata, selected, allow_editing);
+    if(selected_graphdata.hasOwnProperty("xml") && allow_editing){
+    
+      var doc = mxUtils.parseXml(selected_graphdata.xml);
+      var codec = new mx.mxCodec(doc);
+
+       
+      var container = ReactDOM.findDOMNode(this.GraphRef.current);
+                    
+      // var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
+      // wnd.setVisible(true);
+      console.log(selected_graphdata)
+
+      // Checks if the browser is supported
+      if (!mx.mxClient.isBrowserSupported()) {
+        // Displays an error message if the browser is not supported.
+        mx.mxUtils.error("Browser is not supported!", 200, false);
+      } else {
+        // Disables the built-in context menu
+        mx.mxEvent.disableContextMenu(container);
+        
+      
+        // mxElbowEdgeHandler.prototype.snapToTerminals = true;
+        // Creates the graph inside the given container
+        var graph = new mx.mxGraph(container);    
+
+      codec.decode(doc.documentElement, graph.getModel());
+
+      }
+    
+    }else{
+      
+      [graph, xml] = this.LoadNewGraph(selected_graphdata, selected, allow_editing);
+
+      if(allow_editing){
+        this.props.updateSelected(xml,[])
+      }
+
+    }
+    
     
     graph.foldingEnabled = false;
     graph.recursiveResize = true;
-  
-    this.executeLayout(graph, lane, parent);
+    
+    graph.popupMenuHandler.autoExpand = true;
+    graph.graphHandler.scaleGrid = true;
+    
+    graph.ordered = false;
+    graph.setPanning(true);
+    graph.setTooltips(true);
+    graph.setConnectable(true);
+    graph.setEnabled(true);
+    graph.setEdgeLabelsMovable(false);
+    graph.setVertexLabelsMovable(false);
+    graph.setGridEnabled(true);
+    graph.setAllowDanglingEdges(false);
+    graph.setDisconnectOnMove(false);
+    graph.setSwimlaneNesting(false)
+    
+    var newvertstyle = graph.stylesheet.getDefaultVertexStyle() 
+    var newedgestyle = graph.stylesheet.getDefaultEdgeStyle()   
+
+    Object.keys(vertstyle).forEach(key => {
+      newvertstyle[key] = vertstyle[key]
+    });
+
+    Object.keys(edgestyle).forEach(key => {
+      newedgestyle[key] = edgestyle[key]
+    });
+
+    graph.refresh()
     
     if(allow_editing){
+                      
+        // Installs context menu
+        graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)
+        {
+if(cell != null){
+
+if(cell.hasOwnProperty("vertex")) {
+
+if(cell.vertex){
+var transform_submenu = menu.addItem('Apply Transformation', null, null);
+var copy_graph = menu.addItem('Copy Graph', null, this.copyGraph.bind(this));
+var extract_graph_to_project = menu.addItem('Extract graph', null, this.extractGraph.bind(this));
+
+menu.addItem('Expand', null, function()
+{
+this.props.triggerTransformationProp('expand', cell.value);
+}.bind(this));
+
+
+
+menu.addItem('Decompose', null, function()
+{
+this.props.triggerTransformationProp('decompose', cell.value);
+}.bind(this), transform_submenu);
+
+menu.addItem('Compose', null, function()
+{
+
+var allcells = graph.getSelectionModel().cells
+var selectednodes = []
+
+for(var cell in allcells){
+  
+  if(allcells[cell].vertex){
+    
+    selectednodes.push(allcells[cell].value)
+    
+  }
+  
+}
+
+var packageName = window.prompt("Please enter a name for the composed package: ")
+
+var graphname = window.prompt("Please enter a name for the new graph: ")
+
+// console.log(this.state.selected_graphdata)
+// console.log(selectednodes)
+
+this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
+
+}.bind(this), transform_submenu);
+
+menu.addItem('Substitute', null, function()
+{
+this.props.triggerTransformationProp('equiv', cell.value);
+}.bind(this), transform_submenu);
+
+menu.addItem('Reduce', null, function()
+{
+this.props.triggerTransformationProp('reduction', cell.value);
+}.bind(this), transform_submenu);
+
+}
+
+}
+}
+
+}.bind(this);
+
+
       
-      this.initToolbar(graph, selected);
-      
-      // Updates the display
-      graph.getModel().endUpdate();
-      graph.getModel().addListener(mxEvent.CHANGE, this.onChange.bind(this));
-      graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected.bind(this));
-      
+if(selected_graphdata.hasOwnProperty("history")){
+
+      alert("YES")      
+      console.log(selected_graphdata)
+      this.initToolbar(graph, selected_graphdata.history, selected);
+
+    }else{
+
+      alert("NO")
+      this.initToolbar(graph, [], selected);
+
     }
 
 
 
-  //   // Helper method to mark parts with constituent=1 in the style
-  //   graph.isPart = function(cell)
-  //   {
-  //     return this.getCurrentCellStyle(cell)['constituent'] == '1';
-  //   };
+      // Updates the display
+      graph.getModel().endUpdate();
+      graph.getModel().addListener(mxEvent.CHANGE, this.onChange.bind(this));
+      graph.getSelectionModel().addListener(mxEvent.CHANGE, this.onSelected.bind(this));
     
-  //   // Redirects selection to parent
-  //   graph.selectCellForEvent = function(cell)
-  //   {
-  //     if (this.isPart(cell))
-  //     {
-  //       cell = this.model.getParent(cell);
-  //     }
+      graph.doResizeContainer(window.innerWidth, window.innerHeight)
       
-  //     mxGraph.prototype.selectCellForEvent.apply(this, arguments);
-  //   };
-
-  // // try {
+      
+      var margin = 250;
+      var max = 1;
+      
+      var bounds = graph.getGraphBounds();
+      var cw = graph.container.clientWidth - margin;
+      var ch = graph.container.clientHeight - margin;
+      var w = bounds.width / graph.view.scale;
+      var h = bounds.height / graph.view.scale;
+      var s = Math.min(max, Math.min(cw / w, ch / h));
+      
+      graph.view.scaleAndTranslate(s,
+        (margin + cw - w * s) / (2 * s) - bounds.x / graph.view.scale,
+        (margin + ch - h * s) / (2 * s) - bounds.y / graph.view.scale);
         
-  //   graph.getModel().beginUpdate();
-
-  //   // var overlay = new mx.mxCellOverlay(new mx.mxImage("https://www.vhv.rs/file/max/18/186017_gray-rectangle-png.png", 10, 10), "Reduction");
-  //   // graph.addCellOverlay(edgedict['EV_[1...d]']['SETBIT_[d+1]'], overlay);
-  //   // overlay.addListener(mxEvent.CLICK, function(sender, evt)
-  //   // {
-  //   //   var cell = evt.getProperty('cell');
-  //   //   graph.setSelectionCell(cell);
-  //   // });
-
-
-
-  //   var redcell = new mx.mxCell("test", new mx.mxPolyline([new mx.mxPoint(0,0), new mx.mxPoint(0,1)]))
-    
-  //   // mxUtils.setCellStyles(graph.getModel(), [dict['EV_[1...d]'], edgedict['EV_[1...d]']['SETBIT_[d+1]']], 'opacity', 20);
-    
-  //   var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100);
-    
-  //   red.style = 'fillColor=gray;strokeColor=none;fontSize=none;opacity=50;constituent=1';   
-    
-  //   red.setConnectable(false)
-    
-  //   graph.getModel().add(red, dict['EV_[1...d]'])
-    
-
-  // }finally{
-
-  //   graph.getModel().endUpdate();
-
-  // }
-
-
-
-
-    if(allow_editing){
-    graph.doResizeContainer(window.innerWidth, window.innerHeight)
-
-    
-    var margin = 250;
-    var max = 1;
-    
-    var bounds = graph.getGraphBounds();
-    var cw = graph.container.clientWidth - margin;
-    var ch = graph.container.clientHeight - margin;
-    var w = bounds.width / graph.view.scale;
-    var h = bounds.height / graph.view.scale;
-    var s = Math.min(max, Math.min(cw / w, ch / h));
-    
-    graph.view.scaleAndTranslate(s,
-      (margin + cw - w * s) / (2 * s) - bounds.x / graph.view.scale,
-      (margin + ch - h * s) / (2 * s) - bounds.y / graph.view.scale);
-      
-    graph.swimlaneSelectionEnabled = false
-    
-  }else{
-    graph.fit()
-  }
-
-  this.graph = graph
-
-  graph.refresh()
-    this.setState({graph : graph, selected_graphdata : selected_graphdata, lane : lane, parent : parent})
-      
-  }
-      
-  LoadGraph(selected_graphdata, selected, allow_editing){
-    
-    if (selected_graphdata){
-
-    var container = ReactDOM.findDOMNode(this.GraphRef.current);
-
-    // var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
-    // wnd.setVisible(true);
-
-    // Checks if the browser is supported
-    if (!mx.mxClient.isBrowserSupported()) {
-      // Displays an error message if the browser is not supported.
-      mx.mxUtils.error("Browser is not supported!", 200, false);
-    } else {
-      // Disables the built-in context menu
-      mx.mxEvent.disableContextMenu(container);
-
-
-      // mxElbowEdgeHandler.prototype.snapToTerminals = true;
-
-   
-
-      // Creates the graph inside the given container
-      var graph = new mx.mxGraph(container);    
-
-      mxConstants.HANDLE_SIZE = 0;
-      mxConstants.VERTEX_SELECTION_COLOR = '#00ff0080';
-      mxConstants.EDGE_SELECTION_COLOR = '#00ff0080';
-      mxConstants.EDGE_SELECTION_STROKEWIDTH = 2;
-      mxConstants.VERTEX_SELECTION_STROKEWIDTH = 2;
-      mxConstants.VERTEX_SELECTION_DASHED = false;
-      mxConstants.EDGE_SELECTION_DASHED = false;
-
-
-      graph.graphHandler.scaleGrid = true;
-
-      graph.ordered = false;
-
-      // Gets the default parent for inserting new cells. This is normally the first
-      // child of the root (ie. layer 0).
-      var parent = graph.getDefaultParent();
-
-      // Enables tooltips, new connections and panning
-      // Enables new connections in the graph
-      graph.setPanning(true);
-      graph.setTooltips(true);
-      graph.setConnectable(true);
-      graph.setEnabled(true);
-      graph.setEdgeLabelsMovable(false);
-      graph.setVertexLabelsMovable(false);
-      graph.setGridEnabled(true);
-      graph.setAllowDanglingEdges(false);
-      graph.setDisconnectOnMove(false);
-
-      var style = [];
-      style[mx.mxConstants.STYLE_SHAPE] = mx.mxConstants.SHAPE_SWIMLANE;
-      style[mx.mxConstants.STYLE_PERIMETER] = mx.mxPerimeter.RectanglePerimeter;
-      style[mx.mxConstants.STYLE_STROKECOLOR] = 'none';
-      style[mx.mxConstants.STYLE_FONTCOLOR] = '#606060';
-      style[mx.mxConstants.STYLE_FILLCOLOR] = 'none';
-      style[mx.mxConstants.STYLE_GRADIENTCOLOR] = 'white';
-      style[mx.mxConstants.STYLE_STARTSIZE] = 30;
-      style[mx.mxConstants.STYLE_ROUNDED] = false;
-      style[mx.mxConstants.STYLE_FONTSIZE] = 12;
-      style[mx.mxConstants.STYLE_FONTSTYLE] = 0;
-      style[mx.mxConstants.STYLE_HORIZONTAL] = false;
-      // To improve text quality for vertical labels in some old IE versions...
-      style[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#efefef';
-      graph.getStylesheet().putCellStyle('swimlane', style);
-    
-      // styling
-      var style = graph.getStylesheet().getDefaultVertexStyle();
-      style[mx.mxConstants.STYLE_STROKECOLOR] = 'gray';
-      style[mx.mxConstants.STYLE_STROKE] = 'gray';
-      style[mx.mxConstants.STYLE_ROUNDED] = true;
-      style[mx.mxConstants.STYLE_FILLCOLOR] = 'white';
-      style[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
-      style[mx.mxConstants.STYLE_FONTSIZE] = '12';
-      style[mx.mxConstants.STYLE_SPACING] = 4;
-
-      // edge style
-      style = graph.getStylesheet().getDefaultEdgeStyle();
-      style[mx.mxConstants.STYLE_STROKECOLOR] = '#0C0C0C';
-      style[mx.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
-      style[mx.mxConstants.STYLE_ROUNDED] = true;
-      style[mx.mxConstants.STYLE_FONTCOLOR] = 'black';
-      style[mx.mxConstants.STYLE_FONTSIZE] = '10';
-      style[mx.mxConstants.STYLE_STROKEWIDTH] = '1.25';
-      style[mx.mxConstants.STYLE_EDGE] = mx.mxEdgeStyle.ElbowConnector;
-
-        // run through each element in json        
-      
-        // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30);         
+        graph.swimlaneSelectionEnabled = false
         
-
-
-          try {
-        
-            graph.getModel().beginUpdate();
-            
-            var lane = graph.insertVertex(parent, null, selected, 0, 0, 1000, 500, 'swimlane');
-
-            lane.setConnectable(false);
-
-          var dict = {};
-
-          if(!selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
-            selected_graphdata.graph.Adv_pkg = [];
-          }
-
-          if(!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
-            selected_graphdata.graph.terminal_pkg = [];
-          }
-
-          for (var element in selected_graphdata.graph){
-         
-            if(element == 'Adv_pkg' || element == 'terminal_pkg'){
-              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 10, 200);    
-              graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
-              
-            }else{
-              var graphElement = graph.insertVertex(lane, null, element, 20, 20, 100, 60);            
-              
-            }
-
-            
-              
-            dict[element] = graphElement;
-
-            }
-
-            var edgedict = {}
-          
-              for(var oracle in selected_graphdata.oracles){
-              
-                var edge_element = graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
-              
-                if(!edgedict.hasOwnProperty('Adv_pkg')){
-                  edgedict['Adv_pkg'] = {}
-                }
-
-                if(edgedict['Adv_pkg'].hasOwnProperty(selected_graphdata.oracles[oracle][1])){
-                  alert("Multiple similarly named oracles?")
-                }
-
-                edgedict['Adv_pkg'][selected_graphdata.oracles[oracle][1]] = edge_element
-
-              }
-
-              for(var element in selected_graphdata.graph){
-              if (selected_graphdata.graph[element].length > 0){
-
-                for(var edge in selected_graphdata.graph[element]){
-                  if(selected_graphdata.graph[element][edge][0] == ""){
-                    var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
-                    
-                  }else{
-                    var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict[selected_graphdata.graph[element][edge][0]]);
-
-                  }
-                }
-
-                if(!edgedict.hasOwnProperty(element)){
-                  edgedict[element] = {}
-                }
-
-                if(edgedict[element].hasOwnProperty(selected_graphdata.graph[element][edge][1])){
-                  alert("Multiple similarly named edges from one package!")
-                }
-
-                // console.log(element)
-                // console.log(selected_graphdata.graph[element][edge][1])
-
-
-                edgedict[element][selected_graphdata.graph[element][edge][1]] = edge_element
-
-              }
-
-              }
-
-        //data
-      } finally {
-        // Updates the display
-        graph.getModel().endUpdate();
-
+      }else{
+        graph.fit()
       }
       
-				graph.popupMenuHandler.autoExpand = true;
-        
-        if(allow_editing){
-			    // Installs context menu
-				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt)
-				{
-					if(cell != null){
-
-					if(cell.hasOwnProperty("vertex")) {
-
-            if(cell.vertex){
-              var transform_submenu = menu.addItem('Apply Transformation', null, null);
-              var copy_graph = menu.addItem('Copy Graph', null, this.copyGraph.bind(this));
-              var extract_graph_to_project = menu.addItem('Extract graph', null, this.extractGraph.bind(this));
-
-              menu.addItem('Expand', null, function()
-            {
-              this.props.triggerTransformationProp('expand', cell.value);
-            }.bind(this));
-
-
-              
-              menu.addItem('Decompose', null, function()
-              {
-                this.props.triggerTransformationProp('decompose', cell.value);
-              }.bind(this), transform_submenu);
-              
-              menu.addItem('Compose', null, function()
-              {
+      this.setState({graph : graph, selected_graphdata : selected_graphdata})
+      
+    }
                 
-                var allcells = graph.getSelectionModel().cells
-                var selectednodes = []
-                
-                for(var cell in allcells){
+                LoadNewGraph(selected_graphdata, selected, allow_editing){
                   
-                  if(allcells[cell].vertex){
+                  if (selected_graphdata){
                     
-                    selectednodes.push(allcells[cell].value)
+                    var container = ReactDOM.findDOMNode(this.GraphRef.current);
                     
-                  }
-                  
-                }
-                
-                var packageName = window.prompt("Please enter a name for the composed package: ")
-                
-                var graphname = window.prompt("Please enter a name for the new graph: ")
-                
-                // console.log(this.state.selected_graphdata)
-                // console.log(selectednodes)
-                
-                this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
-                
-              }.bind(this), transform_submenu);
+                    // var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
+                    // wnd.setVisible(true);
+                    
+                    // Checks if the browser is supported
+                    if (!mx.mxClient.isBrowserSupported()) {
+                      // Displays an error message if the browser is not supported.
+                      mx.mxUtils.error("Browser is not supported!", 200, false);
+                    } else {
+                      // Disables the built-in context menu
+                      mx.mxEvent.disableContextMenu(container);
+                      
+    
+                      // mxElbowEdgeHandler.prototype.snapToTerminals = true;
+                      
+                      // Creates the graph inside the given container
+                      var graph = new mx.mxGraph(container);    
               
-              menu.addItem('Substitute', null, function()
-              {
-                this.props.triggerTransformationProp('equiv', cell.value);
-              }.bind(this), transform_submenu);
+                      
+                      // Gets the default parent for inserting new cells. This is normally the first
+                      // child of the root (ie. layer 0).
+                      var parent = graph.getDefaultParent();
+                  
+                      var defaultvertstyle = graph.stylesheet.getDefaultVertexStyle()
+                      Object.keys(vertstyle).forEach(key => {
+                        defaultvertstyle[key] = vertstyle[key]
+                      });
+                      
+                      
+                      var defaultedgestyle = graph.stylesheet.getDefaultEdgeStyle()
 
-              menu.addItem('Reduce', null, function()
-              {
-                this.props.triggerTransformationProp('equiv', cell.value);
-              }.bind(this), transform_submenu);
+                      Object.keys(edgestyle).forEach(key => {
+                        defaultedgestyle[key] = edgestyle[key]
+                      });
+                      
+                      // run through each element in json        
+                      
+                      // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30);         
+                      
+                      
+                      
+                      try {
+                        
+                        graph.getModel().beginUpdate();
+                        
+                        var lane = graph.insertVertex(parent, null, selected, 0, 0, 1000, 500);
+                        lane.style = swimlaneStyleString
+                        
+                        lane.setConnectable(false);
+                        
+                        var dict = {};
+                        
+                        if(!selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
+                          selected_graphdata.graph.Adv_pkg = [];
+                        }
+                        
+                        if(!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
+                          selected_graphdata.graph.terminal_pkg = [];
+                        }
+                        
+                        for (var element in selected_graphdata.graph){
+                          
+                          if(element == 'Adv_pkg' || element == 'terminal_pkg'){
+                            var graphElement = graph.insertVertex(lane, null, element, 20, 20, 10, 200);    
+                            graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
+                            
+                          }else{
+                            var graphElement = graph.insertVertex(lane, null, element, 20, 20, 100, 60);            
+                            graphElement.style = vertStyleString;
+                            
+                          }
+                          
+                          
+                          
+                          dict[element] = graphElement;
+                          
+                        }
+                        
+                        var edgedict = {}
+                        
+                        for(var oracle in selected_graphdata.oracles){
+                          
+                          var edge_element = graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
+                          edge_element.style = edgeStyleString
+                          
+                          
+                          if(!edgedict.hasOwnProperty('Adv_pkg')){
+                            edgedict['Adv_pkg'] = {}
+                          }
+                          
+                          if(edgedict['Adv_pkg'].hasOwnProperty(selected_graphdata.oracles[oracle][1])){
+                            alert("Multiple similarly named oracles?")
+                          }
+                          
+                          edgedict['Adv_pkg'][selected_graphdata.oracles[oracle][1]] = edge_element
+                          
+                        }
+                        
+                        for(var element in selected_graphdata.graph){
+                          if (selected_graphdata.graph[element].length > 0){
+                            
+                            for(var edge in selected_graphdata.graph[element]){
+                              if(selected_graphdata.graph[element][edge][0] == ""){
+                                var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
+                                edge_element.style = edgeStyleString
+                                
+                              }else{
+                                var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict[selected_graphdata.graph[element][edge][0]]);
+                                edge_element.style = edgeStyleString
+                                
+                              }
+                            }
+                            
+                            if(!edgedict.hasOwnProperty(element)){
+                              edgedict[element] = {}
+                            }
+                            
+                            if(edgedict[element].hasOwnProperty(selected_graphdata.graph[element][edge][1])){
+                              alert("Multiple similarly named edges from one package!")
+                            }
+                            
+                            // console.log(element)
+                            // console.log(selected_graphdata.graph[element][edge][1])
+                            
+                            
+                            edgedict[element][selected_graphdata.graph[element][edge][1]] = edge_element
+                            
+                          }
+                          
+                        }
+                        
+                        //data
+                      } finally {
+                        // Updates the display
+                        graph.getModel().endUpdate();
+                        
+                      }
+                      
+                      // layout and save to xml
+                      this.executeLayout(graph, lane, parent);
 
-            }
+                      var codec = new mx.mxCodec();
 
-          }
-        }
-        
-      }.bind(this);
+                      var result = codec.encode(graph.getModel());
+                      var xml = mx.mxUtils.getXml(result);
+                    
+                      // Enables tooltips, new connections and panning
+                      // Enables new connections in the graph
 
-        }
-
-      return [graph, lane, parent, dict, edgedict];
+                      return [graph, xml];
 
     }
 
@@ -912,6 +1090,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   onSelected(){
     console.log("onSelected")
+
     this.state.graph.container.focus()
   }
 

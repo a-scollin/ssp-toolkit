@@ -1,6 +1,5 @@
 import { V } from "mathjax-full/js/output/common/FontData";
 import { default as MxGraph } from "mxgraph";
-import { buildMxFile } from "./export_helper.js";
 import GrahamScan from '@lucio/graham-scan'
 import { fromPairs, isFunction } from "lodash";
 import { InputGroup, Overlay } from "react-bootstrap";
@@ -29,6 +28,147 @@ const {
   mxGraph,
   mxEdgeHandler
 } = MxGraph(); 
+
+
+  // // HULL handler: CTRL + H
+  // keyHandler.bindControlKey(72, function(evt) {
+   
+  //   var target_cells = graph.getSelectionModel().cells
+
+  //   var all_cells = graph.getModel().cells
+    
+  //   var hullpoints = scan(target_cells)
+    
+  //   if(hullpoints.length === 0){
+  //     return 
+  //   }
+
+  //   var lowest_x = hullpoints[0][0]
+  //   var lowest_y = hullpoints[0][1]
+  //   var biggest_x = hullpoints[0][0]
+  //   var biggest_y = hullpoints[0][1]
+  //   var x,y
+
+  //   console.log(hullpoints)
+
+  //   for(var point in hullpoints){
+      
+  //     [x,y] = hullpoints[point]
+
+  //     if(x < lowest_x){
+  //       lowest_x = x
+  //     }
+
+  //     if(x > biggest_x){
+  //       biggest_x = x
+  //     }
+      
+  //     if(y < lowest_y){
+  //       lowest_y = y
+  //     }
+
+  //     if(y > biggest_y){
+  //       biggest_y = y
+  //     }
+
+  //   }
+  //   // box in format x,y,w,
+  //   var box = [lowest_x, -biggest_y, biggest_x-lowest_x, -(biggest_y + lowest_y)]
+
+  //   var other_cells = []
+    
+  //   var box = [0, 0, 100, 100]
+
+  //   for(var cell in all_cells){
+  //     if(!target_cells.includes(all_cells[cell]) && all_cells[cell].style !== 'swimlane' && all_cells[cell].value !== 'Adv_pkg' && all_cells[cell].value !== 'terminal_pkg' && (all_cells[cell].vertex || all_cells[cell].edge)){
+        
+  //       if(all_cells[cell].vertex){
+  //         // middle of vertex in box
+  //         if(isInsideRect([all_cells[cell].geometry.x,all_cells[cell].geometry.y],box)){
+  //           other_cells.push(all_cells[cell])
+  //         }
+  //       }else if(all_cells[cell].edge){
+  //         for(var point in all_cells[cell].geometry.points){
+            
+  //           if(isInsideRect([all_cells[cell].geometry.points[point].x,all_cells[cell].geometry.points[point].y],box)){
+
+  //             other_cells.push(all_cells[cell])
+  //             break
+
+  //           }
+  //         }
+  //       }
+
+  //     }
+  //   }
+  
+
+  //   function ReductionShape() { }
+
+  //   ReductionShape.prototype = new mxShape();
+  //   ReductionShape.prototype.constructor = ReductionShape;
+   
+    
+
+  //   ReductionShape.prototype.redrawShape = function(c, x, y, w, h)
+  //   {
+  //       c.begin();
+        
+  //       var point_x,point_y;
+  //       console.log("jil")
+
+  //       for(var point in hullpoints){
+    
+  //         [point_x,point_y] = hullpoints[point]
+  //         c.lineTo(x + point_x, y + point_y);
+    
+  //       }
+    
+  //       c.close();
+  //       c.fillAndStroke();
+    
+  //   };
+    
+  //   mxCellRenderer.registerShape('reduction', ReductionShape);
+    
+  //   var style = graph.getStylesheet().getDefaultVertexStyle();
+  //   style[mxConstants.STYLE_SHAPE] = 'reduction';
+
+  //     try {
+        
+  //       graph.getModel().beginUpdate();
+      
+  //       var red = graph.insertVertex(graph.getDefaultParent(), null, "", box[0], box[1], box[2], box[3], style);
+  //       // var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100, 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
+        
+        
+  //       console.log(red)
+
+  //       console.log("here")
+        
+  //       red.setConnectable(false)
+
+  //       applyOverlay(graph,other_cells)
+
+  //     } finally {
+  //       graph.getModel().endUpdate();
+  //       graph.refresh()
+  //     }
+    
+  // });
+    
+
+var mx = require("mxgraph")({
+  mxImageBasePath: "./mxgraph/javascript/src/images",
+  mxBasePath: "./mxgraph/javascript/src"
+})
+
+// Workaround because window['mxGraphModel'] is not defined
+Object.keys(mx).forEach ( (key)=>{
+
+  window[key] = mx[key]
+
+});
 
 function scan(selected_cells){
 
@@ -123,232 +263,7 @@ const saveFile = async (blob) => {
 };
 
 
-export function configureKeyBindings(graph, selected) {
-
-  console.log("configure new key bindings")
-  console.log(graph)
-
-  if (!graph.isEditing()){
-    graph.container.setAttribute('tabindex', '-1');
-    graph.container.focus();
-  }else{
-    alert("what")
-  }
-
-  var undoManager = new mxUndoManager();
-
-  var listener = function(sender, evt) {
-    console.log("event added")
-    undoManager.undoableEditHappened(evt.getProperty("edit"));
-  };
-  graph.getModel().addListener(mxEvent.UNDO, listener);
-  graph.getView().addListener(mxEvent.UNDO, listener);
-
-  const keyHandler = new mxKeyHandler(graph);
-
-  keyHandler.getFunction = function(evt)
-{
-  if (evt != null)
-  {
-    return (mxEvent.isControlDown(evt) || (mxClient.IS_MAC && evt.metaKey)) ? this.controlKeys[evt.keyCode] : this.normalKeys[evt.keyCode];
-  }
-
-  return null;
-};
-
-  // Undo handler: CTRL + Z
-  keyHandler.bindControlKey(90, function(evt) {
-    console.log("undo")
-    undoManager.undo();
-  });
-
-  // Redo handler: CTRL + X
-  keyHandler.bindControlKey(88, function(evt) {
-    console.log("redo")
-    undoManager.redo();
-  });
-
-  // copy handler: CTRL + C
-  keyHandler.bindControlKey(67, function(evt) {
-    mxClipboard.copy(graph)
-    });
-
-  // paste handler: CTRL + V
-  keyHandler.bindControlKey(86, function(evt) {
-    mxClipboard.paste(graph)
-    });
-
-
-  // HULL handler: CTRL + H
-  keyHandler.bindControlKey(72, function(evt) {
-   
-    var target_cells = graph.getSelectionModel().cells
-
-    var all_cells = graph.getModel().cells
-    
-    var hullpoints = scan(target_cells)
-    
-    if(hullpoints.length === 0){
-      return 
-    }
-
-    var lowest_x = hullpoints[0][0]
-    var lowest_y = hullpoints[0][1]
-    var biggest_x = hullpoints[0][0]
-    var biggest_y = hullpoints[0][1]
-    var x,y
-
-    console.log(hullpoints)
-
-    for(var point in hullpoints){
-      
-      [x,y] = hullpoints[point]
-
-      if(x < lowest_x){
-        lowest_x = x
-      }
-
-      if(x > biggest_x){
-        biggest_x = x
-      }
-      
-      if(y < lowest_y){
-        lowest_y = y
-      }
-
-      if(y > biggest_y){
-        biggest_y = y
-      }
-
-    }
-    // box in format x,y,w,
-    var box = [lowest_x, -biggest_y, biggest_x-lowest_x, -(biggest_y + lowest_y)]
-
-    var other_cells = []
-    
-    var box = [0, 0, 100, 100]
-
-    for(var cell in all_cells){
-      if(!target_cells.includes(all_cells[cell]) && all_cells[cell].style !== 'swimlane' && all_cells[cell].value !== 'Adv_pkg' && all_cells[cell].value !== 'terminal_pkg' && (all_cells[cell].vertex || all_cells[cell].edge)){
-        
-        if(all_cells[cell].vertex){
-          // middle of vertex in box
-          if(isInsideRect([all_cells[cell].geometry.x,all_cells[cell].geometry.y],box)){
-            other_cells.push(all_cells[cell])
-          }
-        }else if(all_cells[cell].edge){
-          for(var point in all_cells[cell].geometry.points){
-            
-            if(isInsideRect([all_cells[cell].geometry.points[point].x,all_cells[cell].geometry.points[point].y],box)){
-
-              other_cells.push(all_cells[cell])
-              break
-
-            }
-          }
-        }
-
-      }
-    }
-  
-
-    function ReductionShape() { }
-
-    ReductionShape.prototype = new mxShape();
-    ReductionShape.prototype.constructor = ReductionShape;
-   
-    
-
-    ReductionShape.prototype.redrawShape = function(c, x, y, w, h)
-    {
-        c.begin();
-        
-        var point_x,point_y;
-        console.log("jil")
-
-        for(var point in hullpoints){
-    
-          [point_x,point_y] = hullpoints[point]
-          c.lineTo(x + point_x, y + point_y);
-    
-        }
-    
-        c.close();
-        c.fillAndStroke();
-    
-    };
-    
-    mxCellRenderer.registerShape('reduction', ReductionShape);
-    
-    var style = graph.getStylesheet().getDefaultVertexStyle();
-    style[mxConstants.STYLE_SHAPE] = 'reduction';
-
-      try {
-        
-        graph.getModel().beginUpdate();
-      
-        var red = graph.insertVertex(graph.getDefaultParent(), null, "", box[0], box[1], box[2], box[3], style);
-        // var red = graph.insertVertex(graph.getDefaultParent(), null, "", 0, 0, 100, 100, 'fillColor=gray;strokeColor=none;rounded=false;fontSize=none;opacity=50;constituent=1');
-        
-        
-        console.log(red)
-
-        console.log("here")
-        
-        red.setConnectable(false)
-
-        applyOverlay(graph,other_cells)
-
-      } finally {
-        graph.getModel().endUpdate();
-        graph.refresh()
-      }
-    
-  });
-    
-    // HULL handler: CTRL + F
-    keyHandler.bindControlKey(70, function(evt) {
-  
-      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 20);
-    
-    });
-
-    // HULL handler: CTRL + G
-    keyHandler.bindControlKey(71, function(evt) {
-  
-      mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
-    
-    });
-
-        // HULL handler: CTRL + G
-        keyHandler.bindControlKey(71, function(evt) {
-  
-          mxUtils.setCellStyles(graph.getModel(), graph.getSelectionModel().cells, 'opacity', 100);
-        
-        });
-
-
-
-        keyHandler.bindControlKey(187, function(evt) {
-          graph.zoomIn();
-        })
-
-        keyHandler.bindControlKey(189, function(evt) {
-          graph.zoomOut();
-        })
-
-
-  // export handler: CTRL + E
-  keyHandler.bindControlKey(69, () => buildMxFile([[selected, graph.getModel()]]))
-
-  // Delete handler.
-  keyHandler.bindKey(8, function(evt) {
-    console.log("delete")
-    if (graph.isEnabled()) {
-      const currentNode = graph.getSelectionCell();
-      graph.removeCells([currentNode]);
-    }
-  });
+export function configureKeyBindings(graph, selected, updateSelected) {
 
 }
 
