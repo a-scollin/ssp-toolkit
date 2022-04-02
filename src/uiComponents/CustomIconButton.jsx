@@ -12,6 +12,7 @@ import TransformIcon from '@mui/icons-material/Transform';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ClearIcon from '@mui/icons-material/Clear';
 import HistoryIcon from '@mui/icons-material/History';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function CustomIconButton(props) {
     
@@ -53,6 +54,9 @@ export default function CustomIconButton(props) {
                 case 'clear':
                     items.push(<ClearIcon/>)
                     break;
+                case 'copy':
+                    items.push(<ContentCopyIcon/>)
+                    break;
                 case 'history':
                     items.push(<HistoryIcon/>)
                     break;
@@ -69,7 +73,7 @@ export default function CustomIconButton(props) {
     return (
 
         <Tooltip title={tip}>
-        <IconButton onClick={props.func} aria-label="delete">
+        <IconButton onClick={() => props.func(props.value)} aria-label="delete">
             {items}
         </IconButton>
         </Tooltip>

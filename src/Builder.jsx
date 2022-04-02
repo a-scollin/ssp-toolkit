@@ -54,7 +54,7 @@ function add_child(children,parent,child){
     
     if(children[element].graphname === parent){
 
-      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
 
       return children
 
@@ -101,7 +101,6 @@ export default class Builder extends Component {
     this.setState({graphdata : newGraphdata})
 
   }
-
 
   // Function to be passed to graph view for invoking an expansion 
 
@@ -414,7 +413,7 @@ selectGraph(selected){
 
   updateSelectedMeta(xml, history){
    
-      this.meta = {"xml" : xml, "history" : history}
+      this.meta = {"xml" : xml, "history" : []}
 
   }
 
@@ -633,12 +632,11 @@ selectGraph(selected){
                   <Stack direction="row" spacing={1}>
                   <input type="file" style={{'display': 'none'}} ref={input => this.graphUpload = input} onChange={this.onGraphUpload.bind(this)} id="graph_upload"/>
                   <CustomIconButton tip="Import graph" type={["add","import"]} func={Object.keys(this.state.graphdata).length !== 0 ? () => this.graphUpload.click() : () => alert("Please open a project file to add graphs.")}/>
-                  <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => alert("not implemented yet!")}/> 
+                  <CustomIconButton tip="Write new graph" type={["add","write"]} func={() => this.updateGraphData({"oracles" : [["package","oracle_[1]"]], "graph" : {"package" : [["","outgoing_[1]"]]}},true, window.prompt("Please input a name for the new graph"))}/> 
                   </Stack>
                   </ReflexElement>
                   <ReflexSplitter/>
                 <ReflexElement flex={0.9} minSize="100"> 
-
                   <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
     </TabPanel>

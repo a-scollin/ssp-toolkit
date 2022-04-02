@@ -6,6 +6,8 @@ import Moveable from "react-moveable";
 import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import Slider from '@mui/material/Slider';
+import TextField from '@mui/material/TextField';
+
 
 import {
     ReflexContainer,
@@ -18,6 +20,7 @@ import { useThemeWithoutDefault } from "@mui/system";
 import CodeEditor from "./uiComponents/CodeEditor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
 import { toJS } from "draft-js/lib/DefaultDraftBlockRenderMap";
+
 
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
@@ -40,12 +43,13 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, compose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
+import { ThirtyFpsTwoTone } from "@mui/icons-material";
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
+    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, packagename : "Composed\nPackage", options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
     this.packSelection = null
@@ -543,6 +547,44 @@ newExpand(chains, value){
 
 }
 
+copyTransformation(){
+
+    var text = ""
+
+    switch(this.state.type){
+        
+        case "decompose":
+            text = '"decompose" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "subgraph" : ' + JSON.stringify(this.state.input_data, null, '\t') + '}'
+        break;
+        
+        case "expand" : 
+            text = '"expand" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "value : ' + this.targetval.toString() + '}'
+        break;
+        
+        case "compose" : 
+            text = '"compose" : {\n\t"packages" : ['
+            
+            for (var node in this.state.selected_node){
+                text += '"' + node + '",'
+            }
+            
+            if(this.state.selected_node.length > 0){
+                text = text.slice(0, -1)
+            }
+
+            text += '],\n\t "package_name" : "' + this.state.packagename + '"}'
+        
+        break;
+        
+        case "equiv":
+            text = ""
+        break;
+    }    
+
+    navigator.clipboard.writeText(text)
+
+}
+
   updateGraph(fin, displayed=null){
 
     if(displayed != null){
@@ -556,26 +598,34 @@ newExpand(chains, value){
         this.valdict = {};
     }
 }
-      
+   
+newCompose(packs, packagename){
+    
+    try{
+        var newGraph = compose(this.incomingGraph,this.state.selected_graphdata,packs, packagename)
+    } catch(e) {
+        console.log(e)
+        alert(e)
+        return 
+    }
+
+    this.updateGraph(false,newGraph)
+
+}
+
 newDecompose(packSelection,subGraph){
 
     if(!subGraph.hasOwnProperty('graph')){
         alert('Please supply a valid sub graph')
         return
     }
-
     try{
-
         var newGraph = decompose(this.incomingGraph,this.state.selected_graphdata,packSelection,subGraph)
-
     } catch(e) {
-
         console.log(e)
         alert(e)
         return 
-
     }
-
 
     this.updateGraph(false,newGraph)
 
@@ -620,7 +670,6 @@ renderDecompose(){
                                             }})} name="decomp_input"/>
                                         <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import new graph'/>
                                         <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose graph from imported'/>
-                                        <CustomIconButton type={['write']} func={() => alert("Not implemented yet")} tip='Write new graph'/>
                                         <CustomPopup
                                         open={this.state.input_data != null ? true : false}
                                         onChoice={(choice) => {
@@ -649,6 +698,61 @@ renderDecompose(){
                     options.push(<ReflexSplitter/>)
                     options.push(<ReflexElement><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
                     </ReflexElement>)
+                }
+            return options
+}
+
+renderCompose(){
+    var options = []
+                options.push(<ReflexElement flex={0.4} key={'save'}>
+                                        <Stack direction="row" spacing={1}>
+                                        <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => {
+                                            if(this.state.selected_node != null){
+                                                this.newDecompose(this.state.selected_node,json_data)
+                                            }else{
+                                            this.setState({input_data : json_data});
+                                            }})} name="decomp_input"/>
+                                    <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
+
+                                        <CustomPopup
+                                        open={this.state.select_from_list}
+                                        onChoice={(packchoice) => {
+                                            
+                                                this.newCompose([packchoice,...this.state.selected_node],this.state.packagename)                                            
+                                                this.setState({selected_node : [packchoice,...this.state.selected_node], select_from_list : false});
+                                            
+                                           }}
+                                        items={Object.keys(this.state.selected_graphdata.graph)}
+                                        title={"Choose package to compose:"}
+                                        />
+                                        </Stack>
+                    </ReflexElement>)
+                    options.push(<ReflexElement flex={0.4} key={'save'}><TextField
+                        id="outlined-name"
+                        label="Package name"
+                        value={this.state.packagename}
+                        onChange={(e) => {
+                            
+                            this.newCompose(this.state.selected_node,e.target.value)  
+                            this.setState({packagename : e.target.value})
+                        }}
+                      /></ReflexElement>)
+                if(this.state.selected_nodes != []){
+                    for (var node in this.state.selected_node){
+                        options.push(<ReflexSplitter/>)
+                        options.push(<ReflexElement key={this.state.selected_node[node]}><p>{this.state.selected_node[node]}</p><CustomIconButton type={['delete']} value={this.state.selected_node[node]} func={(v) => this.setState((prevProps) =>{
+                    
+                            var selected_node = [...prevProps.selected_node]
+                            const index = selected_node.indexOf(v);
+                            if (index > -1) {
+                                selected_node.splice(index, 1); // 2nd parameter means remove one item only
+                            }
+                            return {selected_node}
+
+                        })} tip='Remove selected'/>
+                        </ReflexElement>)
+
+                    }
                 }
             return options
 }
@@ -751,6 +855,8 @@ return options
 
     var save_tool =  this.state.type != null ? <CustomIconButton type={['save']} func={() => this.updateGraph(true)} tip='Save transformation'/>: <></>
   
+    var copy_tool =  this.state.type != null ? <CustomIconButton type={['copy']} func={() => this.copyTransformation()} tip='Copy transformation'/>: <></>
+
     var transform_options = []
 
     switch(this.state.type){
@@ -761,8 +867,12 @@ return options
         case "expand" : 
             transform_options = this.renderExpand();                    
         break;
+        case "compose" : 
+            transform_options = this.renderCompose();                    
+        break;
         case "equiv":
             transform_options = this.renderEquiv();
+        break;
     }
 
       return (
@@ -774,6 +884,7 @@ return options
             </ReflexElement>
             <ReflexSplitter/>
             <ReflexElement className="panel panel--empty">{save_tool}</ReflexElement>
+            <ReflexElement className="panel panel--empty">{copy_tool}</ReflexElement>
           </ReflexContainer>
     
     

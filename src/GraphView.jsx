@@ -240,6 +240,18 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     
     this.props.updateSelected(xml,undoManager.history)
 
+    // var cells = graph.getModel().cells
+
+    // var container = ReactDOM.findDOMNode(this.GraphRef.current);
+
+    // for (cell in cells) {
+
+    //   container.children.remove()
+
+    // }
+      
+    
+
   }.bind(this);
 
   graph.getModel().addListener(mxEvent.UNDO, listener);
@@ -517,14 +529,14 @@ for(var cell in allcells){
   
 }
 
-var packageName = window.prompt("Please enter a name for the composed package: ")
-
-var graphname = window.prompt("Please enter a name for the new graph: ")
+this.props.triggerTransformationProp('compose', selectednodes);
+// var packageName = window.prompt("Please enter a name for the composed package: ")
+// var graphname = window.prompt("Please enter a name for the new graph: ")
 
 // console.log(this.state.selected_graphdata)
 // console.log(selectednodes)
 
-this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
+// this.props.update(compose(buildIncoming(this.state.selected_graphdata), this.props.selected_graphdata, selectednodes,packageName), true, graphname)
 
 }.bind(this), transform_submenu);
 
@@ -549,13 +561,11 @@ this.props.triggerTransformationProp('reduction', cell.value);
       
 if(selected_graphdata.hasOwnProperty("history")){
 
-      alert("YES")      
       console.log(selected_graphdata)
       this.initToolbar(graph, selected_graphdata.history, selected);
 
     }else{
 
-      alert("NO")
       this.initToolbar(graph, [], selected);
 
     }
@@ -650,18 +660,21 @@ if(selected_graphdata.hasOwnProperty("history")){
                         lane.setConnectable(false);
                         
                         var dict = {};
-                        
-                        if(!selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
-                          selected_graphdata.graph.Adv_pkg = [];
+
+                        var termflag = false
+
+                        if (!selected_graphdata.graph.hasOwnProperty("Adv_pkg")){
+                          selected_graphdata.graph.Adv_pkg = []
                         }
-                        
-                        if(!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
-                          selected_graphdata.graph.terminal_pkg = [];
+
+                        if (!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
+                          selected_graphdata.graph.terminal_pkg = []
                         }
-                        
+        
                         for (var element in selected_graphdata.graph){
                           
                           if(element == 'Adv_pkg' || element == 'terminal_pkg'){
+
                             var graphElement = graph.insertVertex(lane, null, element, 20, 20, 10, 200);    
                             graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
                             
@@ -702,6 +715,10 @@ if(selected_graphdata.hasOwnProperty("history")){
                             
                             for(var edge in selected_graphdata.graph[element]){
                               if(selected_graphdata.graph[element][edge][0] == ""){
+
+                            
+                              termflag = true;
+                            
                                 var edge_element = graph.insertEdge(lane, null,selected_graphdata.graph[element][edge][1], dict[element] ,dict['terminal_pkg']);
                                 edge_element.style = edgeStyleString
                                 
@@ -738,7 +755,9 @@ if(selected_graphdata.hasOwnProperty("history")){
                       }
                       
                       // layout and save to xml
+
                       this.executeLayout(graph, lane, parent);
+
 
                       var codec = new mx.mxCodec();
 
@@ -850,6 +869,10 @@ if(selected_graphdata.hasOwnProperty("history")){
       for(var cell in cells){
         
         cellContent = cells[cell]
+
+        console.log(cells)
+        console.log(cell)
+        console.log(cellContent)
 
         // console.log(cellContent)
         
