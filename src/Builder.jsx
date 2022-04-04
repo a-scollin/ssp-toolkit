@@ -30,7 +30,7 @@ import { buildMxFile } from "./helpers/export_helper.js";
 
 
 
-import { substitute, buildIncoming, decompose, compose, expand } from "./helpers/transformation_helper";
+import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains } from "./helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -392,12 +392,14 @@ selectGraph(selected){
 
   }
 
-  updateSelected(newGraphData){
+  updateSelectedGraphdata(newGraphData){
     this.setState(prevState =>{
       
       let graphdata = {...prevState.graphdata}
-      
-      graphdata.modular_pkgs[prevState.selected] = newGraphData
+
+      graphdata.modular_pkgs[prevState.selected].graph = {...newGraphData.graph}
+
+      graphdata.modular_pkgs[prevState.selected].oracles = [...newGraphData.oracles]
 
       if(prevState.transform_type !== null){
 
@@ -415,6 +417,33 @@ selectGraph(selected){
   }
 
 
+
+
+  updateSelectedTransformations(newTransformations){
+
+    this.setState(prevState =>{
+      
+      let graphdata = {...prevState.graphdata}
+
+      graphdata.modular_pkgs[prevState.selected].to_run = {...newTransformations.to_run}
+
+      graphdata.modular_pkgs[prevState.selected].history = {...newTransformations.history}
+
+      // if(prevState.transform_type !== null){
+
+      //   let transformation_display = newGraphData
+
+      //   let transformation_base = JSON.parse(JSON.stringify(newGraphData))
+
+      //   return {graphdata, transformation_base, transformation_display}
+
+      // }
+
+      return {graphdata}
+
+    });
+  }
+
   updateSelectedMeta(xml, history){
    
       this.meta = {"xml" : xml, "history" : []}
@@ -425,21 +454,29 @@ selectGraph(selected){
 
   runTransformations(parent,passedgraphdata=null, passedtree_data=null){
 
-    var graphdata = passedgraphdata === null ? this.state.graphdata : passedgraphdata
-    var tree_data = passedtree_data === null ? this.state.tree_data : passedtree_data
+    var graphdata = passedgraphdata === null ? JSON.parse(JSON.stringify(this.state.graphdata)) : passedgraphdata
+    var tree_data = passedtree_data === null ? JSON.parse(JSON.stringify(this.state.tree_data)) : passedtree_data
     
+    console.log(graphdata.modular_pkgs)
+    console.log(parent)
+
     if(!graphdata.modular_pkgs[parent].hasOwnProperty('to_run')){
       return
     }
 
     var more_to_run;
     var parentGraphData = buildIncoming(graphdata.modular_pkgs[parent])
-    var parentGraphData_with_oracles = graphdata.modular_pkgs[parent]
+
+    var chains = findAllExpandableChains(parentGraphData)
+
+    var parentGraphData_with_oracles = {"oracles" : graphdata.modular_pkgs[parent].oracles, "graph" : graphdata.modular_pkgs[parent].graph, "reduction" : graphdata.modular_pkgs[parent].reduction}
     var newGraphData
     var can_tree_data;
 
     var value;
     var expandable_package;
+    var sel_chain;
+    var ghost;
 
     var target;
     var subgraph;
@@ -452,92 +489,154 @@ selectGraph(selected){
     var partial;
     var include;
 
+    var reduction;
 
-    for(var newGraph in parentGraphData_with_oracles.to_run){
+
+    for(var newGraph in graphdata.modular_pkgs[parent].to_run){
       
+      alert("beans")
       if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
         throw "Name already exists!"
       }
-      if(parentGraphData_with_oracles.to_run[newGraph].type === 'substitute'){
+      if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'substitute'){
 
-        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(lhs)){
-          lhs = parentGraphData_with_oracles.to_run[newGraph].lhs
+        if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('lhs')){
+          lhs = graphdata.modular_pkgs[parent].to_run[newGraph].lhs
         }else{
           throw "lhs required for substitution : " + newGraph
         }  
         
-        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(rhs)){
-          rhs = parentGraphData_with_oracles.to_run[newGraph].rhs
+        if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('rhs')){
+          rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
         }else{
           throw "rhs required for substitution : " + newGraph
         }  
         
-        rhs = parentGraphData_with_oracles.to_run[newGraph].rhs
+        rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
           
-        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(partial)){
-          partial = parentGraphData_with_oracles.to_run[newGraph].partial
+        if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('partial')){
+          partial = graphdata.modular_pkgs[parent].to_run[newGraph].partial
         }else{
           partial = false;
         }
 
-        // if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(include)){          
-        //   include = parentGraphData_with_oracles.to_run[newGraph].include
+        // if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty(include)){          
+        //   include = graphdata.modular_pkgs[parent].to_run[newGraph].include
         // }else{
           include = []
         // }
 
         newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial, include)
                     
-        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'decompose'){
+        }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'decompose'){
 
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(target)){
-            target = parentGraphData_with_oracles.to_run[newGraph].target
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('target')){
+            target = graphdata.modular_pkgs[parent].to_run[newGraph].target
           }else{
             throw "target required for decomposition : " + newGraph
           }  
 
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(subgraph)){
-            subgraph = parentGraphData_with_oracles.to_run[newGraph].subgraph
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('subgraph')){
+            subgraph = graphdata.modular_pkgs[parent].to_run[newGraph].subgraph
           }else{
             throw "subgraph required for decomposition : " + newGraph
           }
           
           newGraphData = decompose(parentGraphData,parentGraphData_with_oracles,target,subgraph)
 
-        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'compose'){
+        }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'compose'){
           
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(packages)){
-            packages = parentGraphData_with_oracles.to_run[newGraph].packages
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('packages')){
+            packages = graphdata.modular_pkgs[parent].to_run[newGraph].packages
           }else{
             throw "packages required for composition : " + newGraph
           }  
 
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(package_name)){
-            package_name = parentGraphData_with_oracles.to_run[newGraph].package_name
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('package_name')){
+            package_name = graphdata.modular_pkgs[parent].to_run[newGraph].package_name
           }else{
             throw "package_name required for composition : " + newGraph
           }
           
           newGraphData = compose(parentGraphData,parentGraphData_with_oracles,packages,package_name)
 
-        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'expand'){
+        }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'expand'){
         
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(expandable_package)){
-            expandable_package = parentGraphData_with_oracles.to_run[newGraph].expandable_package
+
+          sel_chain = null
+
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('expandable_package')){
+            expandable_package = graphdata.modular_pkgs[parent].to_run[newGraph].expandable_package
           }else{
-            throw "packages required for expansion : " + newGraph
+            throw "expandable_package required for expansion : " + newGraph
           }  
 
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(value)){
-            value = parentGraphData_with_oracles.to_run[newGraph].value
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('value')){
+            value = graphdata.modular_pkgs[parent].to_run[newGraph].value
           }else{
             throw "value required for composition : " + newGraph
           }
+
+
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('ghost')){
+            ghost = graphdata.modular_pkgs[parent].to_run[newGraph].ghost
+          }else{
+            ghost = true
+          }
+
           // expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true)
-          newGraphData = expand(parentGraphData,parentGraphData_with_oracles,packages,package_name)
+
+
+          for(var chain in chains){
+            if(chains[chain].includes(expandable_package)){
+              sel_chain = chains[chain]
+              break
+            }
+          }
+
+          if(sel_chain == null){
+            throw expandable_package + " appears in no expandable chain!"
+          }
+          
+          newGraphData = expand(parentGraphData,parentGraphData_with_oracles, sel_chain, value,ghost)
+
+        }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'reduce'){
+          
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('reduction')){
+            reduction = graphdata.modular_pkgs[parent].to_run[newGraph].reduction
+          }else{
+            console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
+            throw "reduction required for reduce : " + newGraph
+          }
+
+          newGraphData = JSON.parse(JSON.stringify(parentGraphData_with_oracles))
+
+          if(newGraphData.reduction != null){
+            
+            newGraphData.reduction = [...reduction, ...newGraphData.reduction]
+          }else{
+            newGraphData.reduction = reduction
+          }
+          
+
+        }else{
+
+          throw "invalid type : " + graphdata.modular_pkgs[parent].to_run[newGraph].type
 
         }
-        graphdata.modular_pkgs[newGraph] = newGraphData 
+        
+        
+        if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty("to_run")){
+          
+          graphdata.modular_pkgs[newGraph] = {...newGraphData, "to_run" : graphdata.modular_pkgs[parent].to_run[newGraph].to_run}
+          
+        }else{
+          graphdata.modular_pkgs[newGraph] = newGraphData
+        }
+        
+        console.log(newGraphData)
+        console.log(graphdata.modular_pkgs)
+
         can_tree_data = add_child(tree_data, parent, newGraph)
 
         if(can_tree_data === null){
@@ -546,9 +645,11 @@ selectGraph(selected){
 
         tree_data = can_tree_data
         
-      if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty("to_run")){
-        graphdata.modular_pkgs[newGraph] = { newGraphData, ...parentGraphData_with_oracles.to_run[newGraph].to_run} 
-        [graphdata, tree_data] = this.runTransformations(newGraph)
+        if(graphdata.modular_pkgs[newGraph].hasOwnProperty("to_run")){
+          
+          console.log(graphdata.modular_pkgs);
+
+        [graphdata, tree_data] = this.runTransformations(newGraph, graphdata, tree_data)
       }
 
       graphdata.modular_pkgs[parent].history = {...graphdata.modular_pkgs[parent].to_run}
@@ -582,9 +683,9 @@ selectGraph(selected){
 
     var code_editor = [<CodeEditor text={JSON.stringify(code, null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 
-    var transform_code = {"to_run" : this.state.graphdata.modular_pkgs[this.state.selected].to_run == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].to_run, "transformation_history" : this.state.graphdata.modular_pkgs[this.state.selected].transformation_history == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].transformation_history}
+    var transform_code = {"to_run" : this.state.graphdata.modular_pkgs[this.state.selected].to_run == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].to_run, "history" : this.state.graphdata.modular_pkgs[this.state.selected].history == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].history}
 
-    var transform_editor = [<CodeEditor text={JSON.stringify(transform_code, null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+    var transform_editor = [<CodeEditor text={JSON.stringify(transform_code, null, '\t')} onSubmit={(newTransformations) => this.updateSelectedTransformations(newTransformations)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 
 
     }else{
