@@ -702,7 +702,7 @@ if(selected_graphdata.hasOwnProperty("history")){
                             if(selected_graphdata.hasOwnProperty("reduction")){
                               if(selected_graphdata.reduction.includes(element)){
                                 console.log(selected_graphdata.reduction)
-                                graphElement.style += "gradientColor=#808080;"
+                                graphElement.style += "fillColor=#dae8fc;"
                               }
                             }                          
                             

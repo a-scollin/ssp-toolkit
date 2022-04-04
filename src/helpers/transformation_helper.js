@@ -877,7 +877,6 @@ function resolveInnerEdges(newGraphData, newPackages,rhs, rhs_in, rhs_out, count
 export function compose(graphData_passed,graphData_with_oracles,selectedNodes,packageName){
     
     
-
     var graphData = JSON.parse(JSON.stringify(graphData_passed))
 
     console.log(graphData)
