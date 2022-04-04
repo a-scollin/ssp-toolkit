@@ -444,9 +444,9 @@ selectGraph(selected){
     });
   }
 
-  updateSelectedMeta(xml, history){
+  updateSelectedMeta(xml, edithistory){
    
-      this.meta = {"xml" : xml, "history" : []}
+      this.meta = {"xml" : xml, "edithistory" : []}
 
   }
 
@@ -494,7 +494,6 @@ selectGraph(selected){
 
     for(var newGraph in graphdata.modular_pkgs[parent].to_run){
       
-      alert("beans")
       if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
         throw "Name already exists!"
       }

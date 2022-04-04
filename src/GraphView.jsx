@@ -575,16 +575,16 @@ this.props.triggerTransformationProp('reduction', selectednodes);
 
 
       
-if(selected_graphdata.hasOwnProperty("history")){
+// if(selected_graphdata.hasOwnProperty("edithistory")){
 
-      console.log(selected_graphdata)
-      this.initToolbar(graph, selected_graphdata.history, selected);
+//       console.log(selected_graphdata)
+//       this.initToolbar(graph, selected_graphdata.edithistory, selected);
 
-    }else{
+//     }else{
 
       this.initToolbar(graph, [], selected);
 
-    }
+    // }
 
 
 
