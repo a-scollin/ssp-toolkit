@@ -13,7 +13,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ClearIcon from '@mui/icons-material/Clear';
 import HistoryIcon from '@mui/icons-material/History';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import PendingIcon from '@mui/icons-material/Pending';
 export default function CustomIconButton(props) {
     
     let items = []
@@ -60,6 +61,11 @@ export default function CustomIconButton(props) {
                 case 'history':
                     items.push(<HistoryIcon/>)
                     break;
+                case 'partial':
+                    items.push(<AutoGraphIcon/>)
+                    break;
+                case 'ghost':
+                    items.push(<PendingIcon/>)
 
                 default:
                     break;

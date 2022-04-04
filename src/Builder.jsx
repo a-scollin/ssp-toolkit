@@ -30,7 +30,7 @@ import { buildMxFile } from "./helpers/export_helper.js";
 
 
 
-import { substitute, buildIncoming } from "./helpers/transformation_helper";
+import { substitute, buildIncoming, decompose, compose, expand } from "./helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -116,6 +116,8 @@ export default class Builder extends Component {
         this.transform_type = type
 
         this.transform_node = cell_value
+
+        console.log(this.state.graphdata.modular_pkgs[this.state.selected])
         
         this.setState({transformation_base : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected])), transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
     
@@ -436,56 +438,114 @@ selectGraph(selected){
     var newGraphData
     var can_tree_data;
 
+    var value;
+    var expandable_package;
+
+    var target;
+    var subgraph;
+
+    var packages;
+    var package_name;
+
     var lhs;
     var rhs;
-    var partialMatching;
+    var partial;
     var include;
 
 
     for(var newGraph in parentGraphData_with_oracles.to_run){
-
+      
+      if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
+        throw "Name already exists!"
+      }
       if(parentGraphData_with_oracles.to_run[newGraph].type === 'substitute'){
 
+        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(lhs)){
           lhs = parentGraphData_with_oracles.to_run[newGraph].lhs
+        }else{
+          throw "lhs required for substitution : " + newGraph
+        }  
+        
+        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(rhs)){
           rhs = parentGraphData_with_oracles.to_run[newGraph].rhs
+        }else{
+          throw "rhs required for substitution : " + newGraph
+        }  
+        
+        rhs = parentGraphData_with_oracles.to_run[newGraph].rhs
           
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(partialMatching)){
-            partialMatching = parentGraphData_with_oracles.to_run[newGraph].partialMatching
-          }else{
-            partialMatching = false;
-          }
+        if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(partial)){
+          partial = parentGraphData_with_oracles.to_run[newGraph].partial
+        }else{
+          partial = false;
+        }
 
-          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(include)){          
-            include = parentGraphData_with_oracles.to_run[newGraph].include
+        // if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(include)){          
+        //   include = parentGraphData_with_oracles.to_run[newGraph].include
+        // }else{
+          include = []
+        // }
+
+        newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial, include)
+                    
+        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'decompose'){
+
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(target)){
+            target = parentGraphData_with_oracles.to_run[newGraph].target
+          }else{
+            throw "target required for decomposition : " + newGraph
+          }  
+
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(subgraph)){
+            subgraph = parentGraphData_with_oracles.to_run[newGraph].subgraph
+          }else{
+            throw "subgraph required for decomposition : " + newGraph
+          }
           
+          newGraphData = decompose(parentGraphData,parentGraphData_with_oracles,target,subgraph)
+
+        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'compose'){
+          
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(packages)){
+            packages = parentGraphData_with_oracles.to_run[newGraph].packages
           }else{
-            include = []
+            throw "packages required for composition : " + newGraph
+          }  
+
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(package_name)){
+            package_name = parentGraphData_with_oracles.to_run[newGraph].package_name
+          }else{
+            throw "package_name required for composition : " + newGraph
           }
+          
+          newGraphData = compose(parentGraphData,parentGraphData_with_oracles,packages,package_name)
 
-          newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partialMatching, include)
+        }else if(parentGraphData_with_oracles.to_run[newGraph].type === 'expand'){
+        
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(expandable_package)){
+            expandable_package = parentGraphData_with_oracles.to_run[newGraph].expandable_package
+          }else{
+            throw "packages required for expansion : " + newGraph
+          }  
 
-          console.log(parent)
-          console.log(lhs)
-          console.log(rhs)
-          console.log(newGraph)          
-          console.log(newGraphData)
-
-          if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
-            throw "Name already exists!"
+          if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty(value)){
+            value = parentGraphData_with_oracles.to_run[newGraph].value
+          }else{
+            throw "value required for composition : " + newGraph
           }
+          // expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true)
+          newGraphData = expand(parentGraphData,parentGraphData_with_oracles,packages,package_name)
 
-          graphdata.modular_pkgs[newGraph] = newGraphData 
+        }
+        graphdata.modular_pkgs[newGraph] = newGraphData 
+        can_tree_data = add_child(tree_data, parent, newGraph)
 
-          can_tree_data = add_child(tree_data, parent, newGraph)
+        if(can_tree_data === null){
+          throw "Parent package doesn't exist!"
+        }
 
-          if(can_tree_data === null){
-            throw "Parent package doesn't exist!"
-          }
-
-          tree_data = can_tree_data
-
-      }
-
+        tree_data = can_tree_data
+        
       if(parentGraphData_with_oracles.to_run[newGraph].hasOwnProperty("to_run")){
         graphdata.modular_pkgs[newGraph] = { newGraphData, ...parentGraphData_with_oracles.to_run[newGraph].to_run} 
         [graphdata, tree_data] = this.runTransformations(newGraph)
@@ -556,7 +616,7 @@ selectGraph(selected){
 
         </ReflexElement>
         <ReflexSplitter/>
-        <ReflexElement flex={0.9} className="site-content">
+        <ReflexElement flex={0.95} className="site-content">
           <ReflexContainer className="site-content" orientation="vertical">
 
             <ReflexElement className="video-panels" flex={0.20} minSize="100">
@@ -608,15 +668,19 @@ selectGraph(selected){
             
             <ReflexElement>
               <ReflexContainer>
-                <ReflexElement flex={0.05}>
+                <ReflexElement flex={this.transform_type == null ? 0.05 : 0}>
                 <div ref={this.toolbarRef} style={{backgroundColor : "#F9F6EE", height:"100%", width : "100%"}} id="divGraph" />
                 </ReflexElement>
                 <ReflexSplitter/>
-                <ReflexElement flex={0.95}>
+                <ReflexElement flex={this.transform_type == null ? 0.95 : 0.85}>
                 <ReflexContainer>
                 {transform}
                 </ReflexContainer>
                 </ReflexElement>
+                <ReflexSplitter/>
+        <ReflexElement flex={this.transform_type == null ? 0 : 0.15} className="video-panels">
+          <TransformationTools update={this.updateGraphData.bind(this)} allGraphData={this.state.graphdata} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
+        </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
             
@@ -653,11 +717,6 @@ selectGraph(selected){
         
           </ReflexContainer>
         </ReflexElement>
-        <ReflexSplitter/>
-        <ReflexElement className="video-panels">
-          <TransformationTools update={this.updateGraphData.bind(this)} allGraphData={this.state.graphdata} updateEquivsProp={this.updateEquivs.bind(this)} equivs={graphEquivs} type={this.transform_type} node={this.transform_node} base={this.state.transformation_base}/>
-        </ReflexElement>
-      
       </ReflexContainer>
     );
   }

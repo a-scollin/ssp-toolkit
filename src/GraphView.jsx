@@ -613,6 +613,16 @@ if(selected_graphdata.hasOwnProperty("history")){
         graph.swimlaneSelectionEnabled = false
         
       }else{
+        const keyHandler = new mx.mxKeyHandler(graph);
+
+        keyHandler.bindControlKey(187, function(evt) {
+          graph.zoomIn();
+        })
+
+        keyHandler.bindControlKey(189, function(evt) {
+          graph.zoomOut();
+        })
+        graph.refresh()
         graph.fit()
       }
       

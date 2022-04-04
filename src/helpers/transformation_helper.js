@@ -1,8 +1,9 @@
 import _, { fromPairs } from 'lodash'
 
 
-export function buildIncoming(graphdata){
+export function buildIncoming(graphdatapassed){
 
+    var graphdata = JSON.parse(JSON.stringify(graphdatapassed))
     var new_graph = {}
 
     for(var node in graphdata.graph){
@@ -85,30 +86,9 @@ function findChain(graphData, node, visitedNodes = [], isBase = false){
 
     if(isBase){
 
-        for(var edge in graphData[node].outgoing){
-
-            if(!visited.includes(graphData[node].outgoing[edge][0])){
-    
-                if(graphData[node].outgoing[edge][0].split('...').length == 2){
-                    
-                    if(graphData[node].outgoing[edge][1].split('...').length != 2){
-                        throw node + " connects to " + graphData[node].outgoing[edge][0] + " with a non expandable edge! ("+ graphData[node].outgoing[edge][1] +")";                     
-                    }
-    
-                    [more_chain, visited] = findChain(graphData,graphData[node].outgoing[edge][0],visited)
-                    
-                    chain = [...more_chain, ...chain]
-                    
-    
-                }
-    
-        }
-
-        
-    }
     return [[node, ...chain], visited]
 
-}
+    }
 
     for(var edge in graphData[node].outgoing){
 
@@ -1901,7 +1881,6 @@ function expandChain(graphData, graphData_with_oracles, chain, value, ghost){
     var expandable;
     
     var base_packs;
-
     
     [base_packs, expandable] = _.partition(chain, element => element.split("...").length != 2)
         
@@ -2219,17 +2198,11 @@ function expandChain(graphData, graphData_with_oracles, chain, value, ghost){
 
 }
 
-export function expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true){
+export function expand(graphData, graphData_with_oracles, chain, value = 3, ghost = true){
 
-    var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles))
+    var newGraph = JSON.parse(JSON.stringify(graphData_with_oracles));
 
-    console.log(chains)
-
-    for(var chain in chains){
-
-        newGraph = expandChain(graphData, newGraph, chains[chain], value, ghost)
-        
-    }
+    newGraph = expandChain(graphData, newGraph, chain, value, ghost)
 
     return newGraph
 

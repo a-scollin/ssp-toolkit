@@ -8,7 +8,7 @@ import { black } from "ansi-colors";
 import Slider from '@mui/material/Slider';
 import TextField from '@mui/material/TextField';
 
-
+import GraphView from "./GraphView.jsx";
 import {
     ReflexContainer,
     ReflexSplitter,
@@ -54,6 +54,7 @@ export default class TransformationTools extends Component {
     this.valdict = {}
     this.packSelection = null
     this.targetval = 0
+    this.targetdict = {}
     this.input_data = null 
    console.log("INIT")
   
@@ -61,14 +62,18 @@ export default class TransformationTools extends Component {
 
 
   componentDidUpdate(prevProps){
-      
+    
+    try {
     this.incomingGraph = buildIncoming(this.props.base)
+    }catch (e){
+        alert("error")
+        return 
+    }
     
     if(this.props.type !== prevProps.type || this.props.node !== prevProps.node){
         
         if(this.props.type == 'expand'){
             this.expandableChains = findAllExpandableChains(this.incomingGraph)
-            console.log(this.expandableChains)
         }else{
             this.expandableChains = null
         }
@@ -528,9 +533,8 @@ equiv_to_option(){
   
 }
 
-newExpand(chains, value){
+newExpand(passedchain, value){
 
-    // This only works for one chain !!!! need to make chains stateful within this function.. 
     // the expand function also needs to be able to take multiple values for multiple chains 
 
     if(this.targetval === value){
@@ -539,19 +543,25 @@ newExpand(chains, value){
 
     this.targetval = value
 
+    this.targetdict[passedchain] = value
 
+    var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
 
-    try{
+    for(var chain in this.targetdict){
 
-        var newGraph = expand(this.incomingGraph, this.state.selected_graphdata, chains, this.targetval)
+        try{
 
-    } catch (e) { 
+        newGraph = expand(this.incomingGraph, newGraph, chain.split(','), this.targetdict[chain])
+    
+        } catch (e) { 
+    
+            console.log(e)
+            return
+    
+        }
 
-        alert(e)
-        return
-
-    }
-
+    }   
+    
     this.updateGraph(false,newGraph)
 
 }
@@ -649,18 +659,18 @@ renderExpand(){
     var options = []
 
     for(var chain in this.expandableChains){
-        options.push(<ReflexElement flex={0.8} key={this.expandableChains[chain]}>{this.expandableChains[chain]}
-            <div key={this.expandableChains[chain]} reference={this.expandableChains[chain]} className="boxpad">
+        options.push(<ReflexElement flex={0.8} key={this.expandableChains[chain]}>{this.expandableChains[chain].join(",\n")}
+            <div key={this.expandableChains[chain].join(",\n")} reference={this.expandableChains[chain]} className="boxpad">
             <Slider style={{opacity : 1}}
 aria-label="Temperature"
-defaultValue={30}
+defaultValue={1}
 valueLabelDisplay="auto"
 step={1}
 marks
 min={1}
 max={10}
 name={this.expandableChains[chain]}
-onChange={ (e, val) => this.newExpand([e.target.name],val)}  />
+onChange={ (e, val) => this.newExpand(e.target.name,val)}  />
 </div>
             </ReflexElement>)
             options.push(<ReflexSplitter/>)
@@ -668,12 +678,17 @@ onChange={ (e, val) => this.newExpand([e.target.name],val)}  />
 
     options.pop()
 
+    options.push(<ReflexSplitter/>)
+    options.push(<ReflexElement minSize="50" flex={0.25}><Stack direction="row" spacing={1}>   
+    <CustomIconButton type={['ghost']} func={() => alert("Error")} tip='Add Ghost Edges'/>
+ </Stack></ReflexElement>)
+
     return options
 }
   
 renderDecompose(){
     var options = []
-                options.push(<ReflexElement flex={0.8} key={'save'}>
+                options.push(<ReflexElement flex={0.2} key={'save'}>
                                         <Stack direction="row" spacing={1}>
                                         <input type="file" style={{'display': 'none'}} ref={input => this.decompUpload = input} onChange={(event) => resolveInput(event.target.files[0], (json_data) => {
                                             if(this.state.selected_node != null){
@@ -684,11 +699,13 @@ renderDecompose(){
                                         <CustomIconButton type={['import']} func={() => this.decompUpload.click()} tip='Import new graph'/>
                                         <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose graph from imported'/>
                                         <CustomPopup
-                                        open={this.state.input_data != null ? true : false}
+                                        open={this.state.selected_node == null ? true : false}
                                         onChoice={(choice) => {
                                             this.decompUpload.value = null
-                                            this.newDecompose(choice, this.state.input_data)
-                                            this.setState({input_data : null, selected_node : choice })}}
+                                            if(this.state.input_data != null){
+                                                this.newDecompose(choice, this.state.input_data)
+                                            }
+                                            this.setState({selected_node : choice })}}
                                         items={Object.keys(this.state.selected_graphdata.graph)}
                                         title="Choose package to decompose:"
                                         />
@@ -697,7 +714,7 @@ renderDecompose(){
                                         onChoice={(packchoice) => {
                                             if(this.state.selected_node != null){
                                                 this.newDecompose(this.state.selected_node,this.state.allGraphData.modular_pkgs[packchoice])
-                                                this.setState({select_from_list : false})
+                                                this.setState({input_data : this.state.allGraphData.modular_pkgs[packchoice], select_from_list : false})
                                             }else{
                                                 this.setState({input_data : this.state.allGraphData.modular_pkgs[packchoice], select_from_list : false});
                                             }
@@ -707,9 +724,14 @@ renderDecompose(){
                                         />
                                         </Stack>
                     </ReflexElement>)
+                if(this.state.input_data != null){
+                    options.push(<ReflexSplitter/>)
+                    options.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={() => {}} toolbarRef={null}  allow_editing={false} selected={""} triggerTransformationProp = {() => {}} transform={true} selected_graphdata={this.state.input_data}/></ReflexElement>)
+                }
+                
                 if(this.state.selected_node != null){
                     options.push(<ReflexSplitter/>)
-                    options.push(<ReflexElement><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
+                    options.push(<ReflexElement flex={0.3}><p>{this.state.selected_node}</p><CustomIconButton type={['delete']} func={() => this.setState({selected_node : null })} tip='Remove selected'/>
                     </ReflexElement>)
                 }
             return options
@@ -725,7 +747,7 @@ renderCompose(){
                                             }else{
                                             this.setState({input_data : json_data});
                                             }})} name="decomp_input"/>
-                                    <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
+                                    <CustomIconButton type={['add']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
 
                                         <CustomPopup
                                         open={this.state.select_from_list}
@@ -740,7 +762,10 @@ renderCompose(){
                                         />
                                         </Stack>
                     </ReflexElement>)
-                    options.push(<ReflexElement flex={0.4} key={'save'}><TextField
+                    options.push(<ReflexSplitter/>)
+                    options.push(<ReflexElement flex={0.4} key={'save'}>
+                        <TextField
+                        style={{'margin-top' : '25px','margin-left' : '25px'}}
                         id="outlined-name"
                         label="Package name"
                         value={this.state.packagename}
@@ -779,7 +804,6 @@ newReduction(selected){
 
     console.log(newGraph)
 
-    alert("HERE")
 
     this.updateGraph(false,newGraph)
 
@@ -790,7 +814,7 @@ renderReduction(){
     var options = []
                 options.push(<ReflexElement flex={0.4} key={'save'}>
                                         <Stack direction="row" spacing={1}>
-                                    <CustomIconButton type={['list']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
+                                    <CustomIconButton type={['add']} func={() => this.setState({select_from_list : true})} tip='Choose package'/>
 
                                         <CustomPopup
                                         open={this.state.select_from_list}
@@ -874,28 +898,52 @@ renderEquiv(){
 
 options.push()
 options.push(
- <ReflexElement flex={0.3} key="ui">
-<CustomIconButton type={['add']} func={() => this.setState({select_from_list : true, equiv_lhs : null, equiv_rhs : null})} tip='Define a new equivalence'/>
+ <ReflexElement flex={0.5} key="ui">
+<CustomIconButton type={['import']} func={() => alert("Error")} tip='Import LHS'/>
+<CustomIconButton type={['list']} func={() => this.setState({select_from_list_l : true})} tip='Choose LHS'/>
 <CustomPopup
-                                        open={this.state.select_from_list && this.state.equiv_lhs === null}
+                                        open={this.state.select_from_list_l}
                                         onChoice={(choice) => {
-                                        this.setState({equiv_lhs : this.state.allGraphData.modular_pkgs[choice]})}}
+                                        if(this.state.equiv_rhs != null){
+                                            this.newSubstitute(this.state.allGraphData.modular_pkgs[choice], this.state.equiv_rhs)
+                                        }    
+                                        this.setState({equiv_lhs : this.state.allGraphData.modular_pkgs[choice], select_from_list_l : false})}}
                                         items={Object.keys(this.state.allGraphData.modular_pkgs)}
                                         title="Choose graph for LHS of equivalence :"
                                         />
-<CustomPopup
-                                        open={this.state.select_from_list && this.state.equiv_lhs !== null}
-                                        onChoice={(choice) => {
-                                            this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice])
-                                            this.setState({equiv_lhs : null, select_from_list : false })
-                                            }}
-                                        items={Object.keys(this.state.allGraphData.modular_pkgs)}
-                                        title="Choose graph for RHS of equivalence:"
-                                        />
-
-
 </ReflexElement>
 )
+if(this.state.equiv_lhs != null){
+        options.push(<ReflexSplitter/>)
+        options.push(<ReflexElement className="workboard" minSize="50" flex={0.25}><GraphView update={() => {}} toolbarRef={null}  allow_editing={false} selected={""} triggerTransformationProp = {() => {}} transform={true} selected_graphdata={this.state.equiv_lhs}/></ReflexElement>)
+}
+options.push(<ReflexSplitter/>)
+options.push(
+    <ReflexElement flex={0.5} key="ui">
+   <CustomIconButton type={['import']} func={() => alert("Error")} tip='Import RHS'/>
+   <CustomIconButton type={['list']} func={() => this.setState({select_from_list_r : true})} tip='Choose RHS'/>
+   <CustomPopup
+                                           open={this.state.select_from_list_r}
+                                           onChoice={(choice) => {
+                                           if(this.state.equiv_lhs != null){
+                                               this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice])
+                                           }    
+                                           this.setState({equiv_rhs : this.state.allGraphData.modular_pkgs[choice], select_from_list_r : false})}}
+                                           items={Object.keys(this.state.allGraphData.modular_pkgs)}
+                                           title="Choose graph for LHS of equivalence :"
+                                           />
+   </ReflexElement>
+   )
+   if(this.state.equiv_rhs != null){
+           options.push(<ReflexSplitter/>)
+           options.push(<ReflexElement className="workboard" minSize="50" flex={0.25}><GraphView update={() => {}} toolbarRef={null}  allow_editing={false} selected={""} triggerTransformationProp = {() => {}} transform={true} selected_graphdata={this.state.equiv_rhs}/></ReflexElement>)
+   }
+   options.push(<ReflexSplitter/>)
+   options.push(<ReflexElement minSize="50" flex={0.25}><Stack direction="row" spacing={1}>   
+   <CustomIconButton type={['partial']} func={() => alert("Error")} tip='Partial Matching'/>
+</Stack></ReflexElement>)
+   
+
 // options.push(<ReflexSplitter/>)
 // options.push(<ReflexElement flex={0.7} key="equivs">
 //  <ReflexContainer orientation="vertical">
@@ -953,8 +1001,12 @@ return options
         </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter/>
-            <ReflexElement className="panel panel--empty">{save_tool}</ReflexElement>
-            <ReflexElement className="panel panel--empty">{copy_tool}</ReflexElement>
+            <ReflexElement className="panel panel--empty">                                        
+                <Stack direction="row" spacing={1}>
+                    {save_tool} 
+                    {copy_tool}
+                </Stack>
+            </ReflexElement>
           </ReflexContainer>
     
     
