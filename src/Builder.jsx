@@ -545,9 +545,7 @@ selectGraph(selected){
               throw rhs + " doesn't exist!"
             }
 
-            console.log(rhs);
             rhs = {"oracles" : graphdata.modular_pkgs[rhs].oracles, "graph" : graphdata.modular_pkgs[rhs].graph}
-console.log(rhs)
 
           }
 
