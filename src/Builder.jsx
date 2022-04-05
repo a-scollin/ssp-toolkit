@@ -30,7 +30,7 @@ import { buildMxFile } from "./helpers/export_helper.js";
 
 
 
-import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains } from "./helpers/transformation_helper";
+import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains, reduce } from "./helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -54,7 +54,7 @@ function add_child(children,parent,child){
     
     if(children[element].graphname === parent){
 
-      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
+      children[element].children.push({title : child , graphname : child, number : {"expand" : {}, "reduce" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
 
       return children
 
@@ -119,7 +119,7 @@ export default class Builder extends Component {
 
         console.log(this.state.graphdata.modular_pkgs[this.state.selected])
         
-        this.setState({transformation_base : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected])), transformation_display : this.state.graphdata.modular_pkgs[this.state.selected]});
+        this.setState({transformation_base : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected])), transformation_display : JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))});
     
   }
 
@@ -139,7 +139,10 @@ export default class Builder extends Component {
           return 
         }
       }
-      this.setState({ graphdata: json_data }, function(){
+
+      var selected = Object.keys(json_data.modular_pkgs)[0]
+
+      this.setState({ graphdata: json_data, selected : selected }, function(){
         this.createSelectItems();
       });
     })
@@ -177,7 +180,7 @@ export default class Builder extends Component {
 
           for(var graphname in json_data.modular_pkgs){
 
-            tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
+            tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduce" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
             graphdata.modular_pkgs[graphname] = json_data.modular_pkgs[graphname];                     // update the name property, assign a new value                 
 
           }
@@ -189,7 +192,7 @@ export default class Builder extends Component {
         if(json_data.hasOwnProperty("graph")){
 
           var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
-          tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
+          tree_data.push({title : graphname , graphname : graphname, number : {"expand" : {}, "reduce" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, children : []})
           graphdata.modular_pkgs[graphname] = json_data;                     // update the name property, assign a new value                 
           return { graphdata, tree_data };            
 
@@ -211,7 +214,7 @@ export default class Builder extends Component {
     let items = [];         
     var i = 0;
     for (var graphname in this.state.graphdata.modular_pkgs) {   
-         items.push({title : graphname, number : {"expand" : {}, "reduction" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, graphname : graphname, children : []});   
+         items.push({title : graphname, number : {"expand" : {}, "reduce" :{}, "decompose" : {}, "compose" : {}, "equiv" : {}}, graphname : graphname, children : []});   
          i++;
          //here I will be creating my options dynamically based on
          //what props are currently passed to the parent component
@@ -223,7 +226,9 @@ export default class Builder extends Component {
 }  
 
 
-updateGraphData(newGraphData, fin, transform_name=null){
+updateGraphData(newGraphDataPassed, fin, transform_name=null){
+
+  var newGraphData = {"oracles" : newGraphDataPassed.oracles, "graph" : newGraphDataPassed.graph, "reduction" : (newGraphDataPassed.hasOwnProperty("reduction") ? newGraphDataPassed.reduction : [])} 
 
   console.log(newGraphData)
 
@@ -246,7 +251,7 @@ if(fin){
     let transformation_base = {};
     let transformation_display = {};
 
-    tree_data.push({'title' : graphname , 'graphname' : graphname, 'number' : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, 'children' : []})
+    tree_data.push({'title' : graphname , 'graphname' : graphname, 'number' : {"expand" : {}, "reduce" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, 'children' : []})
     graphdata.modular_pkgs[graphname] = newGraphData;                     // update the name property, assign a new value                 
 
     this.transform_type = null
@@ -285,6 +290,7 @@ matchSortableTreeElmSave(element,newGraphData, transform_name){
     
     var number = element.number[this.transform_type]
 
+    console.log(this.transform_type)
     console.log('number')
     console.log(number)
 
@@ -300,7 +306,7 @@ matchSortableTreeElmSave(element,newGraphData, transform_name){
       element.number[this.transform_type][graphname] = 1
     }
 
-      element.children.push({title : graphname, graphname : graphname, number : {"expand" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
+      element.children.push({title : graphname, graphname : graphname, number : {"expand" : {}, "reduce" : {}, "decompose" : {}, "composition" : {}, "equiv" : {}}, children : []})
       
       this.setState(prevState => {
 
@@ -392,6 +398,12 @@ selectGraph(selected){
 
   }
 
+  updateSelectedFromXML(xml){
+
+    
+
+  }
+
   updateSelectedGraphdata(newGraphData){
     this.setState(prevState =>{
       
@@ -401,16 +413,24 @@ selectGraph(selected){
 
       graphdata.modular_pkgs[prevState.selected].oracles = [...newGraphData.oracles]
 
-      if(prevState.transform_type !== null){
-
-        let transformation_display = newGraphData
-
-        let transformation_base = JSON.parse(JSON.stringify(newGraphData))
-
-        return {graphdata, transformation_base, transformation_display}
-
+      if(newGraphData.hasOwnProperty("reudction")){
+      graphdata.modular_pkgs[prevState.selected].reduction = [...newGraphData.reduction] 
       }
+      delete graphdata.modular_pkgs[prevState.selected].xml
 
+      if(prevState.transform_type !== null){
+        
+        let transformation_display = newGraphData
+        
+        let transformation_base = JSON.parse(JSON.stringify(newGraphData))
+        
+        console.log(graphdata)
+        return {graphdata, transformation_base, transformation_display}
+        
+      }
+      console.log(graphdata)
+
+      
       return {graphdata}
 
     });
@@ -469,7 +489,7 @@ selectGraph(selected){
 
     var chains = findAllExpandableChains(parentGraphData)
 
-    var parentGraphData_with_oracles = {"oracles" : graphdata.modular_pkgs[parent].oracles, "graph" : graphdata.modular_pkgs[parent].graph, "reduction" : graphdata.modular_pkgs[parent].reduction}
+    var parentGraphData_with_oracles = {"oracles" : graphdata.modular_pkgs[parent].oracles, "graph" : graphdata.modular_pkgs[parent].graph, "reduction" : (graphdata.modular_pkgs[parent].hasOwnProperty("reduction") ? graphdata.modular_pkgs[parent].reduction : [])}
     var newGraphData
     var can_tree_data;
 
@@ -490,6 +510,7 @@ selectGraph(selected){
     var include;
 
     var reduction;
+    var bitstring;
 
 
     for(var newGraph in graphdata.modular_pkgs[parent].to_run){
@@ -501,17 +522,38 @@ selectGraph(selected){
 
         if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('lhs')){
           lhs = graphdata.modular_pkgs[parent].to_run[newGraph].lhs
+
+          if(typeof lhs == "string"){
+            
+            if(!graphdata.modular_pkgs.hasOwnProperty(lhs)){
+              throw lhs + " doesn't exist!"
+            }
+
+            lhs = {"oracles" : graphdata.modular_pkgs[lhs].oracles, "graph" : graphdata.modular_pkgs[lhs].graph}
+          }
+
         }else{
           throw "lhs required for substitution : " + newGraph
         }  
         
         if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('rhs')){
           rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
+
+          if(typeof rhs == "string"){
+           
+            if(!graphdata.modular_pkgs.hasOwnProperty(rhs)){
+              throw rhs + " doesn't exist!"
+            }
+
+            console.log(rhs);
+            rhs = {"oracles" : graphdata.modular_pkgs[rhs].oracles, "graph" : graphdata.modular_pkgs[rhs].graph}
+console.log(rhs)
+
+          }
+
         }else{
           throw "rhs required for substitution : " + newGraph
         }  
-        
-        rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
           
         if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('partial')){
           partial = graphdata.modular_pkgs[parent].to_run[newGraph].partial
@@ -522,10 +564,14 @@ selectGraph(selected){
         // if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty(include)){          
         //   include = graphdata.modular_pkgs[parent].to_run[newGraph].include
         // }else{
-          include = []
+          
         // }
 
-        newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial, include)
+        
+
+        newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial)
+
+        newGraphData.reduction = parentGraphData_with_oracles.reduction
                     
         }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'decompose'){
 
@@ -537,11 +583,23 @@ selectGraph(selected){
 
           if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('subgraph')){
             subgraph = graphdata.modular_pkgs[parent].to_run[newGraph].subgraph
+
+            if(typeof subgraph == "string"){
+           
+              if(!graphdata.modular_pkgs.hasOwnProperty(subgraph)){
+                throw subgraph + " doesn't exist!"
+              }
+  
+              subgraph = {"oracles" : graphdata.modular_pkgs[subgraph].oracles, "graph" : graphdata.modular_pkgs[subgraph].graph}
+            }
+
           }else{
             throw "subgraph required for decomposition : " + newGraph
           }
           
           newGraphData = decompose(parentGraphData,parentGraphData_with_oracles,target,subgraph)
+
+          newGraphData.reduction = parentGraphData_with_oracles.reduction
 
         }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'compose'){
           
@@ -558,6 +616,8 @@ selectGraph(selected){
           }
           
           newGraphData = compose(parentGraphData,parentGraphData_with_oracles,packages,package_name)
+
+          newGraphData.reduction = parentGraphData_with_oracles.reduction
 
         }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'expand'){
         
@@ -599,6 +659,8 @@ selectGraph(selected){
           
           newGraphData = expand(parentGraphData,parentGraphData_with_oracles, sel_chain, value,ghost)
 
+          newGraphData.reduction = parentGraphData_with_oracles.reduction
+
         }else if(graphdata.modular_pkgs[parent].to_run[newGraph].type === 'reduce'){
           
           if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('reduction')){
@@ -608,15 +670,17 @@ selectGraph(selected){
             throw "reduction required for reduce : " + newGraph
           }
 
-          newGraphData = JSON.parse(JSON.stringify(parentGraphData_with_oracles))
-
-          if(newGraphData.reduction != null){
-            
-            newGraphData.reduction = [...reduction, ...newGraphData.reduction]
+          if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('bitstring')){
+            bitstring = graphdata.modular_pkgs[parent].to_run[newGraph].bitstring
           }else{
-            newGraphData.reduction = reduction
+            bitstring = ""
           }
+
+
+          newGraphData = JSON.parse(JSON.stringify(parentGraphData_with_oracles))
           
+          newGraphData = reduce(newGraphData,reduction, bitstring)
+                    
 
         }else{
 
@@ -669,22 +733,22 @@ selectGraph(selected){
     var transform = []
 
     if(this.transform_type !== null){
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/> </ReflexElement>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}> <GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}/> </ReflexElement>)
       transform.push(<ReflexSplitter/>)
-      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={this.state.transformation_display}/></ReflexElement>)
+      transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={JSON.parse(JSON.stringify(this.state.transformation_display))}/></ReflexElement>)
     }else{
       transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
-      <GraphView updateSelected={this.updateSelectedMeta.bind(this)} update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={this.state.graphdata.modular_pkgs[this.state.selected]}/>
+      <GraphView updateSelected={this.updateSelectedMeta.bind(this)} update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}/>
     </ReflexElement>)
     }
 
-    var code = {"oracles" : this.state.graphdata.modular_pkgs[this.state.selected].oracles, "graph" : this.state.graphdata.modular_pkgs[this.state.selected].graph}
+    var code = {"oracles" : this.state.graphdata.modular_pkgs[this.state.selected].oracles, "graph" : this.state.graphdata.modular_pkgs[this.state.selected].graph, "reduction" : this.state.graphdata.modular_pkgs[this.state.selected].reduction}
 
-    var code_editor = [<CodeEditor text={JSON.stringify(code, null, '\t')} onSubmit={(newGraphData) => this.updateSelected(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+    var code_editor = [<CodeEditor mod_packs={this.state.graphdata != null ? Object.keys(this.state.graphdata.modular_pkgs) : []} mon_packs={this.state.graphdata != null ? Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph) : []} text={JSON.stringify(code, null, '\t')} onSubmit={(newGraphData) => this.updateSelectedGraphdata(newGraphData)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 
     var transform_code = {"to_run" : this.state.graphdata.modular_pkgs[this.state.selected].to_run == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].to_run, "history" : this.state.graphdata.modular_pkgs[this.state.selected].history == null ? {} : this.state.graphdata.modular_pkgs[this.state.selected].history}
 
-    var transform_editor = [<CodeEditor text={JSON.stringify(transform_code, null, '\t')} onSubmit={(newTransformations) => this.updateSelectedTransformations(newTransformations)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
+    var transform_editor = [<CodeEditor mod_packs={this.state.graphdata != null ? Object.keys(this.state.graphdata.modular_pkgs) : []} mon_packs={this.state.graphdata != null ? Object.keys(this.state.graphdata.modular_pkgs[this.state.selected].graph) : []} text={JSON.stringify(transform_code, null, '\t')} onSubmit={(newTransformations) => this.updateSelectedTransformations(newTransformations)}  getLineNumber = {this.lineNumberOfSelected.bind(this)}/>]
 
 
     }else{
@@ -803,7 +867,7 @@ selectGraph(selected){
                   </ReflexElement>
                   <ReflexSplitter/>
                 <ReflexElement flex={0.9} minSize="100"> 
-                  <CustomTreeView deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+                  <CustomTreeView selected={this.state.selected} deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
                 </ReflexElement>
     </TabPanel>
     <TabPanel>

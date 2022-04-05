@@ -43,13 +43,13 @@ import { resolveInput } from "./helpers/import_helper.js";
 
 import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
 
-import { buildIncoming, decompose, compose, findAllExpandableChains, expand, substitute } from './helpers/transformation_helper.js'
+import { buildIncoming, decompose, compose, findAllExpandableChains, expand, substitute, reduce } from './helpers/transformation_helper.js'
 import { ThirtyFpsTwoTone } from "@mui/icons-material";
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, packagename : "Composed\nPackage", options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
+    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, bitstring : "b", packagename : "Composed\nPackage", options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
     this.packSelection = null
@@ -80,8 +80,8 @@ export default class TransformationTools extends Component {
 
         this.setState({allGraphData : this.props.allGraphData, selected_graphdata : this.props.base, type : this.props.type, equivs : this.props.equivs, selected_node : this.props.node},() => {
             switch(this.props.type){
-                case "reduction":
-                    this.newReduction(this.props.node);
+                case "reduce":
+                    this.newReduction(this.props.node, this.state.bitstring);
                     break;
                     
                     case "compose" : 
@@ -547,6 +547,7 @@ newExpand(passedchain, value){
 
     var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
 
+
     for(var chain in this.targetdict){
 
         try{
@@ -579,7 +580,7 @@ copyTransformation(){
         case "expand" : 
             text = '"expand" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "value : ' + this.targetval.toString() + '}'
         break;
-        case "reduction":
+        case "reduce":
             
         break;
         case "compose" : 
@@ -795,17 +796,15 @@ renderCompose(){
             return options
 }
 
-newReduction(selected){
+newReduction(selected, bitstring){
 
+    if(bitstring == null){
+        bitstring = this.state.bitstring
+    }
+    
+    var newgraph = reduce(this.state.selected_graphdata, selected, bitstring)
 
-    var newGraph = JSON.parse(JSON.stringify(this.state.selected_graphdata))
-
-    newGraph.reduction = selected
-
-    console.log(newGraph)
-
-
-    this.updateGraph(false,newGraph)
+    this.updateGraph(false,newgraph)
 
 }
 
@@ -820,7 +819,7 @@ renderReduction(){
                                         open={this.state.select_from_list}
                                         onChoice={(packchoice) => {
                                             
-                                                this.newReduction([packchoice,...this.state.selected_node])                                            
+                                                this.newReduction([packchoice,...this.state.selected_node], this.state.bitstring)                                            
                                                 this.setState({selected_node : [packchoice,...this.state.selected_node], select_from_list : false});
                                             
                                            }}
@@ -830,10 +829,25 @@ renderReduction(){
                                         </Stack>
                     </ReflexElement>)
 
+options.push(<ReflexSplitter/>)
+options.push(<ReflexElement flex={0.4} key={'save'}>
+    <TextField
+    style={{'margin-top' : '25px','margin-left' : '25px'}}
+    id="outlined-name"
+    label="Bitstring"
+    value={this.state.bitstring}
+    onChange={(e) => {
+        
+        this.newReduction(this.state.selected_node,e.target.value)  
+        this.setState({bitstring : e.target.value})
+    }}
+  /></ReflexElement>)
+
                 if(this.state.selected_nodes != []){
                     for (var node in this.state.selected_node){
                         options.push(<ReflexSplitter/>)
-                        options.push(<ReflexElement key={this.state.selected_node[node]}><p>{this.state.selected_node[node]}</p><CustomIconButton type={['delete']} value={this.state.selected_node[node]} func={(v) => this.setState((prevProps) =>{
+                        options.push(<ReflexElement key={this.state.selected_node[node]}><p>{this.state.selected_node[node]}</p><CustomIconButton type={['delete']} value={this.state.selected_node[node]} func={(v) => 
+                            this.setState((prevProps) =>{
                     
                             var selected_node = [...prevProps.selected_node]
                             const index = selected_node.indexOf(v);
@@ -842,7 +856,13 @@ renderReduction(){
                             }
                             return {selected_node}
 
-                        })} tip='Remove selected'/>
+                        }, (e) => {
+                            console.log(e)
+                            this.newReduction(this.state.selected_node)                                            
+
+                        })
+                          
+                        } tip='Remove selected'/>
                         </ReflexElement>)
 
                     }
@@ -979,7 +999,7 @@ return options
         case "decompose":
             transform_options = this.renderDecompose();
         break;
-        case "reduction":
+        case "reduce":
             transform_options = this.renderReduction();
         break;
         case "expand" : 

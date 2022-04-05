@@ -377,6 +377,9 @@ function getAndCheckExternalEdges(lhs,rhs){
     lhs_edges_in.sort()
     rhs_edges_in.sort()
 
+    console.log(lhs_in)
+    console.log(rhs_in)
+
     if(!_.isEqual(lhs_edges_in, rhs_edges_in)){
         throw "The left hand side oracles:\n" + lhs_in.toString() + "\ndo not match the right hand side oracles:\n" + rhs_in.toString()
     }
@@ -497,6 +500,61 @@ function checkComplete(graphData, node, lhs_packs, lhs, rhs, lhs_in, lhs_out, rh
     
 }
 
+export function reduce(graphData, selected, bitstring){
+
+    var newGraph = JSON.parse(JSON.stringify(graphData))
+
+    if(!newGraph.hasOwnProperty("reduction")){
+        newGraph.reduction = []
+    }
+
+    if (newGraph.reduction.length == 0){
+        console.log("diff1")
+        var diff = selected    
+    }else if(selected.length == 0){
+        console.log("diff2")
+        var diff = [...newGraph.reduction]
+    }else{
+        console.log("diff3")
+        var diff = [...newGraph.reduction, ...selected].filter(x => newGraph.reduction.includes(x) && selected.includes(x));
+    }
+    
+    newGraph.reduction = selected
+
+    var str;
+    var matched;
+    var map_names = {}
+
+    for(var elm in newGraph.graph){
+        map_names[elm] = elm
+        if(!diff.includes(elm) && bitstring !== ""){
+            str = elm
+            matched = str.replace(/\^{([\w])}/, '^{' + bitstring + '}');
+            console.log(matched)
+            map_names[str] = matched
+        }
+    }
+
+    
+    newGraph.oracles = newGraph.oracles.map(elm => elm = [map_names[elm[0]], elm[1]])
+
+
+    for(var pack in newGraph.graph){
+        newGraph.graph[pack] = newGraph.graph[pack].map(elm => elm = [map_names[elm[0]], elm[1]])
+    }
+    
+    var finalGraph = {"oracles" : newGraph.oracles, "graph" : {}, "reduction" : selected}
+
+    for(var pack in newGraph.graph){
+
+        finalGraph.graph[map_names[pack]] = newGraph.graph[pack]
+
+    }
+
+    return finalGraph
+
+}
+
 function invertGraphData(obj){
 
     var ret = {};
@@ -521,14 +579,18 @@ export function substitute(graphData, graphData_with_oracles, passed_lhs, passed
     
     console.log(graphData)
     console.log(graphData_with_oracles)
-    console.log(lhs)
-    console.log(rhs)
     console.log(partialMatches)
-    console.log(include)
 
+    console.log(passed_lhs)
+    console.log(passed_rhs)
+    
+    
     var lhs = buildNonIndexedIncoming(passed_lhs)
     
     var rhs = buildNonIndexedIncoming(passed_rhs)
+    
+    console.log(lhs)
+    console.log(rhs)
 
     var visited = []
 

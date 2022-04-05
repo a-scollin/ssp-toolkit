@@ -44,6 +44,35 @@ function CodeEditor(props){
                   });
               });
   
+              for(var elm in props.mon_packs){
+                completions.push({
+                  caption: props.mon_packs[elm],
+                  value: props.mon_packs[elm],
+                  meta: "Monolithic Package",
+                  completer: {
+                    insertMatch: function(editor, data) {
+                        
+                        editor.completer.insertMatch({value: data.value});
+
+                  }
+                }
+              });
+              }
+
+              for(var elm in props.mod_packs){
+                completions.push({
+                  caption: props.mod_packs[elm],
+                  value: props.mod_packs[elm],
+                  meta: "Modular Package",
+                  completer: {
+                    insertMatch: function(editor, data) {
+                        
+                        editor.completer.insertMatch({value: data.value});
+                        // Here you can get the position and set the cursor
+                  }
+                }
+              });
+              }
   
               ["\"graph\" : {\n \"\" : [\n[\"\",\"\"]\n] \n}", 
               "\"oracles\" : [\n[\"\",\"\"]\n]",

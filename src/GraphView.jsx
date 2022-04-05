@@ -18,6 +18,7 @@ import { style } from "@mui/system";
 import { compose, buildIncoming } from './helpers/transformation_helper.js'
 import { Codesandbox } from "react-feather";
 import { buildMxFile } from "./helpers/export_helper.js";
+import { inflateGetHeader } from "pako/lib/zlib/inflate";
 
 // legacy TODO : remove
 const {
@@ -175,9 +176,15 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
     // console.log(this.props)
 
-    if(this.props.selected_graphdata != prevProps.selected_graphdata || this.props.allow_editing != prevProps.allow_editing){
+    console.log("outside")
+    
+    console.log(prevProps.selected_graphdata)
+    console.log(this.props.selected_graphdata)
+
+    if(JSON.stringify(this.props.selected_graphdata.graph) !== JSON.stringify(prevProps.selected_graphdata.graph) || JSON.stringify(this.props.selected_graphdata.oracles) !== JSON.stringify(prevProps.selected_graphdata.oracles) || this.props.allow_editing != prevProps.allow_editing){
       
       if(this.props.selected_graphdata != null){
+      
         this.setupNewGraph(this.props.selected_graphdata, this.props.selected, this.props.allow_editing);
       }
 
@@ -405,6 +412,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
 
   setupNewGraph(selected_graphdata, selected, allow_editing) {
 
+ 
     if(this.state.graph){
       this.state.graph.destroy();
     }
@@ -563,7 +571,7 @@ for(var cell in allcells){
   }
   
 }
-this.props.triggerTransformationProp('reduction', selectednodes);
+this.props.triggerTransformationProp('reduce', selectednodes);
 }.bind(this), transform_submenu);
 
 }
@@ -718,8 +726,6 @@ this.props.triggerTransformationProp('reduction', selectednodes);
                             
                           }
                           
-                          
-                          
                           dict[element] = graphElement;
                           
                         }
@@ -789,8 +795,9 @@ this.props.triggerTransformationProp('reduction', selectednodes);
                       }
                       
                       // layout and save to xml
-
+                                            
                       this.executeLayout(graph, lane, parent);
+                      
 
                       var codec = new mx.mxCodec();
 
