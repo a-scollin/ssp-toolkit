@@ -1052,6 +1052,8 @@ export function compose(graphData_passed,graphData_with_oracles,selectedNodes,pa
 
     }
 
+    console.log(outgoing_edge_dict)
+    console.log(incoming_edge_dict)
     var edges_toadd, index_range, infranges, splitranges,min_index, max_index;
 
     for(var edge in incoming_edge_dict){
@@ -1316,17 +1318,16 @@ export function compose(graphData_passed,graphData_with_oracles,selectedNodes,pa
 
                 newGraph.graph[packageName].push([pack,edge + '_[' + min_index + '...' + max_index])   
 
-                if(splitranges.length > 0){
                     for(var split in splitranges){
                         if(splitranges[split][2].includes('*')){
                             newGraph.graph[packageName].push([pack,edge + '_[' + splitranges[split][2].split("*")[0]+']'])
     
-                        }else if(splitranges[split][2].length > 2){
+                        }else if(splitranges[split].length > 2){
                             newGraph.graph[packageName].push([pack,edge + '_[' + splitranges[split][2]])
                         }
                     }
     
-                }
+                
 
                 continue                
 
@@ -1400,21 +1401,23 @@ export function compose(graphData_passed,graphData_with_oracles,selectedNodes,pa
 
             }
             
-            if(splitranges.length > 0){
-                for(var split in splitranges){
+
+            for(var split in splitranges){
                     if(splitranges[split][2].includes('*')){
                         edges_toadd.push([pack,edge + '_[' + splitranges[split][2].split("*")[0]+']'])
 
-                    }else if(splitranges[split][2].length > 2){
+                    }else if(splitranges[split].length > 2){
                     edges_toadd.push([pack,edge + '_[' + splitranges[split][2]])
                     }
                 }
 
-            }
+            
 
    
                         for(var toAdd in edges_toadd){
         
+                            console.log("ADD")
+                            console.log(edges_toadd[toAdd])
                             newGraph.graph[packageName].push(edges_toadd[toAdd])
         
                         }
