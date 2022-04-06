@@ -63,10 +63,12 @@ export default class TransformationTools extends Component {
 
   componentDidUpdate(prevProps){
     
+    console.log(this.props.base)
     try {
     this.incomingGraph = buildIncoming(this.props.base)
     }catch (e){
-        alert("error")
+        console.log(e)
+        alert("error building incoming")
         return 
     }
     
@@ -801,7 +803,7 @@ newReduction(selected, bitstring){
     if(bitstring == null){
         bitstring = this.state.bitstring
     }
-    
+
     var newgraph = reduce(this.state.selected_graphdata, selected, bitstring)
 
     this.updateGraph(false,newgraph)

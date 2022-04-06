@@ -26,7 +26,7 @@ import { useFormControlUnstyled } from "@mui/material";
 import { resolveInput } from "./helpers/import_helper"
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import { buildMxFile } from "./helpers/export_helper.js";
+import { buildMxFile, getMxFile } from "./helpers/export_helper.js";
 
 
 
@@ -34,9 +34,9 @@ import { substitute, buildIncoming, decompose, compose, expand, findAllExpandabl
 
 const pako = require('pako');
 
-const saveFile = async (blob) => {
+const saveFile = async (blob, name) => {
   const a = document.createElement('a');
-  a.download = 'exported_project.json';
+  a.download = name;
   a.href = URL.createObjectURL(blob);
   a.addEventListener('click', (e) => {
     setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
@@ -514,6 +514,11 @@ selectGraph(selected){
 
 
     for(var newGraph in graphdata.modular_pkgs[parent].to_run){
+
+      
+      console.log(graphdata.modular_pkgs[parent])
+      console.log(newGraph)
+      console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
       
       if(graphdata.modular_pkgs.hasOwnProperty(newGraph)){
         throw "Name already exists!"
@@ -712,12 +717,12 @@ selectGraph(selected){
 
         [graphdata, tree_data] = this.runTransformations(newGraph, graphdata, tree_data)
       }
-
-      graphdata.modular_pkgs[parent].history = {...graphdata.modular_pkgs[parent].to_run}
-      graphdata.modular_pkgs[parent].to_run = {}
       
     }
-
+    
+    graphdata.modular_pkgs[parent].history = {...graphdata.modular_pkgs[parent].to_run}
+    graphdata.modular_pkgs[parent].to_run = {}
+    
     return [graphdata, tree_data]
 
   }
@@ -771,7 +776,8 @@ selectGraph(selected){
   <input type="file" style={{'display': 'none'}} ref={input => this.projUpload = input} onChange={this.onProjectUpload.bind(this)} id="proj_upload"/>
   <CustomIconButton tip="Import project file" type={["import"]} func={() => this.projUpload.click()}/>
   <CustomIconButton tip="Create new project file" type={["write"]} func={this.createProj.bind(this)}/>
-  <CustomIconButton tip="Export current project file" type={["export"]} func={() => saveFile(new Blob([JSON.stringify(this.state.graphdata, null, 2)], {type : 'application/json'}))}/>
+  <CustomIconButton tip="Export current project file" type={["save"]} func={() => saveFile(new Blob([JSON.stringify(this.state.graphdata, null, 2)], {type : 'application/json'}),"exported_project.json")}/>
+  <CustomIconButton tip="Export current selected and children to XML" type={["code"]} func={() => saveFile(new Blob([getMxFile(this.state.graphdata,this.state.tree_data, this.state.selected)], {type : 'application/xml'}), "exported_diagrams.drawio")}/>
 
    </Stack>
 

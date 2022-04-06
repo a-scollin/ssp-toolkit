@@ -15,6 +15,8 @@ import HistoryIcon from '@mui/icons-material/History';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import PendingIcon from '@mui/icons-material/Pending';
+import CodeIcon from '@mui/icons-material/Code';
+
 export default function CustomIconButton(props) {
     
     let items = []
@@ -66,7 +68,10 @@ export default function CustomIconButton(props) {
                     break;
                 case 'ghost':
                     items.push(<PendingIcon/>)
-
+                    break;
+                case 'code':
+                    items.push(<CodeIcon/>)
+                    break;
                 default:
                     break;
                   // code block

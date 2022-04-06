@@ -10,11 +10,45 @@ var vertStyleString = "strokeColor=gray;undefined=gray;rounded=1;fillColor=white
 
 var edgeStyleString = "strokeColor=#0C0C0C;labelBackgroundColor=white;rounded=true;fontColor=black;fontSize=10;strokeWidth=1.25;"
 
+export function getMxFile(graphdata,tree_data, selected){
+
+  var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'
+
+  for(var elm in tree_data) {
+    
+    if (tree_data[elm].graphname == selected){
+      
+      ret += buildDiag(graphdata, tree_data[elm])
+      
+    }
+    
+  }
+  ret += '</mxfile>'
+  
+  return ret
+  
+}
+
+function buildDiag(graphdata, tree_data_node){
+  
+  var ret = '<diagram id="diagram-' + tree_data_node.graphname + '" name="' + tree_data_node.graphname  + '">'
+  
+  ret += graphdata.modular_pkgs[tree_data_node.graphname].xml
+
+  ret += '</diagram>'
+
+  for(var child in tree_data_node.children){
+    ret += buildDiag(graphdata,tree_data_node.children[child])
+  }
+
+  return ret
+
+}
+
 export function buildMxFile(graphModels){
 
-    var ret = '<?xml version="1.0" encoding="UTF-8"?><mxfile host="app.diagrams.net" version="16.5.6">'
-
-    var cellContent;
+  var ret = ""
+  var cellContent;
 
     var id;
 
@@ -24,7 +58,6 @@ export function buildMxFile(graphModels){
 
     for(var model in graphModels){
 
-      ret += '<diagram id="diagram-' + model.toString() + '" name="' + graphModels[model][0] + '">'
 
       
       console.log(graphModels[model])

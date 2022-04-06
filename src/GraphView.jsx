@@ -786,7 +786,7 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                           }
                           
                         }
-                        
+
                         //data
                       } finally {
                         // Updates the display
@@ -795,10 +795,10 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                       }
                       
                       // layout and save to xml
-                                            
-                      this.executeLayout(graph, lane, parent);
                       
-
+                      
+                      this.executeLayout(graph, lane, parent);
+                    
                       var codec = new mx.mxCodec();
 
                       var result = codec.encode(graph.getModel());
