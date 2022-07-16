@@ -17,75 +17,80 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import PendingIcon from '@mui/icons-material/Pending';
 import CodeIcon from '@mui/icons-material/Code';
 
+
+/** 
+ * Custom button with icons and tooltip
+ * 
+ * @param {Object} props - Attributes: type, tip, func 
+ * @property {String} [type] - Names of icons to appear in button (appear in order)
+ * @property {String} tip - Tooltip to appear on hover
+ * @property {Function} func - Function the button triggers
+*/
+
 export default function CustomIconButton(props) {
     
-    let items = []
+    let icons = []
 
     for(var elm in props.type){
-
             switch(props.type[elm]) {
                 case 'add':
-                    items.push(<AddIcon/>)
+                    icons.push(<AddIcon/>)
                     break;
                 case 'list':
-                    items.push(<ListIcon/>)
+                    icons.push(<ListIcon/>)
                     break;
                 case 'sub':
-                    items.push(<RemoveIcon/>)
+                    icons.push(<RemoveIcon/>)
                     break;
                 case 'save':
-                    items.push(<SaveIcon/>)
+                    icons.push(<SaveIcon/>)
                     break;
                 case 'write':
-                    items.push(<CreateIcon/>)
+                    icons.push(<CreateIcon/>)
                     break;
                 case 'export':
-                    items.push(<ExitToAppIcon/>)
+                    icons.push(<ExitToAppIcon/>)
                     break;
                 case 'delete':
-                    items.push(<DeleteIcon/>)
+                    icons.push(<DeleteIcon/>)
                     break;
                 case 'import':
-                    items.push(<PublishIcon/>)
+                    icons.push(<PublishIcon/>)
                     break;
                 case 'transform':
-                    items.push(<TransformIcon/>)
+                    icons.push(<TransformIcon/>)
                     break;
                 case 'run':
-                    items.push(<PlayArrowIcon/>)
+                    icons.push(<PlayArrowIcon/>)
                     break;
                 case 'clear':
-                    items.push(<ClearIcon/>)
+                    icons.push(<ClearIcon/>)
                     break;
                 case 'copy':
-                    items.push(<ContentCopyIcon/>)
+                    icons.push(<ContentCopyIcon/>)
                     break;
                 case 'history':
-                    items.push(<HistoryIcon/>)
+                    icons.push(<HistoryIcon/>)
                     break;
                 case 'partial':
-                    items.push(<AutoGraphIcon/>)
+                    icons.push(<AutoGraphIcon/>)
                     break;
                 case 'ghost':
-                    items.push(<PendingIcon/>)
+                    icons.push(<PendingIcon/>)
                     break;
                 case 'code':
-                    items.push(<CodeIcon/>)
+                    icons.push(<CodeIcon/>)
                     break;
                 default:
                     break;
-                  // code block
               }
-
     }
-
-    let tip = props.tip
     
     return (
 
-        <Tooltip title={tip}>
-        <IconButton onClick={() => props.func(props.value)} aria-label="delete">
-            {items}
+        <Tooltip title={props.tip}>
+        <IconButton onClick={() => props.func(props.func)} aria-label="delete">
+            {icons}
         </IconButton>
         </Tooltip>
     );
