@@ -1,0 +1,363 @@
+{
+    "modular_pkgs": {
+        "SEC1": {
+            "oracles": [
+                [
+                    "BITS_[1]",
+                    "SETBIT_[1]"
+                ],
+                [
+                    "KEYS_[d+1]",
+                    "GETKEYS"
+                ],
+                [
+                    "SIM_{yao}_[1]",
+                    "GBL_[1...d]"
+                ],
+                [
+                    "SIM_{yao}_[1]",
+                    "GETA^{out}_[1]"
+                ]
+            ],
+            "graph": {
+                "SIM_{yao}_[1]": [
+                    [
+                        "EV_[1...d]",
+                        "EVAL_[1...d]"
+                    ],
+                    [
+                        "EV_[1...d]",
+                        "CHECK_[2...d]"
+                    ],
+                    [
+                        "BITS_[1]",
+                        "CHECK_[1]"
+                    ],
+                    [
+                        "KEYS_[d+1]",
+                        "GETA^{out}_[d+1]"
+                    ]
+                ],
+                "EV_[1...d]": [
+                    [
+                        "BITS_[1]",
+                        "GETBIT_[1]"
+                    ],
+                    [
+                        "KEYS_[d+1]",
+                        "SETBIT_[d+1]"
+                    ]
+                ],
+                "BITS_[1]": [],
+                "KEYS_[d+1]": []
+            },
+            "edithistory": [],
+            "to_run": {
+                "SEC1_B_1": {
+                    "type": "decompose",
+                    "target": "EV_[1...d]",
+                    "subgraph": "SEC1_Encoding - SUBGRAPH",
+                    "to_run": {
+                        "SEC1_B": {
+                            "type": "expand",
+                            "expandable_package": "EV_[1...d-1]",
+                            "value": 2,
+                            "ghost": false,
+                            "to_run": {
+                                "SEC1_C": {
+                                    "type": "decompose",
+                                    "target": "SIM_{yao}_[1]",
+                                    "subgraph": "GB1_sub",
+                                    "to_run": {
+                                        "SEC1_D": {
+                                            "type": "substitute",
+                                            "lhs": "AKEYS_L",
+                                            "rhs": "KEYS_R",
+                                            "partial": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "history": {}
+        },
+        "SEC1_Encoding - SUBGRAPH": {
+            "oracles": [
+                [
+                    "EV_[1...d-1]",
+                    "EVAL_[1...d-1]"
+                ],
+                [
+                    "EV_[d]",
+                    "EVAL_[d]"
+                ],
+                [
+                    "BITS_[2...d-1]",
+                    "CHECK_[2...d-1]"
+                ],
+                [
+                    "BITS_[d]",
+                    "CHECK_[d]"
+                ]
+            ],
+            "graph": {
+                "EV_[1...d-1]": [
+                    [
+                        "BITS_[2...d-1]",
+                        "SETBIT_[2*]"
+                    ],
+                    [
+                        "",
+                        "GETBIT_[1*]"
+                    ]
+                ],
+                "EV_[d]": [
+                    [
+                        "",
+                        "SETBIT_[d+1]"
+                    ],
+                    [
+                        "BITS_[d]",
+                        "GETBIT_[d]"
+                    ]
+                ],
+                "BITS_[2...d-1]": [],
+                "BITS_[d]": [],
+                "terminal_pkg": []
+            },
+            "edithistory": []
+        },
+        "SEC0": {
+            "oracles": [
+                [
+                    "KEYS_[1]",
+                    "SETBIT_[1]"
+                ],
+                [
+                    "KEYS_[1]",
+                    "GETA^{out}_[1]"
+                ],
+                [
+                    "KEYS_[d]",
+                    "GETKEYS^{in}_[d+1]"
+                ],
+                [
+                    "GB_{yao}_[1...d]",
+                    "GBL_[1...d]"
+                ]
+            ],
+            "graph": {
+                "KEYS_[1]": [],
+                "KEYS_[d]": [],
+                "GB_{yao}_[1...d]": [
+                    [
+                        "KEYS_[1]",
+                        "GETKEYS^{in}_[1]"
+                    ],
+                    [
+                        "KEYS_[d]",
+                        "GETKEYS^{out}_[d]"
+                    ]
+                ]
+            },
+            "edithistory": [],
+            "to_run": {
+                "SEC0_C_1": {
+                    "type": "decompose",
+                    "target": "GB_{yao}_[1...d]",
+                    "subgraph": "SEC0_Encoding - SUBGRAPH",
+                    "to_run": {
+                        "SEC0_C": {
+                            "type": "expand",
+                            "expandable_package": "GB_{yao}^{0}_[1...d-1]",
+                            "value": 2,
+                            "ghost": true
+                        }
+                    }
+                }
+            },
+            "history": {}
+        },
+        "SEC0_Encoding - SUBGRAPH": {
+            "oracles": [
+                [
+                    "GB_{yao}^{0}_[1...d-1]",
+                    "GBL_[1...d-1]"
+                ],
+                [
+                    "GB_{yao}^{0}_[d]",
+                    "GBL_[d]"
+                ]
+            ],
+            "graph": {
+                "GB_{yao}^{0}_[1...d-1]": [
+                    [
+                        "KEYS_[2...d-1]",
+                        "GETKEYS^{out}_[2*]"
+                    ],
+                    [
+                        "",
+                        "GETKEYS^{in}_[1*]"
+                    ]
+                ],
+                "GB_{yao}^{0}_[d]": [
+                    [
+                        "",
+                        "GETKEYS^{out}_[d]"
+                    ]
+                ],
+                "KEYS_[2...d-1]": [],
+                "terminal_pkg": []
+            },
+            "edithistory": []
+        },
+        "GB1 - SUBGRAPH": {
+            "oracles": [
+                [
+                    "AKEYS_[1]",
+                    "GETA^{out}_[1]"
+                ],
+                [
+                    "GB^{1}_{yao}_[1...d-1]",
+                    "GBL_[1...d-1]"
+                ],
+                [
+                    "GB^{1}_{yao}_[d]",
+                    "GBL_[d]"
+                ]
+            ],
+            "graph": {
+                "GB^{1}_{yao}_[1...d-1]": [
+                    [
+                        "AKEYS_[1]",
+                        "GETA^{in}_[1*]"
+                    ],
+                    [
+                        "AKEYS_[1]",
+                        "GETINA^{in}_[1*]"
+                    ],
+                    [
+                        "AKEYS_[2...d-1]",
+                        "GETA^{out}_[2*]"
+                    ],
+                    [
+                        "",
+                        "EVAL_[1...d-1]"
+                    ]
+                ],
+                "AKEYS_[1]": [
+                    [
+                        "",
+                        "CHECK_[1]"
+                    ]
+                ],
+                "GB^{1}_{yao}_[d]": [
+                    [
+                        "",
+                        "GETA^{out}_[d+1]"
+                    ],
+                    [
+                        "",
+                        "EVAL_[d]"
+                    ],
+                    [
+                        "AKEYS_[d]",
+                        "GETINA^{in}_[d]"
+                    ],
+                    [
+                        "AKEYS_[d]",
+                        "GETA^{in}_[d]"
+                    ]
+                ],
+                "AKEYS_[d]": [
+                    [
+                        "",
+                        "CHECK_[d]"
+                    ]
+                ],
+                "AKEYS_[2...d-1]": [
+                    [
+                        "",
+                        "CHECK_[2...d-1]"
+                    ]
+                ],
+                "terminal_pkg": []
+            },
+            "edithistory": [],
+            "to_run": {
+                "GB1_sub": {
+                    "type": "expand",
+                    "expandable_package": "GB^{1}_{yao}_[1...d-1]",
+                    "value": 2,
+                    "ghost": false
+                }
+            },
+            "history": {}
+        },
+        "KEYS_R": {
+            "oracles": [
+                [
+                    "KEYS",
+                    "SETBIT"
+                ],
+                [
+                    "KEYS",
+                    "GETA^{out}"
+                ],
+                [
+                    "KEYS",
+                    "GETA^{in}"
+                ],
+                [
+                    "KEYS",
+                    "GETINA^{in}"
+                ],
+                [
+                    "KEYS",
+                    "GETBIT"
+                ]
+            ],
+            "graph": {
+                "KEYS": []
+            },
+            "edithistory": []
+        },
+        "AKEYS_L": {
+            "oracles": [
+                [
+                    "BITS",
+                    "SETBIT"
+                ],
+                [
+                    "BITS",
+                    "GETBIT"
+                ],
+                [
+                    "AKEYS",
+                    "GETA^{out}"
+                ],
+                [
+                    "AKEYS",
+                    "GETA^{in}"
+                ],
+                [
+                    "AKEYS",
+                    "GETINA^{in}"
+                ]
+            ],
+            "graph": {
+                "AKEYS": [
+                    [
+                        "BITS",
+                        "CHECK"
+                    ]
+                ],
+                "BITS": []
+            },
+            "edithistory": []
+        }
+    }
+}

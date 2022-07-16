@@ -17,7 +17,7 @@ import {
 import { ListGroup, ThemeProvider } from "react-bootstrap";
 import { getCheckboxUtilityClass, getTableHeadUtilityClass, toggleButtonGroupClasses, touchRippleClasses } from "@mui/material";
 import { useThemeWithoutDefault } from "@mui/system";
-import CodeEditor from "./uiComponents/CodeEditor.jsx";
+import CodeEditor from "../reusableComponents/CodeEditor.jsx";
 import { inflateGetHeader } from "pako/lib/zlib/inflate.js";
 import { toJS } from "draft-js/lib/DefaultDraftBlockRenderMap";
 
@@ -31,25 +31,25 @@ import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 
-import CustomIconButton from "./uiComponents/CustomIconButton.jsx";
+import CustomIconButton from "../reusableComponents/IconButton.jsx";
 import Stack from '@mui/material/Stack';
 
 
 import Select from 'react-select'
 import { V } from "mathjax-full/js/output/common/FontData";
 import { RANGES } from "mathjax-full/js/core/MmlTree/OperatorDictionary";
-import { resolveInput } from "./helpers/import_helper.js";
+import { resolveInput } from "../helpers/import_helper.js";
 
 
-import { CustomPopup } from "./uiComponents/CustomPopup.jsx";
+import { CustomPopup } from "../reusableComponents/Popup.jsx";
 
-import { buildIncoming, decompose, compose, findAllExpandableChains, expand, substitute, reduce } from './helpers/transformation_helper.js'
-import { ThirtyFpsTwoTone } from "@mui/icons-material";
+import { buildIncoming, decompose, compose, findAllExpandableChains, expand, substitute, reduce } from '../helpers/transformation_helper.js'
+import { ThirtyFpsSelect, ThirtyFpsTwoTone } from "@mui/icons-material";
 
 export default class TransformationTools extends Component {
   constructor(props) {
     super(props);
-    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, bitstring : "b", packagename : "Composed\nPackage", options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
+    this.state = {selected_graphdata : null, input_data : null, selected_equiv : "", ommited_equivs : [], selection : null, type : null, bitstring : "b", partial : false,  ghost : false, packagename : "Composed\nPackage", options : [], equivs : [], equiv_lhs : null, equiv_rhs : null};
     this.GraphRef = React.createRef()
     this.valdict = {}
     this.packSelection = null
@@ -109,8 +109,11 @@ export default class TransformationTools extends Component {
      
   }
 
-newSubstitute(lhs,rhs){
+newSubstitute(lhs,rhs, partial){
     
+if(partial == null){
+    partial = this.state.partial 
+}
 
     // const [ lhs, rhs ] = this.state.selected_equiv
     
@@ -168,7 +171,7 @@ newSubstitute(lhs,rhs){
     // }]
 
     try {
-        var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,lhs,rhs)
+        var newGraphData = substitute(this.incomingGraph,this.state.selected_graphdata,lhs,rhs,partial)
 
     } catch (e) {
         console.log(e)
@@ -535,9 +538,15 @@ equiv_to_option(){
   
 }
 
-newExpand(passedchain, value){
+newExpand(passedchain, value, ghost){
 
     // the expand function also needs to be able to take multiple values for multiple chains 
+
+    if(ghost == null){
+        ghost = this.state.ghost
+    }
+
+
 
     if(this.targetval === value){
         return
@@ -554,7 +563,7 @@ newExpand(passedchain, value){
 
         try{
 
-        newGraph = expand(this.incomingGraph, newGraph, chain.split(','), this.targetdict[chain])
+        newGraph = expand(this.incomingGraph, newGraph, chain.split(','), this.targetdict[chain], ghost)
     
         } catch (e) { 
     
@@ -576,17 +585,16 @@ copyTransformation(){
     switch(this.state.type){
         
         case "decompose":
-            text = '"decompose" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "subgraph" : ' + JSON.stringify(this.state.input_data, null, '\t') + '}'
-        break;
-        
+            text = '\t"type" : "decompose",\n\t"target" : "'+ this.state.selected_node + '",\n\t "subgraph" : ' + JSON.stringify(this.input_data) 
+        break;        
         case "expand" : 
-            text = '"expand" : {\n\t"package" : "'+ this.state.selected_node + '",\n\t "value : ' + this.targetval.toString() + '}'
+            text = '\t"type" : "expand",\n\t"expandable_package" : "'+ this.expandableChains[Object.keys(this.expandableChains)[0]][0] + '",\n\t "value" : ' + this.targetval.toString() + ',\n\t "ghost" : ' + this.state.ghost.toString()
         break;
         case "reduce":
-            
+            text = '\t"type" : "reduce",\n\t"reduction" : "'+ this.state.selected_node + '",\n\t "bitstring : "' + this.state.bitstring.toString() + '"'
         break;
         case "compose" : 
-            text = '"compose" : {\n\t"packages" : ['
+            text = '"type" : "compose",\n\t"packages" : ['
             
             for (var node in this.state.selected_node){
                 text += '"' + node + '",'
@@ -596,12 +604,12 @@ copyTransformation(){
                 text = text.slice(0, -1)
             }
 
-            text += '],\n\t "package_name" : "' + this.state.packagename + '"}'
+            text += '],\n\t "package_name" : "' + this.state.packagename + '"'
         
         break;
         
         case "equiv":
-            text = ""
+            text = '\t"type" : "substitute",\n\t"lhs" : '+ JSON.stringify(this.state.lhs) + ',\n\t "rhs" : '+JSON.stringify(this.state.lhs)+',\n\t "partial" : ' + this.state.partial.toString()
         break;
     }    
 
@@ -673,7 +681,7 @@ marks
 min={1}
 max={10}
 name={this.expandableChains[chain]}
-onChange={ (e, val) => this.newExpand(e.target.name,val)}  />
+onChange={ (e, val) => this.newExpand(e.target.name,val, this.state.ghost)}  />
 </div>
             </ReflexElement>)
             options.push(<ReflexSplitter/>)
@@ -683,7 +691,7 @@ onChange={ (e, val) => this.newExpand(e.target.name,val)}  />
 
     options.push(<ReflexSplitter/>)
     options.push(<ReflexElement minSize="50" flex={0.25}><Stack direction="row" spacing={1}>   
-    <CustomIconButton type={['ghost']} func={() => alert("Error")} tip='Add Ghost Edges'/>
+    <CustomIconButton type={['ghost']} func={() => this.setState({ghost:!this.state.ghost})} tip='Add Ghost Edges'/>
  </Stack></ReflexElement>)
 
     return options
@@ -927,7 +935,7 @@ options.push(
                                         open={this.state.select_from_list_l}
                                         onChoice={(choice) => {
                                         if(this.state.equiv_rhs != null){
-                                            this.newSubstitute(this.state.allGraphData.modular_pkgs[choice], this.state.equiv_rhs)
+                                            this.newSubstitute(this.state.allGraphData.modular_pkgs[choice], this.state.equiv_rhs, this.state.partial)
                                         }    
                                         this.setState({equiv_lhs : this.state.allGraphData.modular_pkgs[choice], select_from_list_l : false})}}
                                         items={Object.keys(this.state.allGraphData.modular_pkgs)}
@@ -948,7 +956,7 @@ options.push(
                                            open={this.state.select_from_list_r}
                                            onChoice={(choice) => {
                                            if(this.state.equiv_lhs != null){
-                                               this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice])
+                                               this.newSubstitute(this.state.equiv_lhs, this.state.allGraphData.modular_pkgs[choice], this.state.partial)
                                            }    
                                            this.setState({equiv_rhs : this.state.allGraphData.modular_pkgs[choice], select_from_list_r : false})}}
                                            items={Object.keys(this.state.allGraphData.modular_pkgs)}
@@ -962,7 +970,7 @@ options.push(
    }
    options.push(<ReflexSplitter/>)
    options.push(<ReflexElement minSize="50" flex={0.25}><Stack direction="row" spacing={1}>   
-   <CustomIconButton type={['partial']} func={() => alert("Error")} tip='Partial Matching'/>
+   <CustomIconButton type={['partial']} func={() => this.setState({partial : !this.state.partial})} tip='Partial Matching'/>
 </Stack></ReflexElement>)
    
 

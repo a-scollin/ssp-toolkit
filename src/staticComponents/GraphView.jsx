@@ -7,17 +7,17 @@ import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
 import { default as MxGraph } from "mxgraph";
-import { initToolbar, configureKeyBindings, selectedCellsToGraphData} from "./helpers/graph_helper.js"
-import addToolbarItem from "./helpers/addToolbarItem";
-import getStyleStringByObj from "./helpers/getStyleStringByObj";
-import { resolve_diagram_to_json } from "./helpers/import_helper.js";
+import { initToolbar, configureKeyBindings, selectedCellsToGraphData} from "../helpers/graph_helper.js"
+import addToolbarItem from "../helpers/addToolbarItem";
+import getStyleStringByObj from "../helpers/getStyleStringByObj";
+import { resolve_diagram_to_json } from "../helpers/import_helper.js";
 import { touchRippleClasses } from "@mui/material";
 import { V } from "mathjax-full/js/output/common/FontData";
 import { GradingSharp } from "@mui/icons-material";
 import { style } from "@mui/system";
-import { compose, buildIncoming } from './helpers/transformation_helper.js'
+import { compose, buildIncoming } from '../helpers/transformation_helper.js'
 import { Codesandbox } from "react-feather";
-import { buildMxFile } from "./helpers/export_helper.js";
+import { buildMxFile } from "../helpers/export_helper.js";
 import { inflateGetHeader } from "pako/lib/zlib/inflate";
 
 // legacy TODO : remove
@@ -115,6 +115,8 @@ for(var key in swimlanestyle){
     swimlaneStyleString += key + '=' + swimlanestyle[key] + ';'
   }
 }
+
+console.log(swimlaneStyleString)
 
      
 var vertstyle = {}
@@ -299,6 +301,14 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     });
 
 
+  // save handler: CTRL + s
+  keyHandler.bindControlKey(83, function(evt) {
+    
+    var graphdata = selectedCellsToGraphData(graph.getModel())    
+    
+    this.props.onSave(graphdata)
+
+  }.bind(this));
 
     // HULL handler: CTRL + F
     keyHandler.bindControlKey(70, function(evt) {
@@ -427,9 +437,7 @@ if (this.state.selected_graphdata != null && this.state.selected_graphdata != {}
     if(selected_graphdata.hasOwnProperty("xml") && allow_editing){
     
       var doc = mxUtils.parseXml(selected_graphdata.xml);
-      var codec = new mx.mxCodec(doc);
-
-       
+      var codec = new mx.mxCodec(doc);       
       var container = ReactDOM.findDOMNode(this.GraphRef.current);
                     
       // var wnd = new mx.mxWindow('Title', container, 100, 100, 200, 200, true, true);
@@ -517,12 +525,14 @@ menu.addItem('Expand', null, function()
 this.props.triggerTransformationProp('expand', cell.value);
 }.bind(this));
 
+if(graph.getSelectionModel().cells.length == 1){
 
-
-menu.addItem('Decompose', null, function()
-{
-this.props.triggerTransformationProp('decompose', cell.value);
-}.bind(this), transform_submenu);
+  
+  menu.addItem('Decompose', null, function()
+  {
+    this.props.triggerTransformationProp('decompose', cell.value);
+  }.bind(this), transform_submenu);
+}else{
 
 menu.addItem('Compose', null, function()
 {
@@ -551,6 +561,7 @@ this.props.triggerTransformationProp('compose', selectednodes);
 
 }.bind(this), transform_submenu);
 
+}
 menu.addItem('Substitute', null, function()
 {
 this.props.triggerTransformationProp('equiv', cell.value);
@@ -682,7 +693,21 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                       
                       // HAVE TO ADD 2 ? ?? ?? ?? ? ? var adv = graph.insertVertex(parent, null, "ADV", 40, 40, 80, 30);         
                       
-                      
+                      var term = false
+
+                      for(var edge in selected_graphdata.oracles){
+                        if(selected_graphdata.oracles[edge][0] == ""){
+                          term = true
+                        } 
+                      }
+
+                      for(var pack in selected_graphdata.graph){
+                        for(var edge in selected_graphdata.graph[pack]){
+                        if(selected_graphdata.graph[pack][edge][0] == ""){
+                          term = true
+                        } 
+                      }
+                    }
                       
                       try {
                         
@@ -701,13 +726,17 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                           selected_graphdata.graph.Adv_pkg = []
                         }
 
-                        if (!selected_graphdata.graph.hasOwnProperty("terminal_pkg")){
+                        if (!selected_graphdata.graph.hasOwnProperty("terminal_pkg") && term){
                           selected_graphdata.graph.terminal_pkg = []
                         }
         
                         for (var element in selected_graphdata.graph){
+
+                          if(element == 'terminal_pkg' && !term){
+                            continue
+                          }
                           
-                          if(element == 'Adv_pkg' || element == 'terminal_pkg'){
+                          if(element == 'Adv_pkg' || (element == 'terminal_pkg' && term)){
 
                             var graphElement = graph.insertVertex(lane, null, element, 20, 20, 10, 200);    
                             graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';        
@@ -734,7 +763,7 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                         
                         for(var oracle in selected_graphdata.oracles){
                           
-                          var edge_element = graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0]]);
+                          var edge_element = graph.insertEdge(lane, null, selected_graphdata.oracles[oracle][1], dict['Adv_pkg'] ,dict[selected_graphdata.oracles[oracle][0] != "" ? selected_graphdata.oracles[oracle][0] : 'terminal_pkg']);
                           edge_element.style = edgeStyleString
                           
                           
@@ -798,6 +827,24 @@ this.props.triggerTransformationProp('reduce', selectednodes);
                       
                       
                       this.executeLayout(graph, lane, parent);
+
+                      if(!term){
+
+                        selected_graphdata.graph.terminal_pkg = []
+
+                      try {
+
+                        graph.getModel().beginUpdate();
+                        var graphElement = graph.insertVertex(lane, null, "terminal_pkg", 20, 20, 10, 200);    
+                        graphElement.style = 'fillColor=none;strokeColor=none;fontSize=none;';   
+
+                      } finally {
+                        // Updates the display
+                        graph.getModel().endUpdate();
+                        
+                      }
+
+                    }
                     
                       var codec = new mx.mxCodec();
 

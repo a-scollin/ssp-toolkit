@@ -1,8 +1,6 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import AceEditor from "react-ace";
 
-import ace from "ace-builds/src-noconflict/ace";
+import AceEditor from "react-ace";
 import 'ace-builds'
 import 'ace-builds/webpack-resolver'
 import "ace-builds/src-noconflict/mode-json";
@@ -10,47 +8,56 @@ import "ace-builds/src-noconflict/theme-github";
 import 'brace/ext/searchbox';
 import langTools from "ace-builds/src-noconflict/ext-language_tools"
 import "brace/mode/json";
- 
 
+/** 
+ * Non-stateful code editor component used for editing graph data 
+ * and scripted graph transformations.
+ * 
+ * @param {Object} props - mod_packs, mon_packs, text, onSubmit, getLineNumber 
+ *  
+*/
 
 function CodeEditor(props){
   
+  // Autocompletion 
   var myCompleter ={
-      getCompletions: function(editor, session, pos, prefix, callback) {
+      getCompletions: (editor, session, pos, prefix, callback) => {
               var completions = [];
-              ["\"expand\" : { ... }", "\"decompose\" : { ... }", "\"substitute\" : {\n\t\t\t\t\"lhs\" : {},\n\t\t\t\t\"rhs\" : {}\n\t\t\t\t}"].forEach(function(w) {
+              
+              // Chore : do rest of transformations autocompletions 
+              ["\"expand\" : { ... }", "\"decompose\" : { ... }", "\"substitute\" : {\n\t\t\t\t\"lhs\" : {},\n\t\t\t\t\"rhs\" : {}\n\t\t\t\t}"].forEach((w) => {
       
                   completions.push({
                       caption: w.split(":")[0],
                       value: w,
                       meta: "Transformation",
                       completer: {
-                        insertMatch: function(editor, data) {
+                        insertMatch: (editor, data) => {
                             
-                            editor.completer.insertMatch({value: data.value});
-                            // Here you can get the position and set the cursor
-                            var pos = editor.selection.getCursor(); //Take the latest position on the editor
-                            
-                            if (data.caption === "\"substitute\" "){
-  
-                              editor.gotoLine(pos.row-1, pos.column+9); //This will set your cursor in between the brackets
-                              
-                            }
-  
+                          // Inserts value from completions
+                          editor.completer.insertMatch({value: data.value});
+                          
+                          var pos = editor.selection.getCursor(); 
+                          //Take the latest position on the editor
+                          if (data.caption === "\"substitute\" "){
+                            //This will set your cursor in between the brackets
+                            editor.gotoLine(pos.row-1, pos.column+9); 
+                          }
+                                     
                         }
                       }
                     
-      
                   });
               });
-  
+              
+              // 
               for(var elm in props.mon_packs){
                 completions.push({
                   caption: props.mon_packs[elm],
                   value: props.mon_packs[elm],
                   meta: "Monolithic Package",
                   completer: {
-                    insertMatch: function(editor, data) {
+                    insertMatch: (editor, data) => {
                         
                         editor.completer.insertMatch({value: data.value});
 
@@ -65,10 +72,8 @@ function CodeEditor(props){
                   value: props.mod_packs[elm],
                   meta: "Modular Package",
                   completer: {
-                    insertMatch: function(editor, data) {
-                        
+                    insertMatch: (editor, data) => {
                         editor.completer.insertMatch({value: data.value});
-                        // Here you can get the position and set the cursor
                   }
                 }
               });
@@ -77,14 +82,14 @@ function CodeEditor(props){
               ["\"graph\" : {\n \"\" : [\n[\"\",\"\"]\n] \n}", 
               "\"oracles\" : [\n[\"\",\"\"]\n]",
                "\"to_run\" : {\n\t\t\"GraphName\" : {\n\t\t\t\n\t\t}\n\t}",
-                "\"history\" : [\n\t\t\n\t]"].forEach(function(w) {
+                "\"history\" : [\n\t\t\n\t]"].forEach((w) => {
       
                 completions.push({
                     caption: w.split(":")[0],
                     value: w,
                     meta: "Graphdata Template",
                     completer: {
-                      insertMatch: function(editor, data) {
+                      insertMatch: (editor, data) => {
                           
                           editor.completer.insertMatch({value: data.value});
                           // Here you can get the position and set the cursor
@@ -112,9 +117,9 @@ function CodeEditor(props){
         var commands = [
           {
             name: "submit",
-            bindKey: { win: "Ctrl-S", mac: "Command-S" },
+            bindKey: { win: "Ctrl-S", mac: "Ctrl-S" },
             exec: (editor) => {
-              console.log("bengbengbon")
+
               try {
               onSubmit(JSON.parse(editor.getValue()))
               } catch {
@@ -165,17 +170,6 @@ function CodeEditor(props){
           />
         );
       };
-
-
-    
-
-
-// CodeEditor.defaultProps = {
-//   mainEditor: false
-// };
-
-
-
 
 
 export default CodeEditor;

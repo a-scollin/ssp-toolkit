@@ -279,7 +279,7 @@ export function selectedCellsToGraphData(selectmodel){
       throw 'Unamed ' + selectmodel.cells[id].vertex ? "vertex!" : "edge!";
     }
 
-    if(selectmodel.cells[id].vertex && selectmodel.cells[id].style !== 'swimlane'){
+    if(selectmodel.cells[id].vertex && !selectmodel.cells[id].style.includes('swimlane')){
 
       new_graph.graph[selectmodel.cells[id].value] = []
     

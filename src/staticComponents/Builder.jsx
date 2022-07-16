@@ -15,22 +15,22 @@ import GraphView from "./GraphView";
 import Packages from "./Packages";
 
 import TransformationTools from "./TransformationTools";
-import CodeEditor from "./uiComponents/CodeEditor.jsx";
+import CodeEditor from "../reusableComponents/CodeEditor.jsx";
 
-import CustomTreeView from "./uiComponents/CustomTreeView"
+import CustomTreeView from "../reusableComponents/TreeView"
 
-import CustomIconButton from "./uiComponents/CustomIconButton";
+import CustomIconButton from "../reusableComponents/IconButton";
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import { useFormControlUnstyled } from "@mui/material";
-import { resolveInput } from "./helpers/import_helper"
+import { resolveInput } from "../helpers/import_helper"
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import { buildMxFile, getMxFile } from "./helpers/export_helper.js";
+import { buildMxFile, getMxFile } from "../helpers/export_helper.js";
 
 
 
-import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains, reduce } from "./helpers/transformation_helper";
+import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains, reduce } from "../helpers/transformation_helper";
 
 const pako = require('pako');
 
@@ -152,7 +152,6 @@ export default class Builder extends Component {
   }
 
   createProj(){
-    alert("HERER")
     if(Object.keys(this.state.graphdata).length !== 0){
       if(!window.confirm("This will overwrite the current project, are you sure you want to continue?\nIf you want to add a graph to the current project use the + button.")){
         return 
@@ -725,8 +724,15 @@ selectGraph(selected){
     
     return [graphdata, tree_data]
 
+
   }
  
+  onTransformUpload(event){
+    resolveInput(event.target.file[0],(json) =>{
+this.updateSelectedTransformations(json)
+    })
+  }
+
   render() {
 
     console.log(this.state.tree_data)
@@ -741,7 +747,7 @@ selectGraph(selected){
       transform.push(<ReflexElement className="workboard" minSize="50" flex={0.5}><GraphView update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef}  allow_editing={false} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} transform={true} selected_graphdata={JSON.parse(JSON.stringify(this.state.transformation_display))}/></ReflexElement>)
     }else{
       transform.push(<ReflexElement  flex={1} className="workboard" minSize="50">
-      <GraphView updateSelected={this.updateSelectedMeta.bind(this)} update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}/>
+      <GraphView updateSelected={this.updateSelectedMeta.bind(this)} onSave={(newGraphData) => this.updateSelectedGraphdata(newGraphData)} update={this.updateGraphData.bind(this)} toolbarRef={this.toolbarRef} allow_editing={true} selected={this.state.selected} triggerTransformationProp = {this.triggerTransformation.bind(this)} selected_graphdata={JSON.parse(JSON.stringify(this.state.graphdata.modular_pkgs[this.state.selected]))}/>
     </ReflexElement>)
     }
 
@@ -807,14 +813,15 @@ selectGraph(selected){
     <ReflexElement flex={0.1} className="video-panels">
                   
                   <Stack direction="row" spacing={1}>
-  <CustomIconButton tip="Import transformations" type={["import","transform"]} func={() => alert("Import transformations")}/>
+    <input type="file" style={{'display': 'none'}} ref={input => this.transformUpload = input} onChange={this.onTransformUpload.bind(this)} id="transform_upload"/>
+  <CustomIconButton tip="Import transformations" type={["import","transform"]} func={() => this.transformUpload.click()}/>
   <CustomIconButton tip="Run transformations" type={["run","transform"]} func={() => {
     var graphdata;
     var tree_data;
     [graphdata, tree_data] = this.runTransformations(this.state.selected)
     this.setState({graphdata, tree_data})
     }}/>
-  <CustomIconButton tip="Clear transformation history" type={["clear","history"]} func={() => alert("Clear transformation history")}/>
+  <CustomIconButton tip="Clear transformation history" type={["clear","history"]} func={() => this.updateSelectedTransformations({'to_run' : this.state.graphdata.modular_pkgs[this.state.selected].to_run, "history" : {}})}/>
   
    </Stack>
                     
