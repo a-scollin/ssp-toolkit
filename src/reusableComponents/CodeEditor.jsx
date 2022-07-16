@@ -17,8 +17,8 @@ import "brace/mode/json";
  * @property {String} [mod_packs] - Names of modular packages 
  * @property {String} [mon_packs] - Names of monolithic packages 
  * @property {String} text - Text to supply to editor
- * @property {Function} onSubmit - Function for handling updated text 
- * @property {Function} getLineNumber - !Function for getting selected line number to jump to!
+ * @property {function} onSubmit - Function for handling updated text 
+ * @property {function} getLineNumber - !Function for getting selected line number to jump to!
 */
 
 function CodeEditor(props) {
@@ -30,29 +30,29 @@ function CodeEditor(props) {
 
       // Autocompletion for transformations 
       // Chore : complete for rest of transformations autocompletions 
-      ["\"expand\" : { ... }", 
-      "\"decompose\" : { ... }", 
-      "\"substitute\" : {\n\t\t\t\t\"lhs\" : {},\n\t\t\t\t\"rhs\" : {}\n\t\t\t\t}"].forEach((w) => {
+      ["\"expand\" : { ... }",
+        "\"decompose\" : { ... }",
+        "\"substitute\" : {\n\t\t\t\t\"lhs\" : {},\n\t\t\t\t\"rhs\" : {}\n\t\t\t\t}"].forEach((w) => {
 
-        completions.push({
-          caption: w.split(":")[0],
-          value: w,
-          meta: "Transformation",
-          completer: {
-            insertMatch: (editor, data) => {
+          completions.push({
+            caption: w.split(":")[0],
+            value: w,
+            meta: "Transformation",
+            completer: {
+              insertMatch: (editor, data) => {
 
-              // Inserts value from completions
-              editor.completer.insertMatch({ value: data.value });
+                // Inserts value from completions
+                editor.completer.insertMatch({ value: data.value });
 
-              var pos = editor.selection.getCursor();
-              //Jump to latest position on the editor for easy typing
-              if (data.caption === "\"substitute\" ") {
-                editor.gotoLine(pos.row - 1, pos.column + 9);
+                var pos = editor.selection.getCursor();
+                //Jump to latest position on the editor for easy typing
+                if (data.caption === "\"substitute\" ") {
+                  editor.gotoLine(pos.row - 1, pos.column + 9);
+                }
               }
             }
-          }
+          });
         });
-      });
 
       // Autocompletion for graph data  
       ["\"graph\" : {\n \"\" : [\n[\"\",\"\"]\n] \n}",
@@ -66,17 +66,17 @@ function CodeEditor(props) {
             meta: "Graphdata Template",
             completer: {
               insertMatch: (editor, data) => {
-                
+
                 // Inserts value from completions
                 editor.completer.insertMatch({ value: data.value });
-                
+
                 //Jump to latest position on the editor for easy typing
                 // Chore : do for rest of graph data completions
-                var pos = editor.selection.getCursor(); 
+                var pos = editor.selection.getCursor();
                 if (data.caption === "\"oracles\" ") {
                   editor.gotoLine(pos.row, pos.column + 1);
                 } else {
-                  editor.gotoLine(pos.row - 2, pos.column + 1); 
+                  editor.gotoLine(pos.row - 2, pos.column + 1);
                 }
               }
             }
@@ -120,7 +120,7 @@ function CodeEditor(props) {
   // Add completer to ace build
   langTools.setCompleters([])
   langTools.addCompleter(myCompleter);
-  
+
 
   var getLineNumber = props.getLineNumber
   var text = props.text

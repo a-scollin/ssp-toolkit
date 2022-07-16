@@ -24,75 +24,74 @@ import CodeIcon from '@mui/icons-material/Code';
  * @param {Object} props - Attributes: type, tip, func 
  * @property {String} [type] - Names of icons to appear in button (appear in order)
  * @property {String} tip - Tooltip to appear on hover
- * @property {Function} func - Function the button triggers
+ * @property {function} func - Function the button triggers
 */
 
 export default function CustomIconButton(props) {
-    
+
     let icons = []
 
-    for(var elm in props.type){
-            switch(props.type[elm]) {
-                case 'add':
-                    icons.push(<AddIcon/>)
-                    break;
-                case 'list':
-                    icons.push(<ListIcon/>)
-                    break;
-                case 'sub':
-                    icons.push(<RemoveIcon/>)
-                    break;
-                case 'save':
-                    icons.push(<SaveIcon/>)
-                    break;
-                case 'write':
-                    icons.push(<CreateIcon/>)
-                    break;
-                case 'export':
-                    icons.push(<ExitToAppIcon/>)
-                    break;
-                case 'delete':
-                    icons.push(<DeleteIcon/>)
-                    break;
-                case 'import':
-                    icons.push(<PublishIcon/>)
-                    break;
-                case 'transform':
-                    icons.push(<TransformIcon/>)
-                    break;
-                case 'run':
-                    icons.push(<PlayArrowIcon/>)
-                    break;
-                case 'clear':
-                    icons.push(<ClearIcon/>)
-                    break;
-                case 'copy':
-                    icons.push(<ContentCopyIcon/>)
-                    break;
-                case 'history':
-                    icons.push(<HistoryIcon/>)
-                    break;
-                case 'partial':
-                    icons.push(<AutoGraphIcon/>)
-                    break;
-                case 'ghost':
-                    icons.push(<PendingIcon/>)
-                    break;
-                case 'code':
-                    icons.push(<CodeIcon/>)
-                    break;
-                default:
-                    break;
-              }
+    for (var elm in props.type) {
+        switch (props.type[elm]) {
+            case 'add':
+                icons.push(<AddIcon />)
+                break;
+            case 'list':
+                icons.push(<ListIcon />)
+                break;
+            case 'sub':
+                icons.push(<RemoveIcon />)
+                break;
+            case 'save':
+                icons.push(<SaveIcon />)
+                break;
+            case 'write':
+                icons.push(<CreateIcon />)
+                break;
+            case 'export':
+                icons.push(<ExitToAppIcon />)
+                break;
+            case 'delete':
+                icons.push(<DeleteIcon />)
+                break;
+            case 'import':
+                icons.push(<PublishIcon />)
+                break;
+            case 'transform':
+                icons.push(<TransformIcon />)
+                break;
+            case 'run':
+                icons.push(<PlayArrowIcon />)
+                break;
+            case 'clear':
+                icons.push(<ClearIcon />)
+                break;
+            case 'copy':
+                icons.push(<ContentCopyIcon />)
+                break;
+            case 'history':
+                icons.push(<HistoryIcon />)
+                break;
+            case 'partial':
+                icons.push(<AutoGraphIcon />)
+                break;
+            case 'ghost':
+                icons.push(<PendingIcon />)
+                break;
+            case 'code':
+                icons.push(<CodeIcon />)
+                break;
+            default:
+                break;
+        }
     }
-    
+
     return (
 
         <Tooltip title={props.tip}>
-        <IconButton onClick={() => props.func(props.func)} aria-label="delete">
-            {icons}
-        </IconButton>
+            <IconButton onClick={() => props.func(props.func)} aria-label="delete">
+                {icons}
+            </IconButton>
         </Tooltip>
     );
-  }
-  
+}

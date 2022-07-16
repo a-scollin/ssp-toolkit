@@ -878,7 +878,7 @@ this.updateSelectedTransformations(json)
                   </ReflexElement>
                   <ReflexSplitter/>
                 <ReflexElement flex={0.9} minSize="100"> 
-                  <CustomTreeView selected={this.state.selected} deleteGraph={this.deleteGraph.bind(this)} tree_data={this.state.tree_data} select={this.selectGraph.bind(this)}/>
+                  <CustomTreeView treeData={this.state.tree_data} onSelect={this.selectGraph.bind(this)} deleteNode={this.deleteGraph.bind(this)}/>
                 </ReflexElement>
     </TabPanel>
     <TabPanel>
