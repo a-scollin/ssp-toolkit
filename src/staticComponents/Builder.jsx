@@ -1,38 +1,29 @@
-import React, { cloneElement, Component } from "react";
+import React, { Component } from "react";
 
 import {
   ReflexContainer,
   ReflexSplitter,
   ReflexElement
 } from 'react-reflex'
-
-
 import "react-reflex/styles.css";
-
-import { MathJax, MathJaxContext } from "better-react-mathjax";
 
 import GraphView from "./GraphView";
 import Packages from "./Packages";
-
 import TransformationTools from "./TransformationTools";
+
 import CodeEditor from "../reusableComponents/CodeEditor.jsx";
-
 import CustomTreeView from "../reusableComponents/TreeView"
-
 import CustomIconButton from "../reusableComponents/IconButton";
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import { useFormControlUnstyled } from "@mui/material";
+
 import { resolveInput } from "../helpers/import_helper"
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import 'react-tabs/style/react-tabs.css';
-import { buildMxFile, getMxFile } from "../helpers/export_helper.js";
-
-
-
+import { getMxFile } from "../helpers/export_helper.js";
 import { substitute, buildIncoming, decompose, compose, expand, findAllExpandableChains, reduce } from "../helpers/transformation_helper";
 
-const pako = require('pako');
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+
+import Stack from '@mui/material/Stack';
+
 
 const saveFile = async (blob, name) => {
   const a = document.createElement('a');

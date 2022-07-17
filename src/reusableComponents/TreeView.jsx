@@ -124,6 +124,7 @@ export default function CustomTreeView(props) {
     <TreeItem ContentComponent={CustomContent} {...innerProps} />
   );
 
+  // Renders the each custom tree item 
   function renderChildren(children, deleteGraph) {
 
     var items = []
@@ -137,7 +138,6 @@ export default function CustomTreeView(props) {
     return items
 
   }
-
 
   return (
     <TreeView
