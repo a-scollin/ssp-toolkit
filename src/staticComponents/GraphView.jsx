@@ -7,17 +7,17 @@ import 'react-reflex/styles.css'
 import { black } from "ansi-colors";
 import { AbstractMmlLayoutNode } from "mathjax-full/js/core/MmlTree/MmlNode";
 import { default as MxGraph } from "mxgraph";
-import { initToolbar, configureKeyBindings, selectedCellsToGraphData} from "../helpers/graph_helper.js"
-import addToolbarItem from "../helpers/addToolbarItem";
-import getStyleStringByObj from "../helpers/getStyleStringByObj";
-import { resolve_diagram_to_json } from "../helpers/import_helper.js";
+import { initToolbar, configureKeyBindings, selectedCellsToGraphData} from "../lib/graph_helper.js"
+import addToolbarItem from "../lib/addToolbarItem";
+import getStyleStringByObj from "../lib/getStyleStringByObj";
+import { resolve_diagram_to_json } from "../lib/import_helper.js";
 import { touchRippleClasses } from "@mui/material";
 import { V } from "mathjax-full/js/output/common/FontData";
 import { GradingSharp } from "@mui/icons-material";
 import { style } from "@mui/system";
-import { compose, buildIncoming } from '../helpers/transformation_helper.js'
+import { compose, buildIncoming } from '../lib/transformation_helper.js'
 import { Codesandbox } from "react-feather";
-import { buildMxFile } from "../helpers/export_helper.js";
+import { buildMxFile } from "../lib/export_helper.js";
 import { inflateGetHeader } from "pako/lib/zlib/inflate";
 
 // legacy TODO : remove

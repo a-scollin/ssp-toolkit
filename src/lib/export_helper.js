@@ -3,6 +3,20 @@ import { getPopoverUtilityClass } from "@mui/material";
 import { default as MxGraph } from "mxgraph";
 
 
+
+
+// for saving to client storage
+export const saveFile = async (blob, name) => {
+  const a = document.createElement('a');
+  a.download = name;
+  a.href = URL.createObjectURL(blob);
+  a.addEventListener('click', (e) => {
+    setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
+  });
+  a.click();
+};
+
+
 // styling 
 
 
