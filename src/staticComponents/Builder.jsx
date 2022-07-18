@@ -17,49 +17,14 @@ import CustomIconButton from "../reusableComponents/IconButton";
 
 import { resolveInput } from "../lib/import_helper"
 import { getMxFile, saveFile } from "../lib/export_helper.js";
-import { substitute, 
-  buildIncoming, 
-  decompose, 
-  compose, 
-  expand, 
-  findAllExpandableChains, 
-  reduce } from "../lib/transformation_helper";
+import {
+  runScriptedTransformations
+} from "../lib/transformation_helper";
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
 import Stack from '@mui/material/Stack';
-
-function add_child(children, parent, child) {
-
-  var child_can;
-
-  for (var element in children) {
-
-    child_can = null
-
-    if (children[element].graphname === parent) {
-
-      children[element].children.push({ title: child, graphname: child, number: { "expand": {}, "reduce": {}, "decompose": {}, "compose": {}, "equiv": {} }, children: [] })
-
-      return children
-
-    } else if (children[element].children.length > 0) {
-
-      child_can = add_child(children[element].children, parent, child)
-
-    }
-
-    if (child_can != null) {
-      children[element].children = child_can
-      return children
-    }
-
-  }
-
-  return null
- 
-}
 
 
 /** 
@@ -163,24 +128,32 @@ export default class Builder extends Component {
 
         } else if (json_data.hasOwnProperty("graph")) {
 
-            var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
-            tree_data.push({ title: graphname, graphname: graphname, number: { "expand": {}, "reduce": {}, "decompose": {}, "compose": {}, "equiv": {} }, children: [] })
-            graphdata.modular_pkgs[graphname] = json_data;                     // update the name property, assign a new value                 
-            return { graphdata, tree_data };
+          var graphname = window.prompt("Please enter a name for the graph:", "Graph name");
+          tree_data.push({ title: graphname, graphname: graphname, number: { "expand": {}, "reduce": {}, "decompose": {}, "compose": {}, "equiv": {} }, children: [] })
+          graphdata.modular_pkgs[graphname] = json_data;                     // update the name property, assign a new value                 
+          return { graphdata, tree_data };
 
-          } else {
+        } else {
 
-            alert("Incorrectly formatted JSON, please ensure there is a \'graph\' or \'modular_pkgs' key.");
-            return
+          alert("Incorrectly formatted JSON, please ensure there is a \'graph\' or \'modular_pkgs' key.");
+          return
 
-          }
+        }
 
-        
+
 
       });
     })
   }
+
   
+  // Uses the library method for accessing Fs to add new graphs in project files to the workspace. 
+  onTransformUpload(event) {
+    resolveInput(event.target.file[0], (json) => {
+      this.updateSelectedTransformations(json)
+    })
+  }
+
   // Create the tree items for selecting a graph to work on
   // Chore : Add project to project tree structure preservation, currently all graphs in a project are loaded in a flat list.  
   createTreeItems() {
@@ -224,21 +197,21 @@ export default class Builder extends Component {
 
         let tree_data = [...prevState.tree_data]
         let graphdata = { ...prevState.graphdata };
-        
+
         let transformation_base = {};
         let transformation_display = {};
-        
+
         this.transform_type = null
-        this.transform_node = null 
+        this.transform_node = null
 
         // push to the "end" of the tree list 
         tree_data.push({ 'title': graphname, 'graphname': graphname, 'number': { "expand": {}, "reduce": {}, "decompose": {}, "composition": {}, "equiv": {} }, 'children': [] })
-        
-        // update the graphdata property, add a new key : val        
-        graphdata.modular_pkgs[graphname] = newGraphData;                             
 
-        return { graphdata, transformation_base, transformation_display, tree_data };                                 
- 
+        // update the graphdata property, add a new key : val        
+        graphdata.modular_pkgs[graphname] = newGraphData;
+
+        return { graphdata, transformation_base, transformation_display, tree_data };
+
       });
 
       return
@@ -274,7 +247,7 @@ export default class Builder extends Component {
       var graphname = transform_name != null ? transform_name : this.state.selected + ' - ' + this.transform_type
       var number = element.number[this.transform_type]
 
-      // If there is already a transformed graph of same name then we number it higher. 
+      // If there is already a transformed graph of same name then we number it higher, otherwise we mark it as the first of that name
       if (number.hasOwnProperty(graphname)) {
 
         number = number[graphname]
@@ -289,48 +262,52 @@ export default class Builder extends Component {
 
       element.children.push({ title: graphname, graphname: graphname, number: { "expand": {}, "reduce": {}, "decompose": {}, "composition": {}, "equiv": {} }, children: [] })
 
+      // Resets transformation and updates the project state. 
       this.setState(prevState => {
 
         let graphdata = { ...prevState.graphdata };
         let transformation_base = {};
         let transformation_display = {};
 
-        graphdata.modular_pkgs[graphname] = newGraphData;                     
+        graphdata.modular_pkgs[graphname] = newGraphData;
 
         this.transform_type = null
 
-        return { graphdata, transformation_base, transformation_display };                             
+        return { graphdata, transformation_base, transformation_display };
 
       });
 
       return true;
 
     } else {
-
+      // Check down children lineage
       for (var child in element.children) {
         if (this.dfsGraphSave(element.children[child], newGraphData, transform_name)) {
           return true;
         }
-
       }
-
     }
 
     return false;
 
   }
 
-  deleteGraph(graphname) {
+  /* 
+  * Chore : Implement deletion of graphs from the tree, will also
+  * take a boolean specifying if children are inherited or deleted 
+  */
+  graphDelete(graphname) {
 
     alert("delete this graph!")
     alert(graphname)
 
   }
 
+  /* 
+  * Updates the selected graph, needed to check if there is a transformation 
+  * in progress and to update a graphs metadata (XML structure for exporting) 
+  */
   selectGraph(selected) {
-
-    console.log(this.state.graphdata)
-    console.log(selected)
 
     if (this.transform_type == null) {
 
@@ -348,8 +325,6 @@ export default class Builder extends Component {
           return { graphdata, selected }
 
         });
-
-
       }
 
     } else if (!window.confirm("You haven't finsihed the transformation, progress will be lost - are you sure you want to change seleceted graph?")) {
@@ -357,20 +332,21 @@ export default class Builder extends Component {
     } else {
 
       this.transform_type = null
-
       this.setState({ selected: selected, transformation_base: {}, transformation_display: {} });
     }
   }
 
+  // returns the line number of the selected graph (extra feature for CodeEditor)
+  /* 
+  * Chore : should actually return the line of the selected monolithic package 
+  * (not modular) -- this requires interfacing with GraphView selection model.
+  * Also needs to have a specific function for scripted transformations.  
+  */
 
   lineNumberOfSelected() {
 
     var text = JSON.stringify(this.state.graphdata, null, '\t')
-
-
     var index = text.indexOf(this.state.selected); // => 18
-
-
     var tempString = text.substring(0, index);
 
     // Line number
@@ -378,12 +354,7 @@ export default class Builder extends Component {
 
   }
 
-  updateSelectedFromXML(xml) {
-
-
-
-  }
-
+  // envoked with new graphdata to update selected
   updateSelectedGraphdata(newGraphData) {
     this.setState(prevState => {
 
@@ -396,7 +367,13 @@ export default class Builder extends Component {
       if (newGraphData.hasOwnProperty("reudction")) {
         graphdata.modular_pkgs[prevState.selected].reduction = [...newGraphData.reduction]
       }
+
       delete graphdata.modular_pkgs[prevState.selected].xml
+
+      /* 
+      * If there is a transformation in progress and the selected graphdata is changed (ie. in CodeEditor)
+      * then we reset the transformation base to the updated graphdata. 
+      */
 
       if (prevState.transform_type !== null) {
 
@@ -404,20 +381,16 @@ export default class Builder extends Component {
 
         let transformation_base = JSON.parse(JSON.stringify(newGraphData))
 
-        console.log(graphdata)
         return { graphdata, transformation_base, transformation_display }
 
       }
-      console.log(graphdata)
-
 
       return { graphdata }
 
     });
   }
 
-
-
+  // Updates the scripted transformations from CodeEditor
 
   updateSelectedTransformations(newTransformations) {
 
@@ -429,290 +402,25 @@ export default class Builder extends Component {
 
       graphdata.modular_pkgs[prevState.selected].history = { ...newTransformations.history }
 
-      // if(prevState.transform_type !== null){
-
-      //   let transformation_display = newGraphData
-
-      //   let transformation_base = JSON.parse(JSON.stringify(newGraphData))
-
-      //   return {graphdata, transformation_base, transformation_display}
-
-      // }
-
       return { graphdata }
 
     });
   }
 
+  /*
+  * Updates the meta data for the selected graph - this is used
+  * to store each individual graph model and it's structure (where
+  * the user moves each package, their colour) 
+  * 
+  * Chore: Is also passed edit history for Undo and Redo, 
+  * however it is very buggy due to object complexity hence empty array    
+   */
   updateSelectedMeta(xml, edithistory) {
 
     this.meta = { "xml": xml, "edithistory": [] }
 
   }
 
-
-
-  runTransformations(parent, passedgraphdata = null, passedtree_data = null) {
-
-    var graphdata = passedgraphdata === null ? JSON.parse(JSON.stringify(this.state.graphdata)) : passedgraphdata
-    var tree_data = passedtree_data === null ? JSON.parse(JSON.stringify(this.state.tree_data)) : passedtree_data
-
-    console.log(graphdata.modular_pkgs)
-    console.log(parent)
-
-    if (!graphdata.modular_pkgs[parent].hasOwnProperty('to_run')) {
-      return
-    }
-
-    var more_to_run;
-    var parentGraphData = buildIncoming(graphdata.modular_pkgs[parent])
-
-    var chains = findAllExpandableChains(parentGraphData)
-
-    var parentGraphData_with_oracles = { "oracles": graphdata.modular_pkgs[parent].oracles, "graph": graphdata.modular_pkgs[parent].graph, "reduction": (graphdata.modular_pkgs[parent].hasOwnProperty("reduction") ? graphdata.modular_pkgs[parent].reduction : []) }
-    var newGraphData
-    var can_tree_data;
-
-    var value;
-    var expandable_package;
-    var sel_chain;
-    var ghost;
-
-    var target;
-    var subgraph;
-
-    var packages;
-    var package_name;
-
-    var lhs;
-    var rhs;
-    var partial;
-    var include;
-
-    var reduction;
-    var bitstring;
-
-
-    for (var newGraph in graphdata.modular_pkgs[parent].to_run) {
-
-
-      console.log(graphdata.modular_pkgs[parent])
-      console.log(newGraph)
-      console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
-
-      if (graphdata.modular_pkgs.hasOwnProperty(newGraph)) {
-        throw "Name already exists!"
-      }
-      if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'substitute') {
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('lhs')) {
-          lhs = graphdata.modular_pkgs[parent].to_run[newGraph].lhs
-
-          if (typeof lhs == "string") {
-
-            if (!graphdata.modular_pkgs.hasOwnProperty(lhs)) {
-              throw lhs + " doesn't exist!"
-            }
-
-            lhs = { "oracles": graphdata.modular_pkgs[lhs].oracles, "graph": graphdata.modular_pkgs[lhs].graph }
-          }
-
-        } else {
-          throw "lhs required for substitution : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('rhs')) {
-          rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
-
-          if (typeof rhs == "string") {
-
-            if (!graphdata.modular_pkgs.hasOwnProperty(rhs)) {
-              throw rhs + " doesn't exist!"
-            }
-
-            rhs = { "oracles": graphdata.modular_pkgs[rhs].oracles, "graph": graphdata.modular_pkgs[rhs].graph }
-
-          }
-
-        } else {
-          throw "rhs required for substitution : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('partial')) {
-          partial = graphdata.modular_pkgs[parent].to_run[newGraph].partial
-        } else {
-          partial = false;
-        }
-
-        // if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty(include)){          
-        //   include = graphdata.modular_pkgs[parent].to_run[newGraph].include
-        // }else{
-
-        // }
-
-
-
-        newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial)
-
-        newGraphData.reduction = parentGraphData_with_oracles.reduction
-
-      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'decompose') {
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('target')) {
-          target = graphdata.modular_pkgs[parent].to_run[newGraph].target
-        } else {
-          throw "target required for decomposition : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('subgraph')) {
-          subgraph = graphdata.modular_pkgs[parent].to_run[newGraph].subgraph
-
-          if (typeof subgraph == "string") {
-
-            if (!graphdata.modular_pkgs.hasOwnProperty(subgraph)) {
-              throw subgraph + " doesn't exist!"
-            }
-
-            subgraph = { "oracles": graphdata.modular_pkgs[subgraph].oracles, "graph": graphdata.modular_pkgs[subgraph].graph }
-          }
-
-        } else {
-          throw "subgraph required for decomposition : " + newGraph
-        }
-
-        newGraphData = decompose(parentGraphData, parentGraphData_with_oracles, target, subgraph)
-
-        newGraphData.reduction = parentGraphData_with_oracles.reduction
-
-      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'compose') {
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('packages')) {
-          packages = graphdata.modular_pkgs[parent].to_run[newGraph].packages
-        } else {
-          throw "packages required for composition : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('package_name')) {
-          package_name = graphdata.modular_pkgs[parent].to_run[newGraph].package_name
-        } else {
-          throw "package_name required for composition : " + newGraph
-        }
-
-        newGraphData = compose(parentGraphData, parentGraphData_with_oracles, packages, package_name)
-
-        newGraphData.reduction = parentGraphData_with_oracles.reduction
-
-      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'expand') {
-
-
-        sel_chain = null
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('expandable_package')) {
-          expandable_package = graphdata.modular_pkgs[parent].to_run[newGraph].expandable_package
-        } else {
-          throw "expandable_package required for expansion : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('value')) {
-          value = graphdata.modular_pkgs[parent].to_run[newGraph].value
-        } else {
-          throw "value required for composition : " + newGraph
-        }
-
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('ghost')) {
-          ghost = graphdata.modular_pkgs[parent].to_run[newGraph].ghost
-        } else {
-          ghost = true
-        }
-
-        // expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true)
-
-
-        for (var chain in chains) {
-          if (chains[chain].includes(expandable_package)) {
-            sel_chain = chains[chain]
-            break
-          }
-        }
-
-        if (sel_chain == null) {
-          throw expandable_package + " appears in no expandable chain!"
-        }
-
-        newGraphData = expand(parentGraphData, parentGraphData_with_oracles, sel_chain, value, ghost)
-
-        newGraphData.reduction = parentGraphData_with_oracles.reduction
-
-      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'reduce') {
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('reduction')) {
-          reduction = graphdata.modular_pkgs[parent].to_run[newGraph].reduction
-        } else {
-          console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
-          throw "reduction required for reduce : " + newGraph
-        }
-
-        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('bitstring')) {
-          bitstring = graphdata.modular_pkgs[parent].to_run[newGraph].bitstring
-        } else {
-          bitstring = ""
-        }
-
-
-        newGraphData = JSON.parse(JSON.stringify(parentGraphData_with_oracles))
-
-        newGraphData = reduce(newGraphData, reduction, bitstring)
-
-
-      } else {
-
-        throw "invalid type : " + graphdata.modular_pkgs[parent].to_run[newGraph].type
-
-      }
-
-
-      if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty("to_run")) {
-
-        graphdata.modular_pkgs[newGraph] = { ...newGraphData, "to_run": graphdata.modular_pkgs[parent].to_run[newGraph].to_run }
-
-      } else {
-        graphdata.modular_pkgs[newGraph] = newGraphData
-      }
-
-      console.log(newGraphData)
-      console.log(graphdata.modular_pkgs)
-
-      can_tree_data = add_child(tree_data, parent, newGraph)
-
-      if (can_tree_data === null) {
-        throw "Parent package doesn't exist!"
-      }
-
-      tree_data = can_tree_data
-
-      if (graphdata.modular_pkgs[newGraph].hasOwnProperty("to_run")) {
-
-        console.log(graphdata.modular_pkgs);
-
-        [graphdata, tree_data] = this.runTransformations(newGraph, graphdata, tree_data)
-      }
-
-    }
-
-    graphdata.modular_pkgs[parent].history = { ...graphdata.modular_pkgs[parent].to_run }
-    graphdata.modular_pkgs[parent].to_run = {}
-
-    return [graphdata, tree_data]
-
-
-  }
-
-  onTransformUpload(event) {
-    resolveInput(event.target.file[0], (json) => {
-      this.updateSelectedTransformations(json)
-    })
-  }
 
   render() {
 
@@ -795,7 +503,7 @@ export default class Builder extends Component {
                         <CustomIconButton tip="Run transformations" type={["run", "transform"]} func={() => {
                           var graphdata;
                           var tree_data;
-                          [graphdata, tree_data] = this.runTransformations(this.state.selected)
+                          [graphdata, tree_data] = runScriptedTransformations(this.state.selected, JSON.parse(JSON.stringify(this.state.graphdata)), JSON.parse(JSON.stringify(this.state.tree_data)))
                           this.setState({ graphdata, tree_data })
                         }} />
                         <CustomIconButton tip="Clear transformation history" type={["clear", "history"]} func={() => this.updateSelectedTransformations({ 'to_run': this.state.graphdata.modular_pkgs[this.state.selected].to_run, "history": {} })} />
@@ -855,7 +563,7 @@ export default class Builder extends Component {
                     </ReflexElement>
                     <ReflexSplitter />
                     <ReflexElement flex={0.9} minSize="100">
-                      <CustomTreeView treeData={this.state.tree_data} onSelect={this.selectGraph.bind(this)} deleteNode={this.deleteGraph.bind(this)} />
+                      <CustomTreeView treeData={this.state.tree_data} onSelect={this.selectGraph.bind(this)} deleteNode={this.graphDelete.bind(this)} />
                     </ReflexElement>
                   </TabPanel>
                   <TabPanel>

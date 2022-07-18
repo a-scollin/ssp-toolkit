@@ -2272,3 +2272,289 @@ export function expand(graphData, graphData_with_oracles, chain, value = 3, ghos
     return newGraph
 
 }
+
+
+function add_child(children, parent, child) {
+
+    var child_can;
+  
+    for (var element in children) {
+  
+      child_can = null
+  
+      if (children[element].graphname === parent) {
+  
+        children[element].children.push({ title: child, graphname: child, number: { "expand": {}, "reduce": {}, "decompose": {}, "compose": {}, "equiv": {} }, children: [] })
+  
+        return children
+  
+      } else if (children[element].children.length > 0) {
+  
+        child_can = add_child(children[element].children, parent, child)
+  
+      }
+  
+      if (child_can != null) {
+        children[element].children = child_can
+        return children
+      }
+  
+    }
+  
+    return null
+  
+  }
+
+
+export function runScriptedTransformations(parent, graphdata, tree_data) {
+
+    console.log(graphdata.modular_pkgs)
+    console.log(parent)
+
+    if (!graphdata.modular_pkgs[parent].hasOwnProperty('to_run')) {
+      return
+    }
+
+    var more_to_run;
+    var parentGraphData = buildIncoming(graphdata.modular_pkgs[parent])
+
+    var chains = findAllExpandableChains(parentGraphData)
+
+    var parentGraphData_with_oracles = { "oracles": graphdata.modular_pkgs[parent].oracles, "graph": graphdata.modular_pkgs[parent].graph, "reduction": (graphdata.modular_pkgs[parent].hasOwnProperty("reduction") ? graphdata.modular_pkgs[parent].reduction : []) }
+    var newGraphData
+    var can_tree_data;
+
+    var value;
+    var expandable_package;
+    var sel_chain;
+    var ghost;
+
+    var target;
+    var subgraph;
+
+    var packages;
+    var package_name;
+
+    var lhs;
+    var rhs;
+    var partial;
+    var include;
+
+    var reduction;
+    var bitstring;
+
+
+    for (var newGraph in graphdata.modular_pkgs[parent].to_run) {
+
+
+      console.log(graphdata.modular_pkgs[parent])
+      console.log(newGraph)
+      console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
+
+      if (graphdata.modular_pkgs.hasOwnProperty(newGraph)) {
+        throw "Name already exists!"
+      }
+      if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'substitute') {
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('lhs')) {
+          lhs = graphdata.modular_pkgs[parent].to_run[newGraph].lhs
+
+          if (typeof lhs == "string") {
+
+            if (!graphdata.modular_pkgs.hasOwnProperty(lhs)) {
+              throw lhs + " doesn't exist!"
+            }
+
+            lhs = { "oracles": graphdata.modular_pkgs[lhs].oracles, "graph": graphdata.modular_pkgs[lhs].graph }
+          }
+
+        } else {
+          throw "lhs required for substitution : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('rhs')) {
+          rhs = graphdata.modular_pkgs[parent].to_run[newGraph].rhs
+
+          if (typeof rhs == "string") {
+
+            if (!graphdata.modular_pkgs.hasOwnProperty(rhs)) {
+              throw rhs + " doesn't exist!"
+            }
+
+            rhs = { "oracles": graphdata.modular_pkgs[rhs].oracles, "graph": graphdata.modular_pkgs[rhs].graph }
+
+          }
+
+        } else {
+          throw "rhs required for substitution : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('partial')) {
+          partial = graphdata.modular_pkgs[parent].to_run[newGraph].partial
+        } else {
+          partial = false;
+        }
+
+        // if(graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty(include)){          
+        //   include = graphdata.modular_pkgs[parent].to_run[newGraph].include
+        // }else{
+
+        // }
+
+
+
+        newGraphData = substitute(parentGraphData, parentGraphData_with_oracles, lhs, rhs, partial)
+
+        newGraphData.reduction = parentGraphData_with_oracles.reduction
+
+      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'decompose') {
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('target')) {
+          target = graphdata.modular_pkgs[parent].to_run[newGraph].target
+        } else {
+          throw "target required for decomposition : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('subgraph')) {
+          subgraph = graphdata.modular_pkgs[parent].to_run[newGraph].subgraph
+
+          if (typeof subgraph == "string") {
+
+            if (!graphdata.modular_pkgs.hasOwnProperty(subgraph)) {
+              throw subgraph + " doesn't exist!"
+            }
+
+            subgraph = { "oracles": graphdata.modular_pkgs[subgraph].oracles, "graph": graphdata.modular_pkgs[subgraph].graph }
+          }
+
+        } else {
+          throw "subgraph required for decomposition : " + newGraph
+        }
+
+        newGraphData = decompose(parentGraphData, parentGraphData_with_oracles, target, subgraph)
+
+        newGraphData.reduction = parentGraphData_with_oracles.reduction
+
+      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'compose') {
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('packages')) {
+          packages = graphdata.modular_pkgs[parent].to_run[newGraph].packages
+        } else {
+          throw "packages required for composition : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('package_name')) {
+          package_name = graphdata.modular_pkgs[parent].to_run[newGraph].package_name
+        } else {
+          throw "package_name required for composition : " + newGraph
+        }
+
+        newGraphData = compose(parentGraphData, parentGraphData_with_oracles, packages, package_name)
+
+        newGraphData.reduction = parentGraphData_with_oracles.reduction
+
+      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'expand') {
+
+
+        sel_chain = null
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('expandable_package')) {
+          expandable_package = graphdata.modular_pkgs[parent].to_run[newGraph].expandable_package
+        } else {
+          throw "expandable_package required for expansion : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('value')) {
+          value = graphdata.modular_pkgs[parent].to_run[newGraph].value
+        } else {
+          throw "value required for composition : " + newGraph
+        }
+
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('ghost')) {
+          ghost = graphdata.modular_pkgs[parent].to_run[newGraph].ghost
+        } else {
+          ghost = true
+        }
+
+        // expand(graphData, graphData_with_oracles, chains, value = 3, ghost = true)
+
+
+        for (var chain in chains) {
+          if (chains[chain].includes(expandable_package)) {
+            sel_chain = chains[chain]
+            break
+          }
+        }
+
+        if (sel_chain == null) {
+          throw expandable_package + " appears in no expandable chain!"
+        }
+
+        newGraphData = expand(parentGraphData, parentGraphData_with_oracles, sel_chain, value, ghost)
+
+        newGraphData.reduction = parentGraphData_with_oracles.reduction
+
+      } else if (graphdata.modular_pkgs[parent].to_run[newGraph].type === 'reduce') {
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('reduction')) {
+          reduction = graphdata.modular_pkgs[parent].to_run[newGraph].reduction
+        } else {
+          console.log(graphdata.modular_pkgs[parent].to_run[newGraph])
+          throw "reduction required for reduce : " + newGraph
+        }
+
+        if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty('bitstring')) {
+          bitstring = graphdata.modular_pkgs[parent].to_run[newGraph].bitstring
+        } else {
+          bitstring = ""
+        }
+
+
+        newGraphData = JSON.parse(JSON.stringify(parentGraphData_with_oracles))
+
+        newGraphData = reduce(newGraphData, reduction, bitstring)
+
+
+      } else {
+
+        throw "invalid type : " + graphdata.modular_pkgs[parent].to_run[newGraph].type
+
+      }
+
+
+      if (graphdata.modular_pkgs[parent].to_run[newGraph].hasOwnProperty("to_run")) {
+
+        graphdata.modular_pkgs[newGraph] = { ...newGraphData, "to_run": graphdata.modular_pkgs[parent].to_run[newGraph].to_run }
+
+      } else {
+        graphdata.modular_pkgs[newGraph] = newGraphData
+      }
+
+      console.log(newGraphData)
+      console.log(graphdata.modular_pkgs)
+
+      can_tree_data = add_child(tree_data, parent, newGraph)
+
+      if (can_tree_data === null) {
+        throw "Parent package doesn't exist!"
+      }
+
+      tree_data = can_tree_data
+
+      if (graphdata.modular_pkgs[newGraph].hasOwnProperty("to_run")) {
+
+        console.log(graphdata.modular_pkgs);
+
+        [graphdata, tree_data] = runScriptedTransformations(newGraph, graphdata, tree_data)
+      }
+
+    }
+
+    graphdata.modular_pkgs[parent].history = { ...graphdata.modular_pkgs[parent].to_run }
+    graphdata.modular_pkgs[parent].to_run = {}
+
+    return [graphdata, tree_data]
+
+
+  }
